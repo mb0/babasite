@@ -53,7 +53,7 @@ let car2 = {x:200, y:200}
 let ctrl = {up:false, down:false, left:false, right: false}
 
 function random(max) {
-	return Math.round(Math.random()*max)
+	return (Math.random()*max)
 }
 
 let clouds = []
@@ -62,7 +62,7 @@ for (let i=0; i < 20; i++) {
 	clouds.push({
 		x:random(800),
 		y:random(350),
-		v:random(5),
+		v:1+random(4),
 		w:30+random(20),
 		h:10+random(10),
 	})
@@ -182,7 +182,7 @@ function step(n) {
 		drawSun(ctx, sun)
 	}
 	drawCar(ctx, car1, ctrl)
-	drawCar(ctx, car2, ctrl)
+	//drawCar(ctx, car2, ctrl)
 	window.requestAnimationFrame(step)
 }
 window.requestAnimationFrame(step)
