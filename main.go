@@ -32,6 +32,7 @@ type User struct {
 func NewGame() *Game {
 	h := hub.NewHub(context.Background())
 	g := &Game{Hub: h, All: make(map[int64]*User)}
+
 	go h.Run(g)
 	return g
 }
@@ -67,10 +68,35 @@ func (g *Game) Route(m *hub.Msg) {
 		for _, c := range g.All {
 			c.Chan() <- bcast
 		}
+	case "click":
+		var req clickMsg
+		err := m.Unmarshal(&req)
+		if err != nil {
+			log.Printf("failed to parse chat message: %v", err)
+			return
+		}
+		var name string
+		if user := g.All[m.From.ID()]; user != nil {
+			name = user.Name
+		}
+		bcast, err := hub.RawMsg("chat", clickMsg{name, req.X, req.Y})
+		if err != nil {
+			log.Printf("failed to marshal chat message: %v", err)
+			return
+		}
+		for _, c := range g.All {
+			c.Chan() <- bcast
+		}
 	}
 }
 
 type chatMsg struct {
 	User string `json:"user"`
 	Msg  string `json:"msg"`
+}
+
+type clickMsg struct {
+	User string `json:"user"`
+	X    int    `json:"x"`
+	Y    int    `json:"y"`
 }

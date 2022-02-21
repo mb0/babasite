@@ -62,7 +62,7 @@ for (let i=0; i < 20; i++) {
 	clouds.push({
 		x:random(800),
 		y:random(350),
-		v:1+random(4),
+		v:1+random(1),
 		w:30+random(20),
 		h:10+random(10),
 	})
@@ -170,10 +170,14 @@ function step(n) {
 	// male grüne box
 	ctx.fillStyle = "green"
 	ctx.fillRect(0, 400, 800, 200)
-	// male blauen himmel
-	ctx.fillStyle = "blue"
+	// draw blue sky with gradient
+	let skyGrad = ctx.createLinearGradient(400, 0, 400, 600)
+	skyGrad.addColorStop(0, 'blue')
+	skyGrad.addColorStop(1, 'white')
+	ctx.fillStyle = skyGrad
+	//ctx.fillStyle = 'blue'
 	ctx.fillRect(0, 0, 800, 400)
-	// male sonne
+	// male
 	sun.x = ((n / 10) % 900) -50
 	let u = (sun.x - 400) / 50
 	sun.y = (u * u) + 250
