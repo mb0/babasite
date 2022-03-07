@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"flag"
 	"fmt"
 	"log"
 	"net/http"
@@ -10,18 +11,27 @@ import (
 	"xelf.org/daql/hub/wshub"
 )
 
+var addr = flag.String("addr", "localhost:8080", "http server address")
+
 func main() {
+	flag.Parse()
 	s := NewGame()
 	http.Handle("/hub", wshub.NewServer(s.Hub))
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, "./index.html")
 	})
-	http.ListenAndServe("localhost:8080", nil)
+	http.HandleFunc("/game", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "./game.html")
+	})
+	http.Handle("/js/", http.StripPrefix("/js/", http.FileServer(http.Dir("./js"))))
+	fmt.Printf("starting server on http://%s\n", *addr)
+	http.ListenAndServe(*addr, nil)
 }
 
 type Game struct {
 	*hub.Hub
 	All map[int64]*User
+	Map *Map
 }
 
 type User struct {
@@ -31,7 +41,12 @@ type User struct {
 
 func NewGame() *Game {
 	h := hub.NewHub(context.Background())
-	g := &Game{Hub: h, All: make(map[int64]*User)}
+	var m *Map = NewMap(80, 60)
+	g := &Game{
+		Hub: h,
+		All: make(map[int64]*User),
+		Map: m,
+	}
 
 	go h.Run(g)
 	return g
@@ -46,6 +61,8 @@ func (g *Game) Route(m *hub.Msg) {
 		g.All[id] = &User{Conn: m.From, Name: name}
 		hello, _ := hub.RawMsg("chat", chatMsg{"Server", fmt.Sprintf("Hello user %s", name)})
 		m.From.Chan() <- hello
+		mapmsg, _ := hub.RawMsg("map", g.Map)
+		m.From.Chan() <- mapmsg
 	case hub.Signoff:
 		log.Printf("user signed off")
 		delete(g.All, m.From.ID())
@@ -79,7 +96,8 @@ func (g *Game) Route(m *hub.Msg) {
 		if user := g.All[m.From.ID()]; user != nil {
 			name = user.Name
 		}
-		bcast, err := hub.RawMsg("chat", clickMsg{name, req.X, req.Y})
+		g.Map.Click(req.X, req.Y)
+		bcast, err := hub.RawMsg("click", clickMsg{name, req.X, req.Y})
 		if err != nil {
 			log.Printf("failed to marshal chat message: %v", err)
 			return

@@ -7,7 +7,7 @@
 <body style="background-color:gray;">
 <div id="chat-view">
 <h1>Chat</h1>
-<a href="/game">Game</a>
+<a href="/">Index</a>
 <code id="output"></code>
 <form id="chat">
 	<input name="chat" type="text" placeholder="Chat">
@@ -15,8 +15,9 @@
 </form>
 </div>
 <script src="/js/chat.js"></script>
-<canvas id="our-canvas" width="800" height="600" style="background-color:white"></canvas>
-<script src="/js/simple.js"></script>
+<canvas id="our-canvas" width="800" height="600" style="background-color:white">
+</canvas>
+<script src="/js/game.js"></script>
 <style>
 body {
 	margin:0;
@@ -30,7 +31,7 @@ body {
 }
 canvas {
 	order:1;
-	align-self: stretch;
+	align-self: center;
 }
 #chat-view {
 	order:2;
