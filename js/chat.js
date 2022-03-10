@@ -5,7 +5,7 @@ function addOutput(text) {
 	output.appendChild(el)
 	output.scrollTop = output.scrollHeight - output.clientHeight
 }
-let url = "ws://localhost:9090/hub"
+let url = "ws://localhost:8080/hub"
 let ws = new WebSocket(url)
 ws.onopen = function(e) {
 	addOutput("websocket connected to "+ url)

@@ -15,8 +15,9 @@
 </form>
 </div>
 <script src="/js/chat.js"></script>
-<canvas id="our-canvas" width="800" height="600" style="background-color:white">
-</canvas>
+<div id="game-view">
+	<canvas id="our-canvas" width="800" height="600" style="background-color:white"></canvas>
+</div>
 <script src="/js/game.js"></script>
 <style>
 body {
@@ -29,7 +30,7 @@ body {
 	color: red;
 	text-decoration: none;
 }
-canvas {
+#game-view {
 	order:1;
 	align-self: center;
 }

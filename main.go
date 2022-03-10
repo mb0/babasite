@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"time"
 
 	"xelf.org/daql/hub"
 	"xelf.org/daql/hub/wshub"
@@ -30,8 +31,9 @@ func main() {
 
 type Game struct {
 	*hub.Hub
-	All map[int64]*User
-	Map *Map
+	All  map[int64]*User
+	Map  *Map
+	Play bool
 }
 
 type User struct {
@@ -47,6 +49,14 @@ func NewGame() *Game {
 		All: make(map[int64]*User),
 		Map: m,
 	}
+
+	go func() {
+		tick := time.NewTicker(time.Second)
+		tickmsg, _ := hub.RawMsg("_tick", nil)
+		for range tick.C {
+			h.Chan() <- tickmsg
+		}
+	}()
 
 	go h.Run(g)
 	return g
@@ -104,6 +114,28 @@ func (g *Game) Route(m *hub.Msg) {
 		}
 		for _, c := range g.All {
 			c.Chan() <- bcast
+		}
+	case "step":
+		g.Map.Step()
+		mapmsg, _ := hub.RawMsg("map", g.Map)
+		for _, c := range g.All {
+			c.Chan() <- mapmsg
+		}
+	case "reset":
+		g.Map = NewMap(80, 60)
+		mapmsg, _ := hub.RawMsg("map", g.Map)
+		for _, c := range g.All {
+			c.Chan() <- mapmsg
+		}
+	case "play":
+		g.Play = !g.Play
+	case "_tick":
+		if g.Play {
+			g.Map.Step()
+			mapmsg, _ := hub.RawMsg("map", g.Map)
+			for _, c := range g.All {
+				c.Chan() <- mapmsg
+			}
 		}
 	}
 }
