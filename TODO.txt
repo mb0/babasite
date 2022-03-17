@@ -1,0 +1,60 @@
+babasite
+========
+
+Gamemap
+w:4
+[h,1,0,1,
+ 1,1,0,x,
+ 1,1,1,1
+]
+map[y][x]
+map[y*w+x]
+
+Allgemein
+---------
+- Chat Räume
+- Lobby
+- Mapeditor
+- Benutzeranmelden (Admin)
+ 
+Rätselspiel
+-----------
+
+Inventar(genug Platz)
+-Sachen kombinieren mit anderen Items/Objekte
+
+Multiplayer
+- chat
+
+Spieleraktionen
+- emotes
+- aufheben
+- benutzen
+
+
+top-down-view
+-movement: Point and Click, Wegfindung A*
+-animation: Sprites
+-sowas? https://.opengameartorg/content/bunker-office-tiles
+
+Object
+-Kisten
+-Türen
+-Schalter
+-Terminal (Minigame)
+-Kaputte Bodenplatte/Wand
+
+Raetselideen
+- Versteckte Codes fuer Türen/Tresore
+- koordinierte Emotes, Gesichtserkennung 
+- mehrere Schalter gleichzeitig aktivieren
+- Rover, Hacking, Schlösserknacken mini game
+
+
+Story
+-Start: Mond basis und Gedächnis und Kommunikation verloren
+ Earth Backup Project, Hibernation gone wrong!
+-1.Ziel: Kommunikation zur Erde herstellen
+-2.Observatorium: Teleskop ausrichten
+-3.Rakete: Alien Mothership, Argument zur Rettung der Menschenheit
+
