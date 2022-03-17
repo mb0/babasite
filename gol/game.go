@@ -1,4 +1,4 @@
-package main
+package gol
 
 /*
  drei nachbarn -> neu geboren in der nächsten phase

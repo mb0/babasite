@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/mb0/babasite/gol"
 	"xelf.org/daql/hub"
 	"xelf.org/daql/hub/wshub"
 )
@@ -32,7 +33,7 @@ func main() {
 type Game struct {
 	*hub.Hub
 	All  map[int64]*User
-	Map  *Map
+	Map  *gol.Map
 	Play bool
 }
 
@@ -43,7 +44,7 @@ type User struct {
 
 func NewGame() *Game {
 	h := hub.NewHub(context.Background())
-	var m *Map = NewMap(80, 60)
+	var m *gol.Map = gol.NewMap(80, 60)
 	g := &Game{
 		Hub: h,
 		All: make(map[int64]*User),
@@ -122,7 +123,7 @@ func (g *Game) Route(m *hub.Msg) {
 			c.Chan() <- mapmsg
 		}
 	case "reset":
-		g.Map = NewMap(80, 60)
+		g.Map = gol.NewMap(80, 60)
 		mapmsg, _ := hub.RawMsg("map", g.Map)
 		for _, c := range g.All {
 			c.Chan() <- mapmsg
