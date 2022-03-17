@@ -30,13 +30,11 @@ function paintAt(x, y, color) {
 }
 
 function paintMap(map) {
-    let rows = map.tiles
     ctx.fillStyle = "white"
     ctx.fillRect(0,0,800,600)
-    for (let y = 0; y < rows.length; y++) {
-        let cols = rows[y]
-        for (let x = 0; x < cols.length; x++) {
-            let tile = cols[x]
+    for (let y = 0; y < map.h; y++) {
+        for (let x = 0; x < map.w; x++) {
+            let tile = map.tiles[y*map.w+x]
             if (tile > 0) {
                 paintAt(x, y, "green")
             }
@@ -49,12 +47,13 @@ document.addEventListener("DOMContentLoaded", function() {
         let p = msg.data
         let color = "green"
         if (map != null) {
-            if (map.tiles[p.y][p.x] <= 0) {
+            let i = p.y*map.w+p.x
+            if (map.tiles[i] <= 0) {
                 color = "green"
-                map.tiles[p.y][p.x] = 1
+                map.tiles[i] = 1
             } else {
                 color = "white"
-                map.tiles[p.y][p.x] = 0
+                map.tiles[i] = 0
             }
         }
         paintAt(p.x, p.y, color)

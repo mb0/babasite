@@ -7,38 +7,34 @@ package main
  mit mehr als drei -> überbevölkert, stirbt in der nächsten phase
 */
 type Map struct {
-	Tiles [][]Tile `json:"tiles"`
+	W     int    `json:"w"`
+	H     int    `json:"h"`
+	Tiles []Tile `json:"tiles"`
 }
 
 func NewMap(w, h int) *Map {
-	tiles := make([][]Tile, h)
-	for i := range tiles {
-		tiles[i] = make([]Tile, w)
-	}
-	return &Map{Tiles: tiles}
+	return &Map{W: w, H: h, Tiles: make([]Tile, h*w)}
 }
 
 func (m *Map) Step() {
-	for y, row := range m.Tiles {
-		for x, t := range row {
-			if t == TileBirth {
-				m.Tiles[y][x] = TileAlive
-			} else if t == TileDeath {
-				m.Tiles[y][x] = TileNone
-			}
+	for i, t := range m.Tiles {
+		if t == TileBirth {
+			m.Tiles[i] = TileAlive
+		} else if t == TileDeath {
+			m.Tiles[i] = TileNone
 		}
 	}
-	for y, row := range m.Tiles {
-		for x, t := range row {
-			count := m.Neighbours(x, y)
-			if t >= TileAlive {
-				if count < 2 || count > 3 {
-					m.Tiles[y][x] = TileDeath
-				}
-			} else {
-				if count == 3 {
-					m.Tiles[y][x] = TileBirth
-				}
+	for i, t := range m.Tiles {
+		y := i / m.W
+		x := i % m.W
+		count := m.Neighbours(x, y)
+		if t >= TileAlive {
+			if count < 2 || count > 3 {
+				m.Tiles[i] = TileDeath
+			}
+		} else {
+			if count == 3 {
+				m.Tiles[i] = TileBirth
 			}
 		}
 	}
@@ -48,18 +44,17 @@ func (m *Map) Step() {
 func (m *Map) Neighbours(x, y int) int {
 	var count int
 	for y1 := y - 1; y1 <= y+1; y1++ {
-		if y1 < 0 || y1 >= len(m.Tiles) {
+		if y1 < 0 || y1 >= m.H {
 			continue
 		}
-		row := m.Tiles[y1]
 		for x1 := x - 1; x1 <= x+1; x1++ {
-			if x1 < 0 || x1 >= len(row) {
+			if x1 < 0 || x1 >= m.W {
 				continue
 			}
 			if y1 == y && x1 == x {
 				continue
 			}
-			if row[x1] >= TileAlive {
+			if m.Tiles[y1*m.W+x1] >= TileAlive {
 				count++
 			}
 		}
@@ -68,7 +63,7 @@ func (m *Map) Neighbours(x, y int) int {
 }
 
 func (m *Map) Click(x, y int) {
-	m.Tiles[y][x].Toggle()
+	m.Tiles[y*m.W+x].Toggle()
 }
 
 type Tile int8
