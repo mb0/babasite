@@ -1,5 +1,38 @@
-let canvas = document.getElementById("our-canvas")
-let ctx = canvas.getContext("2d")
+import {app, h} from './app.js'
+import {chat} from './chat.js'
+
+let stop
+app.addView({
+	name: "simple",
+	start: function(app) {
+		stop = false
+		chat.start(app)
+		let canvas = h('canvas#our-canvas', {width:800, height:600, style: "background-color:white"})
+		app.cont.appendChild(h('#simple-view', 
+			h('',
+				h('button',{type:'button', onclick:function(e) {
+					app.send("enter", {room:"gol"})
+				}}, 'GameOfLife')
+			),
+			canvas,
+		))
+		let ctx = canvas.getContext("2d")
+		canvas.addEventListener("click", onClick)
+		window.addEventListener("keydown", onKey)
+		window.addEventListener("keyup", onKey)
+		function step(n) {
+			drawBackground(ctx, n)
+			if (!stop) requestAnimationFrame(step)
+		}
+		requestAnimationFrame(step)
+	},
+	stop: function() {
+		chat.stop()
+		stop = true
+		window.removeEventListener("keydown", onKey)
+		window.removeEventListener("keyup", onKey)
+	},
+})
 
 let car1 = {x:0, y:0}
 let car2 = {x:200, y:200}
@@ -54,38 +87,22 @@ function drawCar(c, car, ctrl) {
 	c.fill()
 }
 
-window.addEventListener("keydown", function(e) {
+function onKey(e) {
 	switch (e.key) {
 	case "ArrowUp":
-		ctrl.up = true
+		ctrl.up = e.type == "keydown"
 		break
 	case "ArrowDown":
-		ctrl.down = true
+		ctrl.down = e.type == "keydown"
 		break
 	case "ArrowRight":
-		ctrl.right = true
+		ctrl.right = e.type == "keydown"
 		break
 	case "ArrowLeft":
-		ctrl.left = true
+		ctrl.left = e.type == "keydown"
 		break
 	}
-})
-window.addEventListener("keyup", function(e) {
-	switch (e.key) {
-	case "ArrowUp":
-		ctrl.up = false
-		break
-	case "ArrowDown":
-		ctrl.down = false
-		break
-	case "ArrowRight":
-		ctrl.right = false
-		break
-	case "ArrowLeft":
-		ctrl.left = false
-		break
-	}
-})
+}
 
 
 function wasHit(sun, mx, my) {
@@ -119,7 +136,7 @@ function drawSun(c, sun) {
 }
 let doDrawSun = true
 
-function step(n) {
+function drawBackground(ctx, n) {
 	// male grüne box
 	ctx.fillStyle = "green"
 	ctx.fillRect(0, 400, 800, 200)
@@ -130,24 +147,21 @@ function step(n) {
 	ctx.fillStyle = skyGrad
 	//ctx.fillStyle = 'blue'
 	ctx.fillRect(0, 0, 800, 400)
-	// male
-	sun.x = ((n / 10) % 900) -50
-	let u = (sun.x - 400) / 50
-	sun.y = (u * u) + 250
 	drawClouds(ctx)
 	if (doDrawSun) {
+		sun.x = ((n / 10) % 900) -50
+		let u = (sun.x - 400) / 50
+		sun.y = (u * u) + 250
 		drawSun(ctx, sun)
 	}
 	drawCar(ctx, car1, ctrl)
 	//drawCar(ctx, car2, ctrl)
-	window.requestAnimationFrame(step)
 }
-window.requestAnimationFrame(step)
 
-canvas.addEventListener("click", function(e) {
+function onClick(e) {
 	if (doDrawSun) {
-		let mx = e.pageX - canvas.offsetLeft
-		let my = e.pageY - canvas.offsetTop
+		let mx = e.pageX - e.target.offsetLeft
+		let my = e.pageY - e.target.offsetTop
 		//let pix = ctx.getImageData(mx, my, 1, 1).data;
 		//let sunhit = pix[0] == 0xff && pix[1] == 0xff
 		let sunhit = wasHit(sun, mx, my)
@@ -158,4 +172,4 @@ canvas.addEventListener("click", function(e) {
 	} else {
 		doDrawSun = true
 	}
-})
+}

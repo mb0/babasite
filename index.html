@@ -1,36 +1,29 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<title>Chat</title>
+	<title>babasite</title>
 	<meta charset="utf8">
 </head>
 <body style="background-color:gray;">
-<div id="chat-view">
-<h1>Chat</h1>
-<a href="/game">Game</a>
-<code id="output"></code>
-<form id="chat">
-	<input name="chat" type="text" placeholder="Chat">
-	<input type="submit" value="Send">
-</form>
-</div>
-<script src="/js/chat.js"></script>
-<canvas id="our-canvas" width="800" height="600" style="background-color:white"></canvas>
-<script src="/js/simple.js"></script>
+<script src="/js/simple.js" type="module"></script>
+<script src="/js/game.js" type="module"></script>
+<div id="app"></div>
 <style>
 body {
 	margin:0;
 	padding:0;
-	display: flex;
-	height: 100vh;
 }
 .menu a {
 	color: red;
 	text-decoration: none;
 }
-canvas {
+#app {
+	display: flex;
+	height: 100vh;
+}
+#lobby-view, #simple-view, #game-view {
 	order:1;
-	align-self: stretch;
+	align-self: center;
 }
 #chat-view {
 	order:2;

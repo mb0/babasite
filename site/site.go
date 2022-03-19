@@ -40,10 +40,7 @@ func NewSite(rooms ...Room) *Site {
 }
 
 func (s *Site) Route(m *hub.Msg) {
-	var id int64
-	if m.From != nil {
-		id = m.From.ID()
-	}
+	id := FromID(m)
 	switch m.Subj {
 	case hub.Signon:
 		log.Printf("user signed on")

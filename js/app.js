@@ -100,7 +100,7 @@ app.addView({
             let name = input.value.trim()
             console.log("login as:", name)
             app.one("_open", () => app.send('enter', {room:'gol', name}))
-            app.one('enter', (data) => app.show(data.room))
+            app.on('enter', (data) => app.show(data.room))
             app.connect()
         })
         app.cont.appendChild(h('#lobby-view', form))
