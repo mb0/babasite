@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/mb0/babasite/gol"
+	"github.com/mb0/babasite/maped"
 	"github.com/mb0/babasite/site"
 	"xelf.org/daql/hub/wshub"
 )
@@ -17,6 +18,7 @@ func main() {
 	s := site.NewSite(
 		site.NewChat("simple"),
 		gol.NewRoom("gol"),
+		maped.NewRoom("maped"),
 	)
 	http.Handle("/hub", wshub.NewServer(s.Hub))
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
