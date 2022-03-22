@@ -11,6 +11,13 @@ export let app = {
         views.push(view)
         return view
     },
+    linksFor(name) {
+        return h('', views.filter(v => v.name != name && v.name != 'lobby').map(v =>
+            h('button', {type:'button', onclick:e => {
+                app.send("enter", {room:v.name})
+            }}, v.label||v.name)
+        ))
+    },
     show(name) {
         let v = views.find(v => v.name == name)
         if (!v) return

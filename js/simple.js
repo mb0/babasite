@@ -2,18 +2,13 @@ import {app, h} from './app.js'
 import {chat} from './chat.js'
 
 let stop
-app.addView({
-	name: "simple",
+app.addView({name: "simple",
+	label: "Sunrise Chat",
 	start: function(app) {
 		stop = false
 		chat.start(app)
 		let canvas = h('canvas#our-canvas', {width:800, height:600, style: "background-color:white"})
-		app.cont.appendChild(h('#simple-view', 
-			h('',
-				h('button',{type:'button', onclick:function(e) {
-					app.send("enter", {room:"gol"})
-				}}, 'GameOfLife')
-			),
+		app.cont.appendChild(h('#simple-view', app.linksFor("simple"),
 			canvas,
 		))
 		let ctx = canvas.getContext("2d")

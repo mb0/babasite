@@ -3,17 +3,12 @@ import {chat} from './chat.js'
 
 let map = null
 let listeners = {}
-app.addView({
-    name: "gol",
+app.addView({name: "gol",
+    label: "Game Of Life",
 	start(app) {
 		chat.start(app)
 		let canvas = h('canvas#our-canvas', {width:800, height:600, style: "background-color:white"})
-        app.cont.appendChild(h('#game-view',
-            h('',
-                h('button',{type:'button', onclick:function(e) {
-                    app.send("enter", {room:"simple"})
-                }}, 'Simple')
-            ),
+        app.cont.appendChild(h('#game-view', app.linksFor("gol"),
             canvas,
             h('',
                 h('button',{type:'button', onclick:function(e) {
@@ -50,12 +45,8 @@ app.addView({
         }
         app.on(listeners)
 	},
-    on(subj, func) {
-        list.push({subj, func})
-        app.on(subj, func)
-    },
 	stop() {
-		stop = true
+		chat.stop()
         app.off(listeners)
 	}
 })

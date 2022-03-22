@@ -1,6 +1,6 @@
 import {app, h} from './app.js'
 
-export let chat = app.addView({
+export let chat = {
 	name: "chat",
 	start: function(app) {
 		let input = h('input', {name:'chat', type:'text', placeholder:'Chat', autocomplete:'off'})
@@ -16,7 +16,7 @@ export let chat = app.addView({
 		})
 	},
 	stop: function() {}
-})
+}
 
 let output = h('code#output')
 function addOutput(text) {
