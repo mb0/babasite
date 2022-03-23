@@ -15,5 +15,6 @@ require (
 	github.com/tidwall/pretty v1.2.0 // indirect
 	github.com/tidwall/rtred v0.1.2 // indirect
 	github.com/tidwall/tinyqueue v0.1.1 // indirect
+	golang.org/x/crypto v0.0.0-20220321153916-2c7772ba3064
 	xelf.org/xelf v0.0.0-20220126024223-0139d0cd0171 // indirect
 )
