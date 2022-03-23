@@ -11,6 +11,7 @@ import (
 	"github.com/mb0/babasite/site"
 	"github.com/tidwall/buntdb"
 	"xelf.org/daql/hub/wshub"
+	"xelf.org/daql/ses"
 )
 
 var addr = flag.String("addr", "localhost:8080", "http server address")
@@ -28,19 +29,53 @@ func main() {
 	// close the db when the main function ends
 	defer db.Close()
 
+	// setup session manager to remember users
+	man, err := site.SetupSess(db, "babasite")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	auth := site.Auth{Man: man, Store: &site.BuntUserStore{DB: db}}
+
+	// create new site with multiple rooms
 	s := site.NewSite(
 		site.NewChat("simple"),
 		gol.NewRoom("gol"),
 		maped.NewRoom("maped"),
 	)
-	http.Handle("/hub", wshub.NewServer(s.Hub))
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		http.ServeFile(w, r, "./index.html")
+
+	// create a mux or also known as router where we provide session cookies
+	sesmux := http.NewServeMux()
+	// only logged in users are allowed to connect to the websocket server
+	hubsrv := wshub.NewServer(s.Hub)
+	hubsrv.UserFunc = func(r *http.Request) (string, error) {
+		if s := ses.Get(r); site.IsUserSess(s) {
+			return s.User(), nil
+		}
+		return "", fmt.Errorf("not authorized")
+	}
+	sesmux.Handle("/hub", site.Authenticate(hubsrv))
+	sesmux.HandleFunc("/login", auth.Login)
+	sesmux.HandleFunc("/logout", auth.Logout)
+	// we want to provide session info for the index site, to remember users
+	sesmux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		if s := ses.Get(r); !site.IsUserSess(s) {
+			http.Redirect(w, r, "/login", http.StatusTemporaryRedirect)
+		} else {
+			http.ServeFile(w, r, "./index.html")
+		}
 	})
-	http.HandleFunc("/game", func(w http.ResponseWriter, r *http.Request) {
-		http.ServeFile(w, r, "./game.html")
-	})
-	http.Handle("/js/", http.StripPrefix("/js/", http.FileServer(http.Dir("./js"))))
+
+	// create a public http server mux
+	srvmux := http.NewServeMux()
+	// serve resources publicly without providing session cookies
+	srvmux.Handle("/js/", http.StripPrefix("/js/", http.FileServer(http.Dir("./js"))))
+	// route non-resource requests to the mux the provides sessions
+	srvmux.Handle("/", ses.Provider{Manager: man, Next: sesmux})
+
 	fmt.Printf("starting server on http://%s\n", *addr)
-	http.ListenAndServe(*addr, nil)
+	err = http.ListenAndServe(*addr, srvmux)
+	if err != nil {
+		fmt.Println(err)
+	}
 }
