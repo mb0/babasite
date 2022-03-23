@@ -59,8 +59,8 @@ func (c *ChatRoom) Route(m *hub.Msg) {
 		var data ChatMsg
 		m.Unmarshal(&data)
 		data.Time = time.Now()
-		if user := c.Users[FromID(m)]; user != nil {
-			data.User = user.Name
+		if m.From != nil {
+			data.User = m.From.User()
 		} else if data.User == "" {
 			data.User = "Server"
 		}

@@ -43,11 +43,12 @@ func (s *Site) Route(m *hub.Msg) {
 	id := FromID(m)
 	switch m.Subj {
 	case hub.Signon:
-		log.Printf("user signed on")
-		user := &User{Conn: m.From, Signon: time.Now()}
+		name := m.From.User()
+		log.Printf("user %s signed on", name)
+		user := &User{Conn: m.From, Name: name, Signon: time.Now()}
 		s.users[id] = user
 	case hub.Signoff:
-		log.Printf("user signed off")
+		log.Printf("user %s signed off", m.From.User())
 		user := s.users[id]
 		if user != nil && user.Room != nil {
 			user.Room.Route(&hub.Msg{Subj: "exit", From: m.From})
@@ -59,9 +60,6 @@ func (s *Site) Route(m *hub.Msg) {
 		// enter a room
 		user := s.users[id]
 		if user != nil {
-			if data.Name != "" {
-				user.Name = data.Name
-			}
 			data.User = *user
 			// find room
 			room := s.rooms[data.Room]
@@ -91,7 +89,6 @@ func (s *Site) Route(m *hub.Msg) {
 
 type EnterMsg struct {
 	Room string      `json:"room"`
-	Name string      `json:"name,omitempty"`
 	User User        `json:"-"`
 	Data interface{} `json:"data,omitempty"`
 }

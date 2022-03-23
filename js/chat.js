@@ -20,7 +20,6 @@ export let chat = {
 
 let output = h('code#output')
 function addOutput(text) {
-	console.log(text)
 	output.appendChild(h('', text))
 	output.scrollTop = output.scrollHeight - output.clientHeight
 }

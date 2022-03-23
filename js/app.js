@@ -95,22 +95,14 @@ export let app = {
 app.addView({
     name: "lobby",
     start(app) {
-        let input = h('input#name', {type:"text",
-            required:true, minlength:1, maxlength:16,
+        let el = h('#lobby-view', 'Verbindet...')
+        app.on('enter', (data) => app.show(data.room))
+        app.one("_open", () => {
+            el.innerHTML = ''
+            el.appendChild(app.linksFor('lobby'))
         })
-        let form = h('form', 
-            h('', h('label', {htmlFor:'name'}, "Name"), input),
-            h('button', 'Enter'),
-        )
-        form.addEventListener('submit', function(e) {
-            e.preventDefault()
-            let name = input.value.trim()
-            console.log("login as:", name)
-            app.one("_open", () => app.send('enter', {room:'gol', name}))
-            app.on('enter', (data) => app.show(data.room))
-            app.connect()
-        })
-        app.cont.appendChild(h('#lobby-view', form))
+        app.connect()
+        app.cont.appendChild(el)
     },
     stop(){}
 })
