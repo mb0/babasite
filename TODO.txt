@@ -35,7 +35,13 @@ Spieleraktionen
 top-down-view
 -movement: Point and Click, Wegfindung A*
 -animation: Sprites
--sowas? https://.opengameartorg/content/bunker-office-tiles
+-sowas?
+ https://opengameart.org/content/bunker-office-tiles
+ https://opengameart.org/content/futuristic-space-buildings-and-dome-walls
+ https://opengameart.org/content/futuristic-doctors-office
+ https://opengameart.org/content/factory-tileset
+ https://opengameart.org/content/cyber-city
+
 
 Object
 -Kisten
