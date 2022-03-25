@@ -60,12 +60,7 @@ func (s *BuntSessStore) New() (_ ses.Data, err error) {
 		if err == nil {
 			continue
 		}
-		res := &Sess{Token: tok}
-		err = s.Save(res, true)
-		if err != nil {
-			return nil, err
-		}
-		return res, nil
+		return &Sess{Token: tok}, nil
 	}
 	return nil, fmt.Errorf("could not generate new session: %v", err)
 }
