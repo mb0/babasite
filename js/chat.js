@@ -1,5 +1,16 @@
 import {app, h} from './app.js'
 
+let listeners = {
+	chat: data => {
+		addOutput(data.user +": "+ data.msg)
+	},
+	hist: data => {
+		if (data.msgs) data.msgs.forEach(el => 
+			output.appendChild(h('', el.user +": "+ el.msg))
+		)
+		scrollEnd()
+	}
+}
 export let chat = {
 	name: "chat",
 	start: function(app) {
@@ -10,17 +21,24 @@ export let chat = {
 			app.send('chat', {msg:input.value})
 			input.value = ""
 		}
-		app.cont.appendChild(h('#chat-view', h('h1', 'Chat'), output, form))
-		app.on("chat", data => {
-			addOutput(data.user +": "+ data.msg)		
-		})
+		app.cont.appendChild(h('#chat-view',
+			h('h1', 'Chat'),
+			output, form,
+		))
+		app.on(listeners)
 	},
-	stop: function() {}
+	stop: function() {
+		app.off(listeners)
+		output.innerHTML = ""
+	}
 }
 
 let output = h('code#output')
 function addOutput(text) {
 	output.appendChild(h('', text))
+	scrollEnd()
+}
+function scrollEnd() {
 	output.scrollTop = output.scrollHeight - output.clientHeight
 }
 app.addOutput = addOutput
