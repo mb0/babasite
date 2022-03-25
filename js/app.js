@@ -25,8 +25,10 @@ export let app = {
         app.cont.innerHTML = ''
         v.start(this)
         cur = v
+        if (v.name != 'lobby') location.hash = '#'+ cur.name
     },
     start() {
+        app.on('_close', () => app.show('lobby'))
         app.show('lobby')
     },
     connect() {
@@ -98,8 +100,12 @@ app.addView({
         let el = h('#lobby-view', 'Verbindet...')
         app.on('enter', (data) => app.show(data.room))
         app.one("_open", () => {
-            el.innerHTML = ''
-            el.appendChild(app.linksFor('lobby'))
+            if (location.hash && location.hash.length > 0) {
+                app.send("enter", {room:location.hash.slice(1)})
+            } else {
+                el.innerHTML = ''
+                el.appendChild(app.linksFor('lobby'))
+            }
         })
         app.connect()
         app.cont.appendChild(el)
