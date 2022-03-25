@@ -20,20 +20,7 @@ app.addView({name: "maped",
             },
             map: m => {
                 map = m
-                const s = m.tileset
-                tiles.innerHTML = ""
-                tiles.appendChild(h('',
-                    h('header', 'Tileset: '+ s.name),
-                    h('ul', s.infos.map(info => {
-                        const color = "color:"+tileColor(info.tile)
-                        return h('li', {style:color}, sel == info.tile ? info.name :
-                            h('a', {href:'', style:color, onclick: e => {
-                                e.preventDefault()
-                                sel = info.tile
-                            }}, info.name)
-                        )
-                    })),
-                ))
+                renderTileset(m.tileset, tiles)
                 paintMap(ctx)
             },
         }
@@ -44,6 +31,23 @@ app.addView({name: "maped",
         app.off(listeners)
 	},
 })
+
+function renderTileset(s, cont) {
+    cont.innerHTML = ""
+    cont.appendChild(h('',
+        h('header', 'Tileset: '+ s.name),
+        h('ul', s.infos.map(info => {
+            const color = "color:"+tileColor(info.tile)
+            return h('li', {style:color}, sel == info.tile ? info.name :
+                h('a', {href:'', style:color, onclick: e => {
+                    e.preventDefault()
+                    sel = info.tile
+                    renderTileset(s, cont)
+                }}, info.name)
+            )
+        })),
+    ))
+}
 
 function paintMap(ctx) {
     ctx.fillStyle = "white"
