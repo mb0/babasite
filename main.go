@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/mb0/babasite/chared"
 	"github.com/mb0/babasite/gol"
 	"github.com/mb0/babasite/maped"
 	"github.com/mb0/babasite/site"
@@ -42,6 +43,7 @@ func main() {
 		site.NewChat("simple"),
 		gol.NewRoom("gol"),
 		maped.NewRoom("maped"),
+		chared.NewRoom("chared", db),
 	)
 
 	// create a mux or also known as router where we provide session cookies
