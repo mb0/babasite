@@ -1,4 +1,4 @@
-import {app, h} from './app.js'
+import {app, h, hReplace} from './app.js'
 import {chat} from './chat.js'
 import {newZoomCanvas, cssColor} from './canvas.js'
 
@@ -12,9 +12,9 @@ app.addView({name: "maped",
         let c = newZoomCanvas("our-canvas", 800, 600)
         c.zoom(8)
         c.move(20, 30)
-		let tiles = h('')
-		app.cont.appendChild(h('#maped-view', app.linksFor("maped"), c.el, tiles))
-		c.el.addEventListener("click", e => {
+        let tiles = h('')
+        app.cont.appendChild(h('#maped-view', app.linksFor("maped"), c.el, tiles))
+        c.el.addEventListener("click", e => {
             let p = c.stagePos(e)
             if (!p) return
             const cur = map.tiles[p.y*map.w+p.x]
@@ -43,8 +43,7 @@ app.addView({name: "maped",
 })
 
 function renderTileset(s, cont) {
-    cont.innerHTML = ""
-    cont.appendChild(h('',
+    hReplace(cont,
         h('header', 'Tileset: '+ s.name),
         h('ul', s.infos.map(info => {
             const color = "color:"+tileColor(info.tile)
@@ -56,7 +55,7 @@ function renderTileset(s, cont) {
                 }}, info.name)
             )
         })),
-    ))
+    )
 }
 
 function paintMap(c) {

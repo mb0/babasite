@@ -113,23 +113,29 @@ app.addView({
     stop(){}
 })
 
-export function h(name, args, data) {
-    let idx = name.indexOf('#'), id
-    if (idx>=0) {
-        id = name.slice(idx+1)
-        name = name.slice(0, idx)
-    }
-    let el = document.createElement(name||'div')
-    if (id) el.id = id
+const selRegex = /^(\w+)?(?:#([^.]*))?(?:[.]([^ ]*))?$/
+export function h(sel, args, data) {
+    let m = sel.match(selRegex)
+    if (!m) return undefined
+    let el = document.createElement(m[1]||'div')
+    if (m[2]) el.id = m[2]
+    if (m[3]) el.className = m[3].replace('.', ' ')
     if (args && !addChild(el, args)) {
         Object.keys(args).forEach(key => {
             el[key] = args[key]
         })
     }
-    Array.from(arguments).slice(2).forEach(d => {
-        if (d) addChild(el, d)
-    })
+    addChild(el, Array.from(arguments).slice(2))
     return el
+}
+export function hAdd(el, args) {
+    if (arguments.length > 2) args = Array.from(arguments).slice(1)
+    return addChild(el, args)
+}
+export function hReplace(el, args) {
+    el.innerHTML = ""
+    if (arguments.length > 2) args = Array.from(arguments).slice(1)
+    return addChild(el, args)
 }
 
 function addChild(el, data) {
