@@ -51,11 +51,12 @@ export function newZoomCanvas(id, width, height, bg) {
                 })
             })
         },
-        startDrag: (move) => {
-            let end = () => {
+        startDrag: (move, done) => {
+            let end = e => {
                 c.el.removeEventListener("mousemove", move)
                 c.el.removeEventListener("mouseup", end)
                 c.el.removeEventListener("mouseleave", end)
+                if (done) done(e)
             }
             c.el.addEventListener("mousemove", move)
             c.el.addEventListener("mouseup", end)
