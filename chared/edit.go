@@ -27,7 +27,7 @@ func Apply(a *Asset, e EditPic) error {
 		return fmt.Errorf("edit selection invalid")
 	}
 	// first look up the pic to edit
-	pic := getPic(a, e.Seq, e.Pic)
+	pic := a.GetPic(e.Seq, e.Pic)
 	if pic == nil {
 		return fmt.Errorf("no sequence named %s", e.Seq)
 	}
@@ -64,23 +64,4 @@ func DrawSel(pic *Pic, e Sel) {
 			}
 		}
 	}
-}
-
-// getSeq returns the sequence with name in asset or nil.
-func getSeq(a *Asset, name string) *Sequence {
-	for _, seq := range a.Seq {
-		if seq.Name == name {
-			return seq
-		}
-	}
-	return nil
-}
-
-// getPic returns the pic with index in sequence s or nil.
-func getPic(a *Asset, seq string, index int) *Pic {
-	s := getSeq(a, seq)
-	if s != nil && index >= 0 && index < len(s.Pics) {
-		return &Pic{Size: a.Size, Data: s.Pics[index]}
-	}
-	return nil
 }

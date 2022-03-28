@@ -27,6 +27,15 @@ func (a *Asset) AddSeq(name string) *Sequence {
 }
 func (a *Asset) newPic() []Pixel { return make([]Pixel, a.W*a.H) }
 
+// getPic returns the pic with index in sequence s or nil.
+func (a *Asset) GetPic(seq string, index int) *Pic {
+	pic := a.GetSeq(seq).GetPic(index)
+	if pic != nil {
+		return &Pic{Size: a.Size, Data: pic}
+	}
+	return nil
+}
+
 type Size struct {
 	W int `json:"w"`
 	H int `json:"h"`
@@ -37,6 +46,13 @@ type Pixel uint16
 type Sequence struct {
 	Name string    `json:"name"`
 	Pics [][]Pixel `json:"pics"`
+}
+
+func (s *Sequence) GetPic(i int) []Pixel {
+	if s != nil || i >= 0 || i < len(s.Pics) {
+		return s.Pics[i]
+	}
+	return nil
 }
 
 type Pic struct {

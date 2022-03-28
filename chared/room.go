@@ -15,6 +15,14 @@ type AssetSubs struct {
 	Subs []hub.Conn
 }
 
+func (a *AssetSubs) Bcast(m *hub.Msg, except int64) {
+	for _, c := range a.Subs {
+		if c.ID() != except {
+			c.Chan() <- m
+		}
+	}
+}
+
 type Room struct {
 	site.ChatRoom
 	Store  *BuntStore
@@ -136,16 +144,16 @@ func (r *Room) handleSub(m *hub.Msg, a *AssetSubs) *hub.Msg {
 	switch m.Subj {
 	case "seq.new", "seq.del":
 		var req struct {
-			Name string
+			Seq string
 		}
 		m.Unmarshal(&req)
-		if req.Name == "" {
+		if req.Seq == "" {
 			return m.ReplyErr(fmt.Errorf("sequence must have a name"))
 		}
-		s := a.GetSeq(req.Name)
+		s := a.GetSeq(req.Seq)
 		if m.Subj == "seq.del" {
 			if s == nil {
-				return m.ReplyRes(false)
+				return m.ReplyErr(fmt.Errorf("sequence not found"))
 			}
 			// remove seq from asset and save
 			for i, o := range a.Seq {
@@ -154,12 +162,15 @@ func (r *Room) handleSub(m *hub.Msg, a *AssetSubs) *hub.Msg {
 					break
 				}
 			}
-			return m.ReplyRes(true)
+			a.Bcast(site.RawMsg("seq.del", req), 0)
+			return nil
 		}
 		if s == nil {
-			s = a.AddSeq(req.Name)
+			s = a.AddSeq(req.Seq)
+			a.Bcast(site.RawMsg("seq.new", s), 0)
+			return nil
 		}
-		return m.Reply(s)
+		return m.Reply(site.RawMsg("seq.new", s))
 	// TODO case "seq.edit":
 	//	maybe rename and moving pics around in seq
 	case "pic.new", "pic.del":
@@ -168,11 +179,19 @@ func (r *Room) handleSub(m *hub.Msg, a *AssetSubs) *hub.Msg {
 			Pic int
 		}
 		m.Unmarshal(&req)
-		s := getSeq(a.Asset, req.Seq)
+		s := a.GetSeq(req.Seq)
+		pic := s.GetPic(req.Pic)
 		if m.Subj == "pic.del" {
-			s.Pics = append(s.Pics[:req.Pic], s.Pics[req.Pic+1:]...)
+			if pic != nil {
+				s.Pics = append(s.Pics[:req.Pic], s.Pics[req.Pic+1:]...)
+				a.Bcast(site.RawMsg("pic.del", req), 0)
+			}
 		} else {
-			s.Pics = append(s.Pics, a.newPic())
+			if pic == nil {
+				s.Pics = append(s.Pics, a.newPic())
+				req.Pic = len(s.Pics) - 1
+				a.Bcast(site.RawMsg("pic.new", req), 0)
+			}
 		}
 	case "pic.edit":
 		var req EditPic
@@ -182,14 +201,8 @@ func (r *Room) handleSub(m *hub.Msg, a *AssetSubs) *hub.Msg {
 		if err != nil {
 			return m.ReplyErr(err)
 		}
-		// share edit with subscribers
-		bcast := site.RawMsg("pic.edit", req)
-		for _, c := range a.Subs {
-			if c.ID() != m.From.ID() {
-				c.Chan() <- bcast
-			}
-		}
-		return m.Reply(req)
+		// share edit with all subscribers
+		a.Bcast(site.RawMsg("pic.edit", req), 0)
 	}
 	return nil
 }
