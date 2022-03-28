@@ -12,7 +12,7 @@ type EditPic struct {
 type Sel struct {
 	Pos
 	Size
-	Data []int16 `json:"data"`
+	Data []Pixel `json:"data"`
 }
 
 type Pos struct {

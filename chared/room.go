@@ -106,15 +106,11 @@ func (r *Room) handle(m *hub.Msg) *hub.Msg {
 		default:
 			return m.ReplyErr(fmt.Errorf("invalid kind"))
 		}
-		if req.Pal.Colors == nil {
+		if req.Pal.Feat == nil {
 			req.Pal = DefaultPallette()
 		}
 		if len(req.Seq) == 0 {
-			req.Seq = []*Sequence{
-				{Name: "seq0", Pics: [][]int16{
-					make([]int16, req.W*req.H),
-				}},
-			}
+			req.AddSeq("seq0")
 		}
 		// TODO validate more asset details
 		err := r.Store.SaveAsset(&req)
@@ -141,35 +137,29 @@ func (r *Room) handleSub(m *hub.Msg, a *AssetSubs) *hub.Msg {
 	case "seq.new", "seq.del":
 		var req struct {
 			Name string
-			Pics int
 		}
 		m.Unmarshal(&req)
 		if req.Name == "" {
 			return m.ReplyErr(fmt.Errorf("sequence must have a name"))
 		}
-		found := -1
-		for i, seq := range a.Seq {
-			if seq.Name == req.Name {
-				found = i
-				break
-			}
-		}
+		s := a.GetSeq(req.Name)
 		if m.Subj == "seq.del" {
-			if found == -1 {
+			if s == nil {
 				return m.ReplyRes(false)
 			}
 			// remove seq from asset and save
-			a.Seq = append(a.Seq[:found], a.Seq[found+1:]...)
+			for i, o := range a.Seq {
+				if o == s {
+					a.Seq = append(a.Seq[:i], a.Seq[i+1:]...)
+					break
+				}
+			}
 			return m.ReplyRes(true)
 		}
-		if req.Pics < 1 {
-			req.Pics = 1
+		if s == nil {
+			s = a.AddSeq(req.Name)
 		}
-		pics := make([][]int16, req.Pics)
-		for i := range pics {
-			pics[i] = make([]int16, a.W*a.H)
-		}
-		a.Seq = append(a.Seq, &Sequence{Name: req.Name, Pics: pics})
+		return m.Reply(s)
 	// TODO case "seq.edit":
 	//	maybe rename and moving pics around in seq
 	case "pic.new", "pic.del":
@@ -182,7 +172,7 @@ func (r *Room) handleSub(m *hub.Msg, a *AssetSubs) *hub.Msg {
 		if m.Subj == "pic.del" {
 			s.Pics = append(s.Pics[:req.Pic], s.Pics[req.Pic+1:]...)
 		} else {
-			s.Pics = append(s.Pics, make([]int16, a.W*a.H))
+			s.Pics = append(s.Pics, a.newPic())
 		}
 	case "pic.edit":
 		var req EditPic

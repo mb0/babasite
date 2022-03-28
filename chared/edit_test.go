@@ -10,30 +10,30 @@ func TestCopySel(t *testing.T) {
 		name string
 		pic  Pic
 		sel  Sel
-		want []int16
+		want []Pixel
 	}{
-		{"fill copy", Pic{Size{3, 3}, make([]int16, 9)}, Sel{
+		{"fill copy", Pic{Size{3, 3}, make([]Pixel, 9)}, Sel{
 			Size: Size{W: 3, H: 3},
-			Data: []int16{1, 1, 1, 1, 1, 1, 1, 1, 1},
-		}, []int16{
+			Data: []Pixel{1, 1, 1, 1, 1, 1, 1, 1, 1},
+		}, []Pixel{
 			1, 1, 1,
 			1, 1, 1,
 			1, 1, 1,
 		}},
-		{"fill part", Pic{Size{3, 3}, make([]int16, 9)}, Sel{
+		{"fill part", Pic{Size{3, 3}, make([]Pixel, 9)}, Sel{
 			Pos:  Pos{X: 1, Y: 1},
 			Size: Size{W: 2, H: 2},
-			Data: []int16{1, 2, 3, 4},
-		}, []int16{
+			Data: []Pixel{1, 2, 3, 4},
+		}, []Pixel{
 			0, 0, 0,
 			0, 1, 2,
 			0, 3, 4,
 		}},
-		{"dot end", Pic{Size{3, 3}, make([]int16, 9)}, Sel{
+		{"dot end", Pic{Size{3, 3}, make([]Pixel, 9)}, Sel{
 			Pos:  Pos{X: 1, Y: 2},
 			Size: Size{W: 1, H: 1},
-			Data: []int16{1},
-		}, []int16{
+			Data: []Pixel{1},
+		}, []Pixel{
 			0, 0, 0,
 			0, 0, 0,
 			0, 1, 0,
