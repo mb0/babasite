@@ -1,5 +1,6 @@
 import {app, h} from './app.js'
 import {chat} from './chat.js'
+import {newZoomCanvas} from './canvas.js'
 
 let map = null
 let listeners = {}
@@ -7,9 +8,10 @@ app.addView({name: "gol",
     label: "Game Of Life",
 	start(app) {
 		chat.start(app)
-		let canvas = h('canvas#our-canvas', {width:800, height:600, style: "background-color:white"})
+        let c = newZoomCanvas("our-canvas", 800, 600)
+        c.zoom(10)
         app.cont.appendChild(h('#game-view', app.linksFor("gol"),
-            canvas,
+            c.el,
             h('',
                 h('button',{type:'button', onclick:function(e) {
                     app.send("step")
@@ -22,25 +24,29 @@ app.addView({name: "gol",
                 }}, 'Play/Stop'),
             ),
         ))
-		let ctx = canvas.getContext("2d")
-		canvas.addEventListener("click", onClick)
+		c.el.addEventListener("click", e => {
+            let p = c.stagePos(e)
+            if (p) app.send("click", p)
+        })
+        c.init(paintMap)
         listeners = {
             click: p => {
+                if (!map) return
                 let color = "green"
-                if (map != null) {
-                    let i = p.y*map.w+p.x
-                    if (map.tiles[i] <= 0) {
-                        color = "green"
-                        map.tiles[i] = 1
-                    } else {
-                        color = "white"
-                        map.tiles[i] = 0
-                    }
+                let i = p.y*map.w+p.x
+                if (map.tiles[i] <= 0) {
+                    color = "green"
+                    map.tiles[i] = 1
+                } else {
+                    color = "white"
+                    map.tiles[i] = 0
                 }
-                paintAt(ctx, p.x, p.y, color)
+                paintAt(c, p.x, p.y, color)
             },
             map: m => {
-                paintMap(ctx, map = m)
+                map = m
+                c.resize(m.w, m.h)
+                paintMap(c)
             },
         }
         app.on(listeners)
@@ -51,28 +57,19 @@ app.addView({name: "gol",
 	}
 })
 
-function paintAt(ctx, x, y, color) {
-    ctx.fillStyle = color
-    ctx.fillRect(x*10, y*10, 10, 10)
+function paintAt(c, x, y, color) {
+    c.ctx.fillStyle = color
+    c.ctx.fillRect(x, y, 1, 1)
 }
 
-function paintMap(ctx, map) {
-    ctx.fillStyle = "white"
-    ctx.fillRect(0,0,800,600)
+function paintMap(c) {
+    c.clear()
     for (let y = 0; y < map.h; y++) {
         for (let x = 0; x < map.w; x++) {
             let tile = map.tiles[y*map.w+x]
             if (tile > 0) {
-                paintAt(ctx, x, y, "green")
+                paintAt(c, x, y, "green")
             }
         }
     }
 }
-
-function onClick(e) {
-    app.send("click", {
-        x: Math.floor((e.pageX - e.target.offsetLeft)/10),
-        y: Math.floor((e.pageY - e.target.offsetTop)/10),
-    })
-}
-
