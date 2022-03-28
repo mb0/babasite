@@ -103,6 +103,7 @@ function assetEditor(a) {
     }
     c.resize(a.w, a.h)
     c.el.addEventListener("mousedown", e => {
+        if (e.button != 0) return
         c.startDrag(e => {
             if (ed.tool == 'paint') {
                 let p = c.stagePos(e)
@@ -153,7 +154,7 @@ function colorView(ed) {
             pal.colors.map((c, tile) => h('span', {
                 style:"background-color:"+cssColor(c),
                 onclick: e => {
-                    if (ed.fg == c) return
+                    if (ed.fg == tile) return
                     ed.fg = tile
                     ed.fgcolor = cssColor(c)
                 },
@@ -165,7 +166,7 @@ function colorView(ed) {
     )
 }
 
-function toolView() {
+function toolView(ed) {
     let tools = [
         {name:'paint'},
         {name:'erase'},
