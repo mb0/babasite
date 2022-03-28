@@ -1,32 +1,52 @@
-import {app, h} from './app.js'
+import {app, h, hReplace} from './app.js'
 import {chat} from './chat.js'
+import {newZoomCanvas, cssColor} from './canvas.js'
 
-let cont = null
+let cssStyle = `
+.pal span {
+    display: inline-block;
+    width:40px;
+    height:20px;
+}
+.tool span + span {
+    padding-left: 4px;
+}
+#chared section {
+    border: thin solid black;
+}
+.inline {
+    display: inline-block;
+    vertical-align: top;
+}
+#chared ul {
+    list-style: none;
+    padding: 0;
+}
+`
 let listeners = {}
-let infos = []
 app.addView({name: "chared",
     label: "Character Editor",
     start(app) {
         chat.start(app)
-        cont = h('')
-        app.cont.appendChild(h('#chared-view',
-            app.linksFor("chared"), cont,
+        let assets = h('')
+        let cont = h('')
+        let editor = null
+        app.cont.appendChild(h('#chared',
+            h('style', cssStyle),
+            app.linksFor("chared"), assets, cont,
         ))
         listeners = {
             "init": res => {
-                infos = res.assets
-                cont.appendChild(assetSelect(infos))
-                cont.appendChild(assetForm({}))
+                assets.appendChild(assetSelect(res.assets))
+                hReplace(cont, assetForm({}))
             },
             "asset.new": res => {
-                cont.innerHTML = ""
-                cont.appendChild(assetSelect(infos))
-                cont.appendChild(assetEditor(res))
+                editor = assetEditor(res)
+                hReplace(cont, editor.el)
             },
             "asset.open": res => {
-                cont.innerHTML = ""
-                cont.appendChild(assetSelect(infos))
-                cont.appendChild(assetEditor(res))
+                editor = assetEditor(res)
+                hReplace(cont, editor.el)
             }
         }
         app.on(listeners)
@@ -47,7 +67,6 @@ function assetSelect(infos) {
         h('header', 'Asset auswählen'),
         h('ul', infos.map(info => h('li', h('a', {href:'?', onclick: e =>{
             e.preventDefault()
-            console.log("select asset", info.name)
             app.send("asset.open", {id:info.id})
         }}, info.name))))
     )
@@ -62,7 +81,6 @@ function assetForm(a) {
     let submit = e => {
         e.preventDefault()
         let a = {name: name.value, kind: kind.value}
-        console.log('submit asset form', a)
         app.send("asset.new", a)
     }
     return h('section',
@@ -76,19 +94,87 @@ function assetForm(a) {
 }
 
 function assetEditor(a) {
-    return h('', 'Asset: '+ a.name +', art: '+ a.kind,
-        !a.seq ? h('', 'no sequnces') : a.seq.map(s => h('', s.name)),
-        // tools and color pallette
-        h('', 'Pallette '+ a.pal.name,
-            !a.pal.colors ? h('', 'no colors') : a.pal.colors.map(c => 
-                h('input', {type:'color', value: cssColor(c)})
-            )
-        )
+    let c = newZoomCanvas("our-canvas", 800, 600)
+    c.zoom(8)
+    c.move(8, 8)
+    let ed = {a, c, el: h(''),
+        tool:'paint', fg:1, fgcolor:'#000000',
+        map: new Array(a.w*a.h),
+    }
+    c.resize(a.w, a.h)
+    c.el.addEventListener("mousedown", e => {
+        c.startDrag(e => {
+            if (ed.tool == 'paint') {
+                let p = c.stagePos(e)
+                if (!p) return
+                let i = p.y*a.w+p.x
+                ed.map[i] = ed.fg
+                c.ctx.fillStyle = ed.fgcolor
+                c.ctx.fillRect(p.x, p.y, 1, 1)
+            }
+        })
+    })
+    c.init(() => {
+        c.clear()
+        for (let y = 0; y < a.h; y++) {
+            for (let x = 0; x < a.w; x++) {
+                let tile = ed.map[y*a.w+x]
+                if (tile) {
+                    c.ctx.fillStyle = cssColor(a.pal.colors[tile])
+                    c.ctx.fillRect(x, y, 1, 1)
+                }
+            }
+        }
+    })
+    c.clear()
+    hReplace(ed.el,
+        sequenceView(ed),
         // canvas
+        c.el,
+        // tools and color pallette
+        h('', toolView(ed), colorView(ed)),
+    )
+    return ed
+}
+function sequenceView(ed) {
+    let a = ed.a
+    return h('section.seq',
+        h('header', 'Sequences for '+ a.kind +' '+ a.name),
+        h('', !a.seq ? "no sequences" :
+            a.seq.map(s => h('span', s.name)),
+        )
+    )
+}
+function colorView(ed) {
+    let pal = ed.a.pal
+    return h('section.pal.inline',
+        h('header', 'Pallette: '+ pal.name),
+        h('', !pal.colors ? "no colors" :
+            pal.colors.map((c, tile) => h('span', {
+                style:"background-color:"+cssColor(c),
+                onclick: e => {
+                    if (ed.fg == c) return
+                    ed.fg = tile
+                    ed.fgcolor = cssColor(c)
+                },
+            })),
+            h('span', {onclick: e => {
+                console.log("add color")
+            }}, '+')
+        )
     )
 }
 
-function cssColor(c) {
-    let s = c.toString(16)
-    return '#' + '000000'.slice(s.length) + s
+function toolView() {
+    let tools = [
+        {name:'paint'},
+        {name:'erase'},
+        {name:'select'},
+    ]
+    return h('section.tool.inline',
+        h('header', 'Tools'),
+        h('', tools.map(tool => h('span', {onclick: e => {
+            ed.tool = tool.name
+        }}, tool.name)))
+    )
 }
