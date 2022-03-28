@@ -1,7 +1,7 @@
 import {h} from './app.js'
 
 export function newZoomCanvas(id, width, height, bg) {
-    let s = {x:0, y:0, w:0, h:0, zoom:1, bg: bg||"gray"}
+    let s = {x:0, y:0, w:0, h:0, zoom:1, bg: "white"}
     let el = h('canvas', {id, width, height})
     let ctx = el.getContext("2d")
     ctx.imageSmoothingEnabled = false
@@ -20,12 +20,12 @@ export function newZoomCanvas(id, width, height, bg) {
         },
         clear: () => {
             ctx.resetTransform()
-            ctx.fillStyle = s.bg
+            ctx.fillStyle = bg||"gray"
             ctx.fillRect(0, 0, el.width, el.height)
             ctx.transform(s.zoom, 0, 0, s.zoom, s.x, s.y)
             ctx.strokeStyle = "black"
             ctx.strokeRect(0, 0, s.w, s.h)
-            ctx.fillStyle = "white"
+            ctx.fillStyle = s.bg
             ctx.fillRect(0, 0, s.w, s.h)
         },
         stagePos: (e) => {

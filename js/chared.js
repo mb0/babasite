@@ -8,6 +8,11 @@ let cssStyle = `
     width:40px;
     height:20px;
 }
+.pal label {
+    display: inline-block;
+    width:60px;
+    height:20px;
+}
 .tool span + span {
     padding-left: 4px;
 }
@@ -83,7 +88,7 @@ function assetForm(a) {
         let a = {name: name.value, kind: kind.value}
         app.send("asset.new", a)
     }
-    return h('section',
+    return h('section.form',
         h('header', 'Asset erstellen'),
         h('form', {onsubmit:submit},
             h('', h('label', "Name"), name),
@@ -95,33 +100,34 @@ function assetForm(a) {
 
 function assetEditor(a) {
     let c = newZoomCanvas("our-canvas", 800, 600)
+    c.stage.bg = cssColor(assetColor(a, 0))
     c.zoom(8)
     c.move(8, 8)
     let ed = {a, c, el: h(''),
-        tool:'paint', fg:1, fgcolor:'#000000',
+        tool:'paint', fg:1, fgcolor:cssColor(assetColor(a, 1)),
         map: new Array(a.w*a.h),
     }
     c.resize(a.w, a.h)
     c.el.addEventListener("mousedown", e => {
         if (e.button != 0) return
-        c.startDrag(e => {
+        let paint = e => {
             if (ed.tool == 'paint') {
                 let p = c.stagePos(e)
                 if (!p) return
-                let i = p.y*a.w+p.x
-                ed.map[i] = ed.fg
+                ed.map[p.y*a.w+p.x] = ed.fg
                 c.ctx.fillStyle = ed.fgcolor
                 c.ctx.fillRect(p.x, p.y, 1, 1)
             }
-        })
+        }
+        c.startDrag(paint, paint)
     })
     c.init(() => {
         c.clear()
         for (let y = 0; y < a.h; y++) {
             for (let x = 0; x < a.w; x++) {
-                let tile = ed.map[y*a.w+x]
-                if (tile) {
-                    c.ctx.fillStyle = cssColor(a.pal.colors[tile])
+                let p = ed.map[y*a.w+x]
+                if (p) {
+                    c.ctx.fillStyle = cssColor(assetColor(a, p))
                     c.ctx.fillRect(x, y, 1, 1)
                 }
             }
@@ -137,6 +143,17 @@ function assetEditor(a) {
     )
     return ed
 }
+function assetColor(a, pixel) {
+    let c = pixel%100
+    let f = (pixel-c)/100
+    if (a && a.pal && a.pal.feat) {
+        let feat = a.pal.feat[f]
+        if (feat && feat.colors && c < feat.colors.length) {
+            return feat.colors[c]
+        }
+    }
+    return 0
+}
 function sequenceView(ed) {
     let a = ed.a
     return h('section.seq',
@@ -150,15 +167,18 @@ function colorView(ed) {
     let pal = ed.a.pal
     return h('section.pal.inline',
         h('header', 'Pallette: '+ pal.name),
-        h('', !pal.colors ? "no colors" :
-            pal.colors.map((c, tile) => h('span', {
-                style:"background-color:"+cssColor(c),
-                onclick: e => {
-                    if (ed.fg == tile) return
-                    ed.fg = tile
-                    ed.fgcolor = cssColor(c)
-                },
-            })),
+        h('', !pal.feat ? "no features" :
+            pal.feat.map((feat, f) => h('', h('label', feat.name),
+                feat.colors.map((color, c) => h('span', {
+                    style:"background-color:"+cssColor(color),
+                    onclick: e => {
+                        let pixel = f*100+c
+                        if (ed.fg == pixel) return
+                        ed.fg = pixel
+                        ed.fgcolor = cssColor(color)
+                    },
+                })),
+            )),
             h('span', {onclick: e => {
                 console.log("add color")
             }}, '+')
