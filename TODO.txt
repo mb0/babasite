@@ -1,22 +1,18 @@
 babasite
 ========
 
-Gamemap
-w:4
-[h,1,0,1,
- 1,1,0,x,
- 1,1,1,1
-]
-map[y][x]
-map[y*w+x]
+Aufgaben
+--------
 
-Allgemein
----------
-- Chat Räume
-- Lobby
-- Mapeditor
-- Benutzeranmelden (Admin)
- 
+Simon: Rätzelideen sammeln und aufschreiben
+
+Jakob: Inspirierende Bilder zum Thema Mondbasis zusammenstellen
+
+Martin: Character editor weiter programmieren
+    * Farbgruppen
+    * Server Übertragung und Speicherung
+    * Interface anpassen (siehe Skizze von Jakob)
+
 Rätselspiel
 -----------
 
