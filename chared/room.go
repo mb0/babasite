@@ -109,6 +109,13 @@ func (r *Room) handle(m *hub.Msg) *hub.Msg {
 		if req.Pal.Colors == nil {
 			req.Pal = DefaultPallette()
 		}
+		if len(req.Seq) == 0 {
+			req.Seq = []*Sequence{
+				{Name: "seq0", Pics: [][]int16{
+					make([]int16, req.W*req.H),
+				}},
+			}
+		}
 		// TODO validate more asset details
 		err := r.Store.SaveAsset(&req)
 		if err != nil {
