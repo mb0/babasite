@@ -3,10 +3,10 @@ package chared
 import (
 	"fmt"
 	"log"
+	"path/filepath"
 	"sort"
 
 	"github.com/mb0/babasite/site"
-	"github.com/tidwall/buntdb"
 	"xelf.org/daql/hub"
 )
 
@@ -25,15 +25,15 @@ func (a *AssetSubs) Bcast(m *hub.Msg, except int64) {
 
 type Room struct {
 	site.ChatRoom
-	Store  *BuntStore
+	Store  *FileStore
 	Assets map[uint32]*AssetSubs
 	Subs   map[int64]uint32
 }
 
-func NewRoom(name string, db *buntdb.DB) *Room {
+func NewRoom(name string, datapath string) *Room {
 	r := &Room{
 		ChatRoom: *site.NewChat(name),
-		Store:    NewBuntStore(db),
+		Store:    NewFileStore(filepath.Join(datapath, "chared")),
 		Assets:   make(map[uint32]*AssetSubs),
 		Subs:     make(map[int64]uint32),
 	}

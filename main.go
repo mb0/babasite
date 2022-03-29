@@ -16,7 +16,8 @@ import (
 )
 
 var addr = flag.String("addr", "localhost:8080", "http server address")
-var dbpath = flag.String("db", "data.db", "buntdb file path or :memory:")
+var datapath = flag.String("data", "data/", "data path")
+var dbpath = flag.String("db", "data/data.db", "buntdb file path or :memory:")
 
 func main() {
 	// parse the above command line args e.g. "babasite -db=./mydata.db"
@@ -43,7 +44,7 @@ func main() {
 		site.NewChat("simple"),
 		gol.NewRoom("gol"),
 		maped.NewRoom("maped"),
-		chared.NewRoom("chared", db),
+		chared.NewRoom("chared", *datapath),
 	)
 
 	// create a mux or also known as router where we provide session cookies
