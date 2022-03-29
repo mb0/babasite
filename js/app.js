@@ -96,8 +96,16 @@ app.addView({
             if (location.hash && location.hash.length > 0) {
                 app.send("enter", {room:location.hash.slice(1)})
             } else {
-                el.innerHTML = ''
-                el.appendChild(app.linksFor('lobby'))
+                hReplace(el, 
+                    h('', 'babasite', h('sup', 'beta')),
+                    h('.menu', app.views.filter(v =>
+                        v != app.cur && v.name != 'lobby'
+                    ).map(v =>
+                        h('', {onclick:e => {
+                            app.send("enter", {room:v.name})
+                        }}, v.label||v.name)
+                    )),
+                )
             }
         })
         app.connect()
