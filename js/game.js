@@ -10,7 +10,7 @@ app.addView({name: "gol",
 		chat.start(app)
         let c = newZoomCanvas("our-canvas", 800, 600)
         c.zoom(10)
-        app.cont.appendChild(h('#game-view', app.linksFor("gol"),
+        app.cont.appendChild(h('#game-view',
             c.el,
             h('',
                 h('button',{type:'button', onclick:function(e) {

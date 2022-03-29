@@ -8,7 +8,7 @@ app.addView({name: "simple",
 		stop = false
 		chat.start(app)
 		let canvas = h('canvas#our-canvas', {width:800, height:600, style: "background-color:white"})
-		app.cont.appendChild(h('#simple-view', app.linksFor("simple"),
+		app.cont.appendChild(h('#simple-view',
 			canvas,
 		))
 		let ctx = canvas.getContext("2d")

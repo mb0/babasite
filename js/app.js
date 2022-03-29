@@ -1,31 +1,24 @@
 let ws = null
-let cur = null
-let views = []
 let listeners = {}
 export let app = {
+    cur: null,
+    views: [],
     cont: document.querySelector("#app"),
     addOutput(text) {
         console.log(text)
     },
     addView(view) {
-        views.push(view)
+        this.views.push(view)
         return view
     },
-    linksFor(name) {
-        return h('', views.filter(v => v.name != name && v.name != 'lobby').map(v =>
-            h('button', {type:'button', onclick:e => {
-                app.send("enter", {room:v.name})
-            }}, v.label||v.name)
-        ))
-    },
     show(name) {
-        let v = views.find(v => v.name == name)
+        let v = this.views.find(v => v.name == name)
         if (!v) return
-        if (cur) cur.stop()
+        if (this.cur) this.cur.stop()
         app.cont.innerHTML = ''
+        this.cur = v
         v.start(this)
-        cur = v
-        if (v.name != 'lobby') location.hash = '#'+ cur.name
+        if (v.name != 'lobby') location.hash = '#'+ v.name
     },
     start() {
         app.on('_close', () => app.show('lobby'))

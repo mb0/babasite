@@ -37,8 +37,7 @@ app.addView({name: "chared",
         let cont = h('')
         let editor = null
         app.cont.appendChild(h('#chared',
-            h('style', cssStyle),
-            app.linksFor("chared"), assets, cont,
+            h('style', cssStyle), assets, cont,
         ))
         listeners = {
             "init": res => {

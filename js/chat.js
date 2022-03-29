@@ -22,7 +22,17 @@ export let chat = {
 			input.value = ""
 		}
 		app.cont.appendChild(h('#chat-view',
-			h('h1', 'Chat'),
+			h('header', 
+				h('', 'babasite', h('sup', 'beta')),
+				h('.menu', app.views.filter(v =>
+					v != app.cur && v.name != 'lobby'
+				).map(v =>
+					h('', {onclick:e => {
+						app.send("enter", {room:v.name})
+					}}, v.label||v.name)
+				)),
+				h('h2', app.cur.label),
+			),
 			output, form,
 		))
 		app.on(listeners)

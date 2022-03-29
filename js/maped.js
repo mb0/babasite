@@ -13,7 +13,7 @@ app.addView({name: "maped",
         c.zoom(8)
         c.move(20, 30)
         let tiles = h('')
-        app.cont.appendChild(h('#maped-view', app.linksFor("maped"), c.el, tiles))
+        app.cont.appendChild(h('#maped-view', c.el, tiles))
         c.el.addEventListener("click", e => {
             let p = c.stagePos(e)
             if (!p) return
