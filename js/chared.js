@@ -1,6 +1,7 @@
 import {app, h, hReplace} from './app.js'
 import {chat} from './chat.js'
 import {newZoomCanvas, cssColor} from './canvas.js'
+import {mount, unmount} from './modal.js'
 
 let cssStyle = `
 .pal span {
@@ -35,23 +36,39 @@ app.addView({name: "chared",
         chat.start(app)
         let assets = h('')
         let cont = h('')
-        let editor = null
+        let ed = null
         app.cont.appendChild(h('#chared',
             h('style', cssStyle), assets, cont,
         ))
         listeners = {
             "init": res => {
                 assets.appendChild(assetSelect(res.assets))
-                hReplace(cont, assetForm({}))
             },
             "asset.new": res => {
-                editor = assetEditor(res)
-                hReplace(cont, editor.el)
+                ed = assetEditor(res)
+                hReplace(cont, ed.el)
             },
             "asset.open": res => {
-                editor = assetEditor(res)
-                hReplace(cont, editor.el)
-            }
+                ed = assetEditor(res)
+                hReplace(cont, ed.el)
+            },
+            "pic.edit": (res, subj) => {
+                if (isErr(res, subj) || !ed) return
+                // get pic
+                let s = ed.a.seq.find(s => s.name == res.seq)
+                if (!s) return
+                let pic = s.pics[res.pic]
+                // update pic
+                for (let i=0; i < res.data.length; i++) {
+                    let p = res.data[i]
+                    if (!p && !res.copy) continue
+                    let x = i%res.w
+                    let y = (i-x)/res.w
+                    pic[y*ed.a.w+x] = p
+                }
+                // repaint canvas
+                ed.repaint()
+            },
         }
         app.on(listeners)
     },
@@ -60,6 +77,13 @@ app.addView({name: "chared",
         app.off(listeners)
     }
 })
+function isErr(res, subj) {
+    if (res&&res.err) {
+        console.error("error message: "+ subj, res.err)
+        return true
+    }
+    return false
+}
 let kinds = [
     {kind:'char', name:'Character'},
     {kind:'tile', name:'Map Tile'},
@@ -68,28 +92,33 @@ let kinds = [
 
 function assetSelect(infos) {
     return h('section',
-        h('header', 'Asset auswählen'),
-        h('ul', infos.map(info => h('li', h('a', {href:'?', onclick: e =>{
+        h('header', 'Asset auswählen oder ', h('a', {href:'#', onclick: e => {
+            e.preventDefault()
+            mount(assetForm({}, a => {
+                app.send("asset.new", a)
+                unmount()
+            }))
+        }}, 'neu erstellen')),
+        h('ul', infos.map(info => h('li', h('a', {href:'#', onclick: e =>{
             e.preventDefault()
             app.send("asset.open", {id:info.id})
         }}, info.name))))
     )
 }
 
-function assetForm(a) {
+function assetForm(a, submit) {
     a = a || {}
     let name = h('input', {type:'text', value:a.name||''})
     let kind = h('select', kinds.map(k =>
         h('option', {selected:k.kind==a.kind, value:k.kind}, k.name)
     ))
-    let submit = e => {
+    let onsubmit = e => {
         e.preventDefault()
-        let a = {name: name.value, kind: kind.value}
-        app.send("asset.new", a)
+        submit({name: name.value, kind: kind.value})
     }
     return h('section.form',
         h('header', 'Asset erstellen'),
-        h('form', {onsubmit:submit},
+        h('form', {onsubmit},
             h('', h('label', "Name"), name),
             h('', h('label', "Art"), kind),
             h('button', 'Neu Anlegen')
@@ -103,35 +132,51 @@ function assetEditor(a) {
     c.zoom(8)
     c.move(8, 8)
     let ed = {a, c, el: h(''),
+        seq: null, pic: 0,
         tool:'paint', fg:1, fgcolor:cssColor(assetColor(a, 1)),
         map: new Array(a.w*a.h),
+        repaint() {
+            c.clear()
+            if (!ed.seq) return
+            let pic = ed.seq.pics[ed.pic]
+            for (let y = 0; y < a.h; y++) {
+                for (let x = 0; x < a.w; x++) {
+                    let idx = y*a.w+x
+                    let p = ed.map[idx] || pic[idx]
+                    if (p) {
+                        c.ctx.fillStyle = cssColor(assetColor(a, p))
+                        c.ctx.fillRect(x, y, 1, 1)
+                    }
+                }
+            }
+        }
     }
+    if (a.seq && a.seq.length) ed.seq = a.seq[0]
     c.resize(a.w, a.h)
     c.el.addEventListener("mousedown", e => {
         if (e.button != 0) return
-        let paint = e => {
             if (ed.tool == 'paint') {
+            let paint = e => {
                 let p = c.stagePos(e)
                 if (!p) return
                 ed.map[p.y*a.w+p.x] = ed.fg
                 c.ctx.fillStyle = ed.fgcolor
                 c.ctx.fillRect(p.x, p.y, 1, 1)
             }
-        }
-        c.startDrag(paint, paint)
-    })
-    c.init(() => {
-        c.clear()
-        for (let y = 0; y < a.h; y++) {
-            for (let x = 0; x < a.w; x++) {
-                let p = ed.map[y*a.w+x]
-                if (p) {
-                    c.ctx.fillStyle = cssColor(assetColor(a, p))
-                    c.ctx.fillRect(x, y, 1, 1)
-                }
-            }
+            c.startDrag(paint, e => {
+                paint(e)
+                if (!ed.map.find(p => !!p)) return
+                app.send("pic.edit", {
+                    seq:ed.seq.name,
+                    pic:ed.pic,
+                    w:a.w,
+                    h:a.h,
+                    data:ed.map,
+                })
+            })
         }
     })
+    c.init(ed.repaint)
     c.clear()
     hReplace(ed.el,
         sequenceView(ed),
