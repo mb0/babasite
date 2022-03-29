@@ -34,18 +34,19 @@ app.addView({name: "chared",
     label: "Character Editor",
     start(app) {
         chat.start(app)
-        let assets = h('')
+        let assets = assetSelect([])
         let cont = h('')
         let ed = null
         app.cont.appendChild(h('#chared',
-            h('style', cssStyle), assets, cont,
+            h('style', cssStyle), assets.el, cont,
         ))
         listeners = {
             "init": res => {
-                assets.appendChild(assetSelect(res.assets))
+                assets.update(res.assets)
             },
             "asset.new": res => {
                 ed = assetEditor(res)
+                assets.addInfo({id:res.id, name:res.name, kind:res.kind})
                 hReplace(cont, ed.el)
             },
             "asset.open": res => {
@@ -91,7 +92,8 @@ let kinds = [
 ]
 
 function assetSelect(infos) {
-    return h('section',
+    let list = h('ul')
+    let el = h('section',
         h('header', 'Asset auswählen oder ', h('a', {href:'#', onclick: e => {
             e.preventDefault()
             mount(assetForm({}, a => {
@@ -99,11 +101,27 @@ function assetSelect(infos) {
                 unmount()
             }))
         }}, 'neu erstellen')),
-        h('ul', infos.map(info => h('li', h('a', {href:'#', onclick: e =>{
+        list
+    )
+    let res = {el,
+        update(infos) {
+            res.infos = infos
+            hReplace(list, infos.map(info => h('li', h('a', {href:'#', onclick: e =>{
             e.preventDefault()
             app.send("asset.open", {id:info.id})
         }}, info.name))))
+        },
+        addInfo(info) {
+            let all = res.infos
+            all.push(info)
+            all.sort((a, b) => 
+                a.name < b.name ? -1 : (a.name > b.name ? 1 : 0)
     )
+            res.update(all)
+        }
+    }
+    res.update(infos)
+    return res
 }
 
 function assetForm(a, submit) {
