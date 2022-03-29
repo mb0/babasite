@@ -177,7 +177,7 @@ function assetEditor(a) {
         }
     })
     c.init(ed.repaint)
-    c.clear()
+    ed.repaint()
     hReplace(ed.el,
         sequenceView(ed),
         // canvas

@@ -201,6 +201,10 @@ func (r *Room) handleSub(m *hub.Msg, a *AssetSubs) *hub.Msg {
 		if err != nil {
 			return m.ReplyErr(err)
 		}
+		err = r.Store.SaveAsset(a.Asset)
+		if err != nil {
+			return m.ReplyErr(err)
+		}
 		// share edit with all subscribers
 		a.Bcast(site.RawMsg("pic.edit", req), 0)
 	}
