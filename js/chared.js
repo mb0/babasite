@@ -65,10 +65,12 @@ app.addView({name: "chared",
                     if (!p && !res.copy) continue
                     let x = i%res.w
                     let y = (i-x)/res.w
-                    pic[y*ed.a.w+x] = p
+                    pic[(y+res.y)*ed.a.w+(x+res.x)] = p
                 }
-                // repaint canvas
+                // repaint canvas if current pic
+                if (ed.seq == s && ed.pic == res.pic) {
                 ed.repaint()
+                }
             },
         }
         app.on(listeners)
@@ -149,10 +151,12 @@ function assetEditor(a) {
     c.stage.bg = cssColor(assetColor(a, 0))
     c.zoom(8)
     c.move(8, 8)
+    let map = new Array(a.w*a.h)
+    let min = {x:a.w, y:a.h}
+    let max = {x:0, y:0}
     let ed = {a, c, el: h(''),
         seq: null, pic: 0,
         tool:'paint', fg:1, fgcolor:cssColor(assetColor(a, 1)),
-        map: new Array(a.w*a.h),
         repaint() {
             c.clear()
             if (!ed.seq) return
@@ -160,7 +164,7 @@ function assetEditor(a) {
             for (let y = 0; y < a.h; y++) {
                 for (let x = 0; x < a.w; x++) {
                     let idx = y*a.w+x
-                    let p = ed.map[idx] || pic[idx]
+                    let p = map[idx] || pic[idx]
                     if (p) {
                         c.ctx.fillStyle = cssColor(assetColor(a, p))
                         c.ctx.fillRect(x, y, 1, 1)
@@ -177,20 +181,40 @@ function assetEditor(a) {
             let paint = e => {
                 let p = c.stagePos(e)
                 if (!p) return
-                ed.map[p.y*a.w+p.x] = ed.fg
+                if (p.y < min.y) min.y = p.y
+                if (p.y > max.y) max.y = p.y
+                if (p.x < min.x) min.x = p.x
+                if (p.x > max.x) max.x = p.x
+                map[p.y*a.w+p.x] = ed.fg
                 c.ctx.fillStyle = ed.fgcolor
                 c.ctx.fillRect(p.x, p.y, 1, 1)
             }
             c.startDrag(paint, e => {
                 paint(e)
-                if (!ed.map.find(p => !!p)) return
+                let w = 1+max.x-min.x
+                let h = 1+max.y-min.y
+                if (w <= 0 || h <= 0) return
+                let data = new Array(w*h)
+                for (let y=0; y < h; y++) {
+                    let u = y*w
+                    let v = (y+min.y)*a.w
+                    for (let x=0; x < w; x++) {
+                        data[u+x] = map[v+(x+min.x)]
+                    }
+                }
                 app.send("pic.edit", {
                     seq:ed.seq.name,
                     pic:ed.pic,
-                    w:a.w,
-                    h:a.h,
-                    data:ed.map,
+                    x:min.x,
+                    y:min.y,
+                    w, h, data,
                 })
+                // reset min, max and map
+                min = {x:a.w, y:a.h}
+                max = {x:0, y:0}
+                for (let i=0; i<map.length; i++) {
+                    map[i] = 0
+                }
             })
         }
     })
