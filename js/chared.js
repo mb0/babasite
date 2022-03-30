@@ -196,16 +196,27 @@ function tmpPic(w, h) {
     return tmp
 }
 
+function renderSeqs(ed) {
+    let seq = ed.a.seq
+    if (!seq) return "Keine Sequenzen"
+    return seq.map(s => 
+        h('span', {onclick(e) {
+           ed.selSeq(s) 
+        }}, s.name)
+    )
+}
+
 function assetEditor(a) {
     let c = newZoomCanvas("our-canvas", 800, 600)
-    c.stage.bg = cssColor(assetColor(a, 0))
+    c.resize(a.w, a.h)
     c.zoom(8)
     c.move(8, 8)
+    c.stage.bg = cssColor(assetColor(a, 0))
     let tmp = tmpPic(a.w, a.h)
-    let renderSeqs = () => !a.seq ? "no sequences" : a.seq.map(s => h('span', s.name))
-    let seqCont = h('', renderSeqs())
+    let seqCont = h('')
     let ed = {a, c, el: h(''),
-        seq: null, pic: 0,
+        seq: a.seq && a.seq.length ? a.seq[0] : null, 
+        pic: 0,
         tool:'paint', fg:1, fgcolor:cssColor(assetColor(a, 1)),
         repaint() {
             c.clear()
@@ -225,7 +236,7 @@ function assetEditor(a) {
         addSeq(s) {
             // add sequence to asset
             a.seq.push(s)
-            hReplace(seqCont, renderSeqs())
+            hReplace(seqCont, renderSeqs(ed))
         },
         delSeq(name) {
             // remove sequence from asset
@@ -233,14 +244,18 @@ function assetEditor(a) {
             if (idx >= 0) a.seq.splice(idx, 1)
             if (ed.seq && ed.seq.name == name) {
                 // change selection
-                ed.seq = a.seq.length ? a.seq[0] : null
-                ed.pic = 0
+                ed.selSeq(a.seq.length ? a.seq[0] : null)
             }
-            hReplace(seqCont, renderSeqs())
+            hReplace(seqCont, renderSeqs(ed))
+        },
+        selSeq(s) {
+            if (ed.seq == s) return
+            ed.seq = s
+                ed.pic = 0
+            tmp.reset()
+            ed.repaint()
         }
     }
-    if (a.seq && a.seq.length) ed.seq = a.seq[0]
-    c.resize(a.w, a.h)
     c.el.addEventListener("mousedown", e => {
         if (e.button != 0) return
             if (ed.tool == 'paint') {
@@ -267,6 +282,7 @@ function assetEditor(a) {
     c.init(ed.repaint)
     ed.repaint()
     let k = kinds.find(k => k.kind == a.kind)
+    hReplace(seqCont, renderSeqs(ed))
     hReplace(ed.el,
         h('section.seq',
             h('header', k.name +' '+ a.name +' Seqenzen:',
