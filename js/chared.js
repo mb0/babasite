@@ -28,6 +28,9 @@ let cssStyle = `
     list-style: none;
     padding: 0;
 }
+.seq span+span {
+    padding-left: 4px;
+}
 `
 let listeners = {}
 app.addView({name: "chared",
@@ -52,6 +55,14 @@ app.addView({name: "chared",
             "asset.open": res => {
                 ed = assetEditor(res)
                 hReplace(cont, ed.el)
+            },
+            "seq.new": (res, subj) => {
+                if (isErr(res, subj)||!ed) return
+                ed.addSeq(res)
+            },
+            "seq.del": (res, subj) => {
+                if (isErr(res, subj)||!ed) return
+                ed.delSeq(res.seq)
             },
             "pic.edit": (res, subj) => {
                 if (isErr(res, subj) || !ed) return
@@ -154,6 +165,8 @@ function assetEditor(a) {
     let map = new Array(a.w*a.h)
     let min = {x:a.w, y:a.h}
     let max = {x:0, y:0}
+    let renderSeqs = () => !a.seq ? "no sequences" : a.seq.map(s => h('span', s.name))
+    let seqCont = h('', renderSeqs())
     let ed = {a, c, el: h(''),
         seq: null, pic: 0,
         tool:'paint', fg:1, fgcolor:cssColor(assetColor(a, 1)),
@@ -171,6 +184,22 @@ function assetEditor(a) {
                     }
                 }
             }
+        },
+        addSeq(s) {
+            // add sequence to asset
+            a.seq.push(s)
+            hReplace(seqCont, renderSeqs())
+        },
+        delSeq(name) {
+            // remove sequence from asset
+            let idx = a.seq.findIndex(s => s.name == name)
+            if (idx >= 0) a.seq.splice(idx, 1)
+            if (ed.seq && ed.seq.name == name) {
+                // change selection
+                ed.seq = a.seq.length ? a.seq[0] : null
+                ed.pic = 0
+            }
+            hReplace(seqCont, renderSeqs())
         }
     }
     if (a.seq && a.seq.length) ed.seq = a.seq[0]
@@ -220,8 +249,20 @@ function assetEditor(a) {
     })
     c.init(ed.repaint)
     ed.repaint()
+    let k = kinds.find(k => k.kind == a.kind)
     hReplace(ed.el,
-        sequenceView(ed),
+        h('section.seq',
+            h('header', k.name +' '+ a.name +' Seqenzen:',
+                h('a', {href:'#', onclick(e) {
+                    e.preventDefault()
+                    mount(sequenceForm({}, s => {
+                        app.send("seq.new", {seq:s.name})
+                        unmount()
+                    }))
+                }}, '+')
+            ),
+            seqCont,
+        ),
         // canvas
         c.el,
         // tools and color pallette
@@ -240,15 +281,23 @@ function assetColor(a, pixel) {
     }
     return 0
 }
-function sequenceView(ed) {
-    let a = ed.a
-    return h('section.seq',
-        h('header', 'Sequences for '+ a.kind +' '+ a.name),
-        h('', !a.seq ? "no sequences" :
-            a.seq.map(s => h('span', s.name)),
+
+function sequenceForm(s, submit) {
+    s = s || {}
+    let name = h('input', {type:'text', value:s.name||''})
+    let onsubmit = e => {
+        e.preventDefault()
+        submit({name: name.value})
+    }
+    return h('section.form',
+        h('header', 'Sequenz erstellen'),
+        h('form', {onsubmit},
+            h('', h('label', "Name"), name),
+            h('button', 'Neu Anlegen')
         )
     )
 }
+
 function colorView(ed) {
     let pal = ed.a.pal
     return h('section.pal.inline',
