@@ -157,14 +157,51 @@ function assetForm(a, submit) {
     )
 }
 
+function tmpPic(w, h) {
+    const data = new Array(w*h)
+    let min = {x:w, y:h}
+    let max = {x:0, y:0}
+    let tmp = {data,
+        // reset min, max and map
+        reset() {
+            for (let y=min.y; y<=max.y; y++) {
+                for (let x=min.x; x<=max.x; x++) {
+                    data[y*w+x] = 0
+                }
+            }
+            min = {x:w, y:h}
+            max = {x:0, y:0}
+        },
+        paint(x, y, pixel) {
+            if (y < min.y) min.y = y
+            if (y > max.y) max.y = y
+            if (x < min.x) min.x = x
+            if (x > max.x) max.x = x
+            data[y*w+x] = pixel
+        },
+        getSel() {
+            const sel = {x:min.x, y:min.y, w:1+max.x-min.x, h:1+max.y-min.y, data:null}
+            if (sel.w <= 0 || sel.h <= 0) return null
+            sel.data = new Array(sel.w*sel.h)
+            for (let y=0; y < sel.h; y++) {
+                let u = y*sel.w
+                let v = (y+min.y)*w
+                for (let x=0; x < sel.w; x++) {
+                    sel.data[u+x] = data[v+(x+min.x)]
+                }
+            }
+            return sel
+        }
+    }
+    return tmp
+}
+
 function assetEditor(a) {
     let c = newZoomCanvas("our-canvas", 800, 600)
     c.stage.bg = cssColor(assetColor(a, 0))
     c.zoom(8)
     c.move(8, 8)
-    let map = new Array(a.w*a.h)
-    let min = {x:a.w, y:a.h}
-    let max = {x:0, y:0}
+    let tmp = tmpPic(a.w, a.h)
     let renderSeqs = () => !a.seq ? "no sequences" : a.seq.map(s => h('span', s.name))
     let seqCont = h('', renderSeqs())
     let ed = {a, c, el: h(''),
@@ -177,7 +214,7 @@ function assetEditor(a) {
             for (let y = 0; y < a.h; y++) {
                 for (let x = 0; x < a.w; x++) {
                     let idx = y*a.w+x
-                    let p = map[idx] || pic[idx]
+                    let p = tmp.data[idx] || pic[idx]
                     if (p) {
                         c.ctx.fillStyle = cssColor(assetColor(a, p))
                         c.ctx.fillRect(x, y, 1, 1)
@@ -210,40 +247,20 @@ function assetEditor(a) {
             let paint = e => {
                 let p = c.stagePos(e)
                 if (!p) return
-                if (p.y < min.y) min.y = p.y
-                if (p.y > max.y) max.y = p.y
-                if (p.x < min.x) min.x = p.x
-                if (p.x > max.x) max.x = p.x
-                map[p.y*a.w+p.x] = ed.fg
+                tmp.paint(p.x, p.y, ed.fg)
                 c.ctx.fillStyle = ed.fgcolor
                 c.ctx.fillRect(p.x, p.y, 1, 1)
             }
             c.startDrag(paint, e => {
                 paint(e)
-                let w = 1+max.x-min.x
-                let h = 1+max.y-min.y
-                if (w <= 0 || h <= 0) return
-                let data = new Array(w*h)
-                for (let y=0; y < h; y++) {
-                    let u = y*w
-                    let v = (y+min.y)*a.w
-                    for (let x=0; x < w; x++) {
-                        data[u+x] = map[v+(x+min.x)]
-                    }
-                }
+                let sel = tmp.getSel()
+                if (!sel) return
                 app.send("pic.edit", {
                     seq:ed.seq.name,
                     pic:ed.pic,
-                    x:min.x,
-                    y:min.y,
-                    w, h, data,
+                    ...sel,
                 })
-                // reset min, max and map
-                min = {x:a.w, y:a.h}
-                max = {x:0, y:0}
-                for (let i=0; i<map.length; i++) {
-                    map[i] = 0
-                }
+                tmp.reset()
             })
         }
     })
