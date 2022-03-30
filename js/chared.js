@@ -105,7 +105,10 @@ let kinds = [
 ]
 
 function assetSelect(infos) {
-    let list = h('ul')
+    let listID = 'dl-asset-infos'
+    let list = h('datalist', {id:listID})
+    let search = h('input', {type:'text', list:listID})
+    let form = h('form', list, search)
     let el = h('section',
         h('header', 'Asset auswählen oder ', h('a', {href:'#', onclick: e => {
             e.preventDefault()
@@ -114,15 +117,12 @@ function assetSelect(infos) {
                 unmount()
             }))
         }}, 'neu erstellen')),
-        list
+        form,
     )
     let res = {el,
         update(infos) {
             res.infos = infos
-            hReplace(list, infos.map(info => h('li', h('a', {href:'#', onclick: e =>{
-            e.preventDefault()
-            app.send("asset.open", {id:info.id})
-        }}, info.name))))
+            hReplace(list, infos.map(info => h('option', info.name)))
         },
         addInfo(info) {
             let all = res.infos
@@ -132,6 +132,12 @@ function assetSelect(infos) {
     )
             res.update(all)
         }
+    }
+    form.onsubmit = e => {
+        e.preventDefault()
+        let info = res.infos.find(info => info.name == search.value)
+        search.value = ""
+        if (info) app.send("asset.open", {id:info.id})
     }
     res.update(infos)
     return res

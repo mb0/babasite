@@ -123,7 +123,9 @@ export function h(sel, args, data) {
     if (m[3]) el.className = m[3].replace('.', ' ')
     if (args && !addChild(el, args)) {
         Object.keys(args).forEach(key => {
-            el[key] = args[key]
+            if (key == 'list' || key == 'for')
+                el.setAttribute(key, args[key])
+            else el[key] = args[key]
         })
     }
     addChild(el, Array.from(arguments).slice(2))
