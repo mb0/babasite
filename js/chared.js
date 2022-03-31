@@ -64,6 +64,14 @@ app.addView({name: "chared",
                 if (isErr(res, subj)||!ed) return
                 ed.delSeq(res.seq)
             },
+            "pic.new": (res, subj) => {
+                if (isErr(res, subj)||!ed) return
+                ed.addPic(res.seq)
+            },
+            "pic.del": (res, subj) => {
+                if (isErr(res, subj)||!ed) return
+                ed.delPic(res.seq, res.pic)
+            },
             "pic.edit": (res, subj) => {
                 if (isErr(res, subj) || !ed) return
                 // get pic
@@ -207,9 +215,20 @@ function renderSeqs(ed) {
     if (!seq) return "Keine Sequenzen"
     return seq.map(s => 
         h('span', {onclick(e) {
-           ed.selSeq(s) 
+           ed.sel(s, 0) 
         }}, s.name)
     )
+}
+function renderPics(ed) {
+    if (!ed.seq) return null
+    let s = ed.seq
+    return h('span', s.name+ ' Pics', h('span', {onclick(e) {
+            app.send("pic.new", {seq:s.name, pic:s.pics.length})
+        }}, '[add]'), ': ', s.pics.map((_, i) => 
+        h('span', {onclick(e) {
+            if (i != ed.pic) ed.sel(s, i) 
+        }}, i+' ')
+    ))
 }
 
 function assetEditor(a) {
@@ -220,6 +239,7 @@ function assetEditor(a) {
     c.stage.bg = cssColor(assetColor(a, 0))
     let tmp = tmpPic(a.w, a.h)
     let seqCont = h('')
+    let picsCont = h('')
     let ed = {a, c, el: h(''),
         seq: a.seq && a.seq.length ? a.seq[0] : null, 
         pic: 0,
@@ -243,24 +263,52 @@ function assetEditor(a) {
             // add sequence to asset
             a.seq.push(s)
             hReplace(seqCont, renderSeqs(ed))
+            if (!ed.seq) {
+                ed.sel(s, 0)
+            }
         },
         delSeq(name) {
             // remove sequence from asset
             let idx = a.seq.findIndex(s => s.name == name)
             if (idx >= 0) a.seq.splice(idx, 1)
+            hReplace(seqCont, renderSeqs(ed))
             if (ed.seq && ed.seq.name == name) {
                 // change selection
-                ed.selSeq(a.seq.length ? a.seq[0] : null)
+                ed.sel(a.seq.length ? a.seq[0] : null, 0)
             }
-            hReplace(seqCont, renderSeqs(ed))
         },
-        selSeq(s) {
-            if (ed.seq == s) return
+        addPic(name, pic) {
+            // find sequence and add pic
+            let s = a.seq.find(s => s.name == name)
+            if (!s) return
+            s.pics.push(new Array(a.w*a.h))
+            if (ed.seq == s) {
+                hReplace(picsCont, renderPics(ed))
+            }
+        },
+        delPic(name, pic) {
+            // remove pic from asset seq
+            let s = ed.a.seq.find(s => s.name == name)
+            if (!s) return
+            s.pics.splice(pic, 1)
+            // if current sequence
+            if (ed.seq == s) {
+                if (ed.pic == pic) {
+                    ed.sel(s, Math.max(0, pic-1), true)
+                } else {
+                    hReplace(picsCont, renderPics(ed))
+                }
+            }
+        },
+        sel(s, pic, force) {
+            pic = pic||0
+            if (!force && ed.seq == s && ed.pic == pic) return
             ed.seq = s
-                ed.pic = 0
+            ed.pic = pic
             tmp.reset()
             ed.repaint()
-        }
+            hReplace(picsCont, renderPics(ed))
+        },
     }
     c.el.addEventListener("mousedown", e => {
         if (e.button != 0) return
@@ -289,19 +337,20 @@ function assetEditor(a) {
     ed.repaint()
     let k = kinds.find(k => k.kind == a.kind)
     hReplace(seqCont, renderSeqs(ed))
+    hReplace(picsCont, renderPics(ed))
     hReplace(ed.el,
         h('section.seq',
-            h('header', k.name +' '+ a.name +' Seqenzen:',
-                h('a', {href:'#', onclick(e) {
-                    e.preventDefault()
+            h('header', k.name +' '+ a.name +' Sequenzen: ',
+                h('span', {onclick(e) {
                     mount(sequenceForm({}, s => {
                         app.send("seq.new", {seq:s.name})
                         unmount()
                     }))
-                }}, '+')
+                }}, '[add]')
             ),
             seqCont,
         ),
+        picsCont,
         // canvas
         c.el,
         // tools and color pallette
