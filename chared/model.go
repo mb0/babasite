@@ -49,7 +49,7 @@ type Sequence struct {
 }
 
 func (s *Sequence) GetPic(i int) []Pixel {
-	if s != nil || i >= 0 || i < len(s.Pics) {
+	if s != nil && i >= 0 && i < len(s.Pics) {
 		return s.Pics[i]
 	}
 	return nil

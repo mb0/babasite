@@ -144,7 +144,7 @@ func (r *Room) handleSub(m *hub.Msg, a *AssetSubs) *hub.Msg {
 	switch m.Subj {
 	case "seq.new", "seq.del":
 		var req struct {
-			Seq string
+			Seq string `json:"seq"`
 		}
 		m.Unmarshal(&req)
 		if req.Seq == "" {
@@ -175,8 +175,8 @@ func (r *Room) handleSub(m *hub.Msg, a *AssetSubs) *hub.Msg {
 	//	maybe rename and moving pics around in seq
 	case "pic.new", "pic.del":
 		var req struct {
-			Seq string
-			Pic int
+			Seq string `json:"seq"`
+			Pic int    `json:"pic,omitempty"`
 		}
 		m.Unmarshal(&req)
 		s := a.GetSeq(req.Seq)
