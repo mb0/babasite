@@ -13,7 +13,6 @@ func DefaultPallette() Pallette {
 }
 
 type Pallette struct {
-	ID   int       `json:"id"`
 	Name string    `json:"name"`
 	Feat []Feature `json:"feat"`
 }

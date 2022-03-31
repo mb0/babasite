@@ -26,16 +26,16 @@ func (a *AssetSubs) Bcast(m *hub.Msg, except int64) {
 type Room struct {
 	site.ChatRoom
 	Store  *FileStore
-	Assets map[uint32]*AssetSubs
-	Subs   map[int64]uint32
+	Assets map[string]*AssetSubs
+	Subs   map[int64]string
 }
 
 func NewRoom(name string, datapath string) *Room {
 	r := &Room{
 		ChatRoom: *site.NewChat(name),
 		Store:    NewFileStore(filepath.Join(datapath, "chared")),
-		Assets:   make(map[uint32]*AssetSubs),
-		Subs:     make(map[int64]uint32),
+		Assets:   make(map[string]*AssetSubs),
+		Subs:     make(map[int64]string),
 	}
 	// read all assets from database
 	assets, err := r.Store.LoadAll()
@@ -43,7 +43,7 @@ func NewRoom(name string, datapath string) *Room {
 		log.Fatalf("chared failed to load assets: %v", err)
 	}
 	for _, a := range assets {
-		r.Assets[a.ID] = &AssetSubs{Asset: a}
+		r.Assets[a.Name] = &AssetSubs{Asset: a}
 	}
 	return r
 }
@@ -66,9 +66,9 @@ func (r *Room) handle(m *hub.Msg) *hub.Msg {
 	case "asset.open", "asset.del":
 		var req Asset
 		m.Unmarshal(&req)
-		a, ok := r.Assets[req.ID]
+		a, ok := r.Assets[req.Name]
 		if !ok {
-			return m.ReplyErr(fmt.Errorf("no asset %d", req.ID))
+			return m.ReplyErr(fmt.Errorf("no asset %s", req.Name))
 		}
 		if m.Subj == "asset.open" {
 			r.unsub(m.From.ID())
@@ -83,7 +83,7 @@ func (r *Room) handle(m *hub.Msg) *hub.Msg {
 	case "asset.new":
 		var req Asset
 		m.Unmarshal(&req)
-		if req.Name == "" {
+		if !NameCheck.MatchString(req.Name) {
 			return m.ReplyErr(fmt.Errorf("invalid name"))
 		}
 		if r.hasAssetName(req.Name) {
@@ -117,17 +117,13 @@ func (r *Room) handle(m *hub.Msg) *hub.Msg {
 		if req.Pal.Feat == nil {
 			req.Pal = DefaultPallette()
 		}
-		if len(req.Seq) == 0 {
-			req.AddSeq("seq0")
-		}
-		// TODO validate more asset details
 		err := r.Store.SaveAsset(&req)
 		if err != nil {
 			return m.ReplyErr(fmt.Errorf("saving asset: %v", err))
 		}
 		r.unsub(m.From.ID())
 		a := &AssetSubs{Asset: &req}
-		r.Assets[req.ID] = a
+		r.Assets[a.Name] = a
 		r.sub(m.From, a)
 		return m.Reply(a)
 	case "seq.new", "seq.del", "pic.new", "pic.del", "pic.edit":
@@ -147,8 +143,8 @@ func (r *Room) handleSub(m *hub.Msg, a *AssetSubs) *hub.Msg {
 			Seq string `json:"seq"`
 		}
 		m.Unmarshal(&req)
-		if req.Seq == "" {
-			return m.ReplyErr(fmt.Errorf("sequence must have a name"))
+		if !NameCheck.MatchString(req.Seq) {
+			return m.ReplyErr(fmt.Errorf("invalid sequence name"))
 		}
 		s := a.GetSeq(req.Seq)
 		if m.Subj == "seq.del" {
@@ -212,18 +208,18 @@ func (r *Room) handleSub(m *hub.Msg, a *AssetSubs) *hub.Msg {
 }
 func (g *Room) getSub(c hub.Conn) *AssetSubs {
 	asset := g.Subs[c.ID()]
-	if asset == 0 {
+	if asset == "" {
 		return nil
 	}
 	return g.Assets[asset]
 }
 func (g *Room) sub(c hub.Conn, a *AssetSubs) {
 	a.Subs = append(a.Subs, c)
-	g.Subs[c.ID()] = a.ID
+	g.Subs[c.ID()] = a.Name
 }
 func (g *Room) unsub(id int64) {
 	sub := g.Subs[id]
-	if sub > 0 {
+	if sub != "" {
 		if prev, ok := g.Assets[sub]; ok {
 			for i, s := range prev.Subs {
 				if s.ID() == id {
@@ -248,7 +244,7 @@ func (g *Room) AssetInfos() []assetInfo {
 	res := make([]assetInfo, 0, len(g.Assets))
 	for _, a := range g.Assets {
 		res = append(res, assetInfo{
-			ID: a.ID, Name: a.Name, Kind: a.Kind,
+			Name: a.Name, Kind: a.Kind,
 		})
 	}
 	sort.Slice(res, func(i, j int) bool {
@@ -261,7 +257,6 @@ type initMsg struct {
 	Assets []assetInfo `json:"assets"`
 }
 type assetInfo struct {
-	ID   uint32 `json:"id"`
 	Name string `json:"name"`
 	Kind string `json:"kind"`
 }

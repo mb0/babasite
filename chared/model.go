@@ -1,7 +1,10 @@
 package chared
 
+import "regexp"
+
+var NameCheck = regexp.MustCompile(`^[a-z0-9_]+$`)
+
 type Asset struct {
-	ID   uint32 `json:"id"`
 	Name string `json:"name"`
 	Kind string `json:"kind"`
 	Size

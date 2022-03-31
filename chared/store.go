@@ -10,6 +10,28 @@ import (
 	"strings"
 )
 
+// in diesem moment speichern wir ganze assets inklusive aller bilder im json
+// format bei jeder änderung in eine datei. diese dateien können sehr viele bilder
+// haben, wodurch es nicht mehr praktisch ist ganze datei neu speichern.
+//
+// weil wir einzelne sequenz bilder bearbeiten, wollen wir diese vielleicht auch
+// einzeln speichern. wir wollen dann bilder erst senden wenn der benutzer eine
+// sequenz auswählt.
+//
+// wir können alle meta daten separat weiter als json datei speichern.
+// ich schlage folgendes schema vor:
+//
+// $asset_name/
+//		asset.json
+//		$seq_name/
+//			$pic_number:001
+// $pal_name.json
+//
+// dafür ist es sinnvoll wenn alle namen ohne leer- oder sonderzeichen sind.
+// einfachheitshalber können wir die ids weg lassen. umbennenen können wir
+// als löschen und erstellen umsetzen oder gesondert behandeln.
+//
+
 type AssetFile struct {
 	Asset
 	Path string
@@ -17,13 +39,12 @@ type AssetFile struct {
 
 type FileStore struct {
 	path  string
-	ids   map[uint32]*AssetFile
 	names map[string]*AssetFile
 	maxID uint32
 }
 
 func NewFileStore(path string) *FileStore {
-	return &FileStore{path: path, ids: make(map[uint32]*AssetFile), names: make(map[string]*AssetFile)}
+	return &FileStore{path: path, names: make(map[string]*AssetFile)}
 }
 
 func (s *FileStore) LoadAll() (res []*Asset, err error) {
@@ -57,37 +78,23 @@ func (s *FileStore) LoadAll() (res []*Asset, err error) {
 			return nil
 		}
 		af := &AssetFile{a, path}
-		s.ids[a.ID] = af
 		s.names[a.Name] = af
 		res = append(res, &a)
-		if a.ID > s.maxID {
-			s.maxID = a.ID
-		}
 		return nil
 	})
 	return res, err
 }
 
 func (s *FileStore) SaveAsset(a *Asset) error {
-	var af *AssetFile
-	if a.ID == 0 {
-		s.maxID++
-		a.ID = s.maxID
+	af := s.names[a.Name]
+	if af == nil {
 		af = &AssetFile{Asset: *a}
-		s.ids[a.ID] = af
 		s.names[a.Name] = af
 	} else {
-		af = s.ids[a.ID]
-		if af == nil {
-			af = &AssetFile{Asset: *a}
-			s.ids[a.ID] = af
-			s.names[a.Name] = af
-		} else {
-			af.Asset = *a
-		}
+		af.Asset = *a
 	}
 	if af.Path == "" {
-		af.Path = fmt.Sprintf("./%04x_%s.json", a.ID, a.Name)
+		af.Path = fmt.Sprintf("./%s.json", a.Name)
 	}
 	fname := filepath.Join(s.path, af.Path)
 	f, err := os.Create(fname)
@@ -102,8 +109,8 @@ func (s *FileStore) SaveAsset(a *Asset) error {
 	}
 	return f.Sync()
 }
-func (s *FileStore) DropAsset(id uint32) error {
-	af := s.ids[id]
+func (s *FileStore) DropAsset(name string) error {
+	af := s.names[name]
 	if af != nil {
 		return os.Remove(af.Path)
 	}
