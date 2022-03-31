@@ -4,6 +4,9 @@ import {newZoomCanvas, cssColor} from './canvas.js'
 import {mount, unmount} from './modal.js'
 
 let cssStyle = `
+#chared {
+    width: calc(98vw - 300px);
+}
 .pal span {
     display: inline-block;
     width:40px;
@@ -23,10 +26,6 @@ let cssStyle = `
 .inline {
     display: inline-block;
     vertical-align: top;
-}
-#chared ul {
-    list-style: none;
-    padding: 0;
 }
 .seq span+span {
     padding-left: 4px;
@@ -88,7 +87,7 @@ app.addView({name: "chared",
                 }
                 // repaint canvas if current pic
                 if (ed.seq == s && ed.pic == res.pic) {
-                ed.repaint()
+                    ed.repaint()
                 }
             },
         }
@@ -116,15 +115,9 @@ function assetSelect(infos) {
     let listID = 'dl-asset-infos'
     let list = h('datalist', {id:listID})
     let search = h('input', {type:'text', list:listID})
-    let form = h('form', list, search)
+    let form = h('form', {style:'display:inline'}, list, search)
     let el = h('section',
-        h('header', 'Asset auswählen oder ', h('a', {href:'#', onclick: e => {
-            e.preventDefault()
-            mount(assetForm({}, a => {
-                app.send("asset.new", a)
-                unmount()
-            }))
-        }}, 'neu erstellen')),
+        'Asset auswählen oder erstellen: ',
         form,
     )
     let res = {el,
@@ -137,15 +130,30 @@ function assetSelect(infos) {
             all.push(info)
             all.sort((a, b) => 
                 a.name < b.name ? -1 : (a.name > b.name ? 1 : 0)
-    )
+            )
             res.update(all)
         }
     }
+    let checkInput = () => {
+        let info = res.infos.find(info => info.name == search.value)
+        if (!info) return false
+        search.value = ""
+        app.send("asset.open", {id:info.id})
+        return true
+    }
+    search.oninput = e => {
+        checkInput()
+    }
     form.onsubmit = e => {
         e.preventDefault()
-        let info = res.infos.find(info => info.name == search.value)
-        search.value = ""
-        if (info) app.send("asset.open", {id:info.id})
+        if (!checkInput()) {
+            let name = search.value
+            search.value = ""
+            mount(assetForm({name}, a => {
+                app.send("asset.new", a)
+                unmount()
+            }))
+        }
     }
     res.update(infos)
     return res
@@ -312,7 +320,7 @@ function assetEditor(a) {
     }
     c.el.addEventListener("mousedown", e => {
         if (e.button != 0) return
-            if (ed.tool == 'paint') {
+        if (ed.tool == 'paint') {
             let paint = e => {
                 let p = c.stagePos(e)
                 if (!p) return
