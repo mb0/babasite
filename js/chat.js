@@ -23,7 +23,7 @@ export let chat = {
 		}
 		app.cont.appendChild(h('#chat-view',
 			h('header', 
-				h('', 'babasite', h('sup', 'beta')),
+				h('', 'babasite', h('sup', 'beta'), ' ', h('a', {href:'/logout'}, "Logout")),
 				h('.menu', app.views.filter(v =>
 					v != app.cur && v.name != 'lobby'
 				).map(v =>
