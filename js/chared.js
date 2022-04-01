@@ -44,6 +44,7 @@ app.addView({name: "chared",
         ))
         listeners = {
             "init": res => {
+                assets.details.style.display = 'block'
                 assets.update(res.assets||[])
             },
             "asset.new": (res, subj) => {
@@ -52,6 +53,7 @@ app.addView({name: "chared",
             },
             "asset.open": (res, subj) => {
                 if (isErr(res, subj)) return
+                assets.details.style.display = 'none'
                 ed = assetEditor(res)
                 hReplace(cont, ed.el)
             },
@@ -124,14 +126,19 @@ function assetSelect(infos) {
     let list = h('datalist', {id:listID})
     let search = h('input', {type:'text', list:listID})
     let form = h('form', {style:'display:inline'}, list, search)
+    let details = h('')
     let el = h('section',
         'Asset auswählen oder erstellen: ',
         form,
+        details,
     )
-    let res = {el,
+    let res = {el, details, 
         update(infos) {
             res.infos = infos
             hReplace(list, infos.map(info => h('option', info.name)))
+            hReplace(details, h('ul', infos.map(info => h('li', {onclick: e =>
+                app.send("asset.open", {name:info.name})
+            }, info.name +' '+ info.kind))))
         },
         addInfo(info) {
             let all = res.infos
