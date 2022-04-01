@@ -203,12 +203,28 @@ function tmpPic(w, h) {
             min = {x:w, y:h}
             max = {x:0, y:0}
         },
-        paint(x, y, pixel) {
+        minmax(x, y) {
             if (y < min.y) min.y = y
             if (y > max.y) max.y = y
             if (x < min.x) min.x = x
             if (x > max.x) max.x = x
+        },
+        paint(x, y, pixel) {
+            tmp.minmax(x, y)
             data[y*w+x] = pixel
+        },
+        rect(rx, ry, rw, rh, pixel) {
+            let x2 = Math.min(rx+rw-1, w-1)
+            let y2 = Math.min(ry+rh-1, h-1)
+            let x1 = Math.max(rx, 0)
+            let y1 = Math.max(ry, 0)
+            tmp.minmax(x1, y1)
+            tmp.minmax(x2, y2)
+            for (let y=y1; y<=y2; y++) {
+                for (let x=x1; x<=x2; x++) {
+                    data[y*w+x] = pixel
+                }
+            }
         },
         getSel() {
             const sel = {x:min.x, y:min.y, w:1+max.x-min.x, h:1+max.y-min.y, data:null}
@@ -258,10 +274,10 @@ function assetEditor(a) {
     let tmp = tmpPic(a.w, a.h)
     let seqCont = h('')
     let picsCont = h('')
-    let ed = {a, c, el: h(''),
+    let ed = {a, c, el: h(''), tmp,
         seq: a.seq && a.seq.length ? a.seq[0] : null, 
         idx:0, pic:null,
-        tool:'paint', mirror:false, grid:true,
+        tool:'pen', mirror:false, grid:true,
         fg:1, fgcolor:cssColor(assetColor(a, 1)),
         repaint() {
             c.clear()
@@ -352,17 +368,15 @@ function assetEditor(a) {
     c.el.addEventListener("mousedown", e => {
         if (!ed.pic) return
         if (e.button != 0) return
-        if (ed.tool == 'paint') {
+        if (ed.tool == 'pen' || ed.tool == 'brush') {
+            let paintFunc = ed.tool == 'pen' ? paintPen : paintBrush
             let paint = e => {
                 let p = c.stagePos(e)
                 if (!p) return
-                tmp.paint(p.x, p.y, ed.fg || 99)
-                c.ctx.fillStyle = ed.fgcolor
-                c.ctx.fillRect(p.x, p.y, 1, 1)
+                paintFunc(ed, p)
                 if (ed.mirror) {
-                    let mx = a.w-p.x-1
-                    tmp.paint(mx, p.y, ed.fg)
-                    c.ctx.fillRect(mx, p.y, 1, 1)
+                    p.x = a.w-p.x-1
+                    paintFunc(ed, p)
                 }
             }
             c.startDrag(paint, e => {
@@ -457,8 +471,8 @@ function colorView(ed) {
 
 function toolView(ed) {
     let tools = [
-        {name:'paint'},
-        {name:'select'},
+        {name:'pen'},
+        {name:'brush'},
     ]
     let opts = [
         {name:'mirror'},
@@ -474,6 +488,17 @@ function toolView(ed) {
             if (opt.name == 'grid') ed.repaint()
         }}, opt.name)))
     )
+}
+
+function paintPen(ed, p) {
+    ed.tmp.paint(p.x, p.y, ed.fg || 99)
+    ed.c.ctx.fillStyle = ed.fgcolor
+    ed.c.ctx.fillRect(p.x, p.y, 1, 1)
+}
+function paintBrush(ed, p) {
+    ed.tmp.rect(p.x-1, p.y-1, 3, 3, ed.fg || 99)
+    ed.c.ctx.fillStyle = ed.fgcolor
+    ed.c.ctx.fillRect(p.x-1, p.y-1, 3, 3)
 }
 
 function boxContains(b, o) {
