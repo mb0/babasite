@@ -66,12 +66,14 @@ func (s *FileStore) AssetInfos() []AssetInfo {
 	return res
 }
 
-func (s *FileStore) PalInfos() []string {
-	res := make([]string, 0, len(s.pals))
+func (s *FileStore) PalInfos() []Pallette {
+	res := make([]Pallette, 0, len(s.pals))
 	for _, p := range s.pals {
-		res = append(res, p.Name)
+		res = append(res, *p)
 	}
-	sort.Strings(res)
+	sort.Slice(res, func(i, j int) bool {
+		return res[i].Name < res[j].Name
+	})
 	return res
 }
 
@@ -111,7 +113,7 @@ func (s *FileStore) LoadAll() error {
 			cand = append(cand, name)
 		} else if strings.HasSuffix(name, ".json") {
 			// parse as pallette
-			_, err := s.LoadPal(name)
+			_, err := s.LoadPal(name[:len(name)-5])
 			if err != nil {
 				log.Printf("error reading palette %s: %v", name, err)
 				continue
@@ -135,11 +137,11 @@ func (s *FileStore) LoadAll() error {
 }
 
 func (s *FileStore) LoadPal(name string) (*Pallette, error) {
-	feat, err := readPal(s.dirfs, fmt.Sprintf("%s.json", name))
+	pal, err := readPal(s.dirfs, fmt.Sprintf("%s.json", name))
 	if err != nil {
 		return nil, err
 	}
-	pal := &Pallette{Name: name, Feat: feat}
+	pal.Name = name
 	s.pals[name] = pal
 	return pal, nil
 }
@@ -242,14 +244,14 @@ func (s *FileStore) DropPic(a *Asset, id int) error {
 	return os.Remove(path)
 }
 
-func readPal(dir fs.FS, pat string) ([]*Feature, error) {
+func readPal(dir fs.FS, pat string) (*Pallette, error) {
 	raw, err := fs.ReadFile(dir, pat)
 	if err != nil {
 		return nil, err
 	}
-	var feat []*Feature
-	err = json.Unmarshal(raw, &feat)
-	return feat, err
+	var p Pallette
+	err = json.Unmarshal(raw, &p)
+	return &p, err
 }
 
 func readAssetMeta(dir fs.FS, pat string) (m AssetMeta, err error) {
@@ -332,7 +334,7 @@ func writePal(p *Pallette, path string) error {
 	if err != nil {
 		return err
 	}
-	raw, err := json.Marshal(p.Feat)
+	raw, err := json.Marshal(p)
 	if err != nil {
 		return err
 	}

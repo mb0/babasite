@@ -39,6 +39,7 @@ app.addView({name: "chared",
         let assets = assetSelect([])
         let cont = h('')
         let ed = null
+        let pals = []
         app.cont.appendChild(h('#chared',
             h('style', cssStyle), assets.el, cont,
         ))
@@ -46,6 +47,54 @@ app.addView({name: "chared",
             "init": res => {
                 assets.details.style.display = 'block'
                 assets.update(res.assets||[])
+                pals = res.pals
+            },
+            "pal.new": (res, subj) => {
+                if (isErr(res, subj)) return
+                // add to list of pals in sort order
+                let idx = pals.findIndex(p => p.name > res.name)
+                if (idx<0) idx = pals.length
+                pals.splice(idx, 0, res)
+            },
+            "pal.open":(res, subj) => {
+                if (isErr(res, subj)) return
+                let p = pals.find(p => p.name == res.name)
+                if (!p) return
+                if (ed) {
+                    ed.updatePal(p)
+                } else {
+                    // TODO pal editor?
+                }
+            },
+            // TODO "pal.del": 
+            "pal.edit": (res, subj) => {
+                if (isErr(res, subj)) return
+                let p = pals.find(p => p.name == res.name)
+                if (!p) return
+                if (!p.feat) p.feat = []
+                // update feture
+                let f = p.feat.find(f => f.name == res.feat)
+                if (f) {
+                    if (f.colors) {
+                        let args = [res.idx||0, res.del||0]
+                        if (res.ins) args = args.concat(res.ins)
+                        f.colors.splice.apply(f.colors, args)
+                    } else {
+                        f.colors = res.ins
+                    }
+                } else if (!res.idx && !res.del) {
+                    f = {name:res.feat, colors:res.ins||[]}
+                    p.feat.push(f)
+                } else {
+                    return
+                }
+                if (ed) {
+                    if (ed.a.pal.name == p.name) {
+                        ed.updatePal(p)
+                    }
+                } else {
+                    // TODO pal editor?
+                }
             },
             "asset.new": (res, subj) => {
                 if (isErr(res, subj)) return
@@ -281,7 +330,7 @@ function assetEditor(a) {
     let tmp = tmpPic(a.w, a.h)
     let seqCont = h('')
     let picsCont = h('')
-    let ed = {a, c, el: h(''), tmp,
+    let ed = {a, c, el: h(''), tmp, pal: null,
         seq: a.seq && a.seq.length ? a.seq[0] : null, 
         idx:0, pic:null,
         tool:'pen', mirror:false, grid:true,
@@ -310,6 +359,11 @@ function assetEditor(a) {
                     }
                 }
             }
+        },
+        updatePal(p) {
+            ed.a.pal = p
+            ed.repaint()
+            ed.pal.update()
         },
         addSeq(s) {
             // add sequence to asset
@@ -371,6 +425,7 @@ function assetEditor(a) {
             hReplace(picsCont, renderPics(ed))
         },
     }
+    ed.pal = palView(ed)
     if (ed.seq && ed.seq.ids) ed.pic = a.pics[ed.seq.ids[ed.idx]]
     c.el.addEventListener("mousedown", e => {
         if (!ed.pic) return
@@ -419,7 +474,7 @@ function assetEditor(a) {
         // canvas
         c.el,
         // tools and color pallette
-        h('', toolView(ed), colorView(ed)),
+        h('', toolView(ed), ed.pal.el),
     )
     return ed
 }
@@ -452,26 +507,114 @@ function sequenceForm(s, submit) {
     )
 }
 
-function colorView(ed) {
-    let pal = ed.a.pal
-    if (!pal) return null
-    return h('section.pal.inline',
-        h('header', 'Pallette: '+ pal.name),
-        h('', !pal.feat ? "no features" :
-            pal.feat.map((feat, f) => h('', h('label', feat.name),
-                feat.colors.map((color, c) => h('span', {
-                    style:"background-color:"+cssColor(color),
-                    onclick: e => {
-                        let pixel = f*100+c
-                        if (ed.fg == pixel) return
-                        ed.fg = pixel
-                        ed.fgcolor = cssColor(color)
-                    },
-                })),
-            )),
-            h('span', {onclick: e => {
-                console.log("add color")
-            }}, '+')
+function palView(ed) {
+    let el = h('section.pal.inline')
+    let update = () => {
+        let pal = ed.a.pal
+        if (!pal) return null
+        hReplace(el, h('header', 'Pallette: '+ pal.name, 
+                h('span', {onclick(e) {
+                    mount(palForm({}, res => {
+                        app.send("pal.new", {name:res.name})
+                        unmount()
+                    }))
+                }}, '[new]')
+            ),
+            h('', !pal.feat ? "no features" :
+                pal.feat.map((feat, f) => h('', h('label', feat.name),
+                    feat.colors.map((color, c) => h('span', {
+                        style:"background-color:"+cssColor(color),
+                        onclick(e) {
+                            let pixel = f*100+c
+                            if (ed.fg == pixel) return
+                            ed.fg = pixel
+                            ed.fgcolor = cssColor(color)
+                        },
+                        ondblclick(e) {
+                            let titel = 'Ändere Farbe für '+feat.name
+                            mount(colorForm(titel, color, res => {
+                                app.send("pal.edit", {
+                                    name:pal.name,
+                                    feat:feat.name,
+                                    idx:c, del:1, ins:[res.color],
+                                })
+                                unmount()
+                            }))
+                        },
+                    })),
+                    h('span', {onclick: e => {
+                        let titel = 'Neue Farbe für '+feat.name
+                        mount(colorForm(titel, {}, res => {
+                            app.send("pal.edit", {
+                                name:pal.name,
+                                feat:feat.name,
+                                idx:feat.colors.length,
+                                ins:[res.color],
+                            })
+                            unmount()
+                        }))
+                    }}, '[add]')
+                )),
+                h('span', {onclick: e => {
+                    console.log("add feat")
+                    mount(featForm({}, res => {
+                        app.send("pal.edit", {
+                            name:pal.name,
+                            feat:res.name,
+                            ins:[],
+                        })
+                        unmount()
+                    }))
+                }}, '[new]')
+            ),
+        )
+    }
+    update()
+    return {el, update}
+}
+
+function palForm(pal, submit) {
+    pal = pal || {}
+    let name = h('input', {type:'text', value:pal.name||''})
+    let onsubmit = e => {
+        e.preventDefault()
+        submit({name: name.value})
+    }
+    return h('section.form',
+        h('header', 'Pallette erstellen'),
+        h('form', {onsubmit},
+            h('', h('label', "Name"), name),
+            h('button', 'Neu Anlegen')
+        )
+    )
+}
+function featForm(feat, submit) {
+    feat = feat || {}
+    let name = h('input', {type:'text', value:feat.name||''})
+    let onsubmit = e => {
+        e.preventDefault()
+        submit({name: name.value})
+    }
+    return h('section.form',
+        h('header', 'Merkmal erstellen'),
+        h('form', {onsubmit},
+            h('', h('label', "Name"), name),
+            h('button', 'Neu Anlegen')
+        )
+    )
+}
+function colorForm(titel, c, submit) {
+    let color = h('input', {type:'color', value:cssColor(c)})
+    let onsubmit = e => {
+        e.preventDefault()
+        let res = color.value.slice(1)
+        submit({color: res})
+    }
+    return h('section.form',
+        h('header', titel),
+        h('form', {onsubmit},
+            h('', h('label', "Farbe"), color),
+            h('button', 'Speichern')
         )
     )
 }

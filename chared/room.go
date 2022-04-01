@@ -87,7 +87,14 @@ func (r *Room) handle(m *hub.Msg) *hub.Msg {
 		if err != nil {
 			return m.ReplyErr(err)
 		}
-		r.Bcast(site.RawMsg("pal.new", nameData{Name: name}))
+		r.Bcast(site.RawMsg("pal.new", p))
+		if a := r.getSub(m.From); a != nil {
+			a.AssetMeta.Pal = p.Name
+			a.Pal = p
+			r.Store.SaveAssetMeta(a.Asset)
+			a.Bcast(site.RawMsg("pal.open", nameData{p.Name}), 0)
+			return nil
+		}
 		return site.RawMsg("pal.open", p)
 	case "pal.open":
 		name, err := nameMsg(m)
@@ -98,7 +105,14 @@ func (r *Room) handle(m *hub.Msg) *hub.Msg {
 		if p == nil {
 			return m.ReplyErr(fmt.Errorf("no pal %s", name))
 		}
-		return m.Reply(p)
+		if a := r.getSub(m.From); a != nil {
+			a.AssetMeta.Pal = p.Name
+			a.Pal = p
+			r.Store.SaveAssetMeta(a.Asset)
+			a.Bcast(site.RawMsg("pal.open", nameData{p.Name}), 0)
+			return nil
+		}
+		return m.Reply(nameData{name})
 	case "pal.del":
 		name, err := nameMsg(m)
 		if err != nil {
@@ -125,7 +139,7 @@ func (r *Room) handle(m *hub.Msg) *hub.Msg {
 		}
 		f := p.GetFeature(req.Feat)
 		if f != nil {
-			tmp := make([]Color, len(f.Colors)-req.Del+len(req.Ins))
+			tmp := make([]Color, 0, len(f.Colors)-req.Del+len(req.Ins))
 			tmp = append(tmp, f.Colors[:req.Idx]...)
 			tmp = append(tmp, req.Ins...)
 			tmp = append(tmp, f.Colors[req.Idx+req.Del:]...)
@@ -348,5 +362,5 @@ func nameMsg(m *hub.Msg) (string, error) {
 
 type Info struct {
 	Assets []AssetInfo `json:"assets,omitempty"`
-	Pals   []string    `json:"pals,omitempty"`
+	Pals   []Pallette  `json:"pals,omitempty"`
 }
