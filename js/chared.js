@@ -103,7 +103,7 @@ app.addView({name: "chared",
             "asset.open": (res, subj) => {
                 if (isErr(res, subj)) return
                 assets.details.style.display = 'none'
-                ed = assetEditor(res)
+                ed = assetEditor(res, pals)
                 hReplace(cont, ed.el)
             },
             "asset.del": res => {
@@ -321,7 +321,7 @@ function renderPics(ed) {
     ))
 }
 
-function assetEditor(a) {
+function assetEditor(a, pals) {
     let c = newZoomCanvas("our-canvas", 800, 600)
     c.resize(a.w, a.h)
     c.zoom(8)
@@ -330,7 +330,7 @@ function assetEditor(a) {
     let tmp = tmpPic(a.w, a.h)
     let seqCont = h('')
     let picsCont = h('')
-    let ed = {a, c, el: h(''), tmp, pal: null,
+    let ed = {a, c, el: h(''), tmp, pals, pal: null,
         seq: a.seq && a.seq.length ? a.seq[0] : null, 
         idx:0, pic:null,
         tool:'pen', mirror:false, grid:true,
@@ -512,7 +512,13 @@ function palView(ed) {
     let update = () => {
         let pal = ed.a.pal
         if (!pal) return null
-        hReplace(el, h('header', 'Pallette: '+ pal.name, 
+        hReplace(el, h('header',
+                h('label', {onclick(e) {
+                    mount(palSelect(ed, res => {
+                        app.send("pal.open", {name:res.name})
+                        unmount()
+                    }))
+                }}, pal.name), ' ',
                 h('span', {onclick(e) {
                     mount(palForm({}, res => {
                         app.send("pal.new", {name:res.name})
@@ -556,7 +562,6 @@ function palView(ed) {
                     }}, '[add]')
                 )),
                 h('span', {onclick: e => {
-                    console.log("add feat")
                     mount(featForm({}, res => {
                         app.send("pal.edit", {
                             name:pal.name,
@@ -571,6 +576,15 @@ function palView(ed) {
     }
     update()
     return {el, update}
+}
+
+function palSelect(ed, submit) {
+    return h('section.form',
+        h('header', 'Pallette auswählen'),
+        h('ul', ed.pals.map(p => h('li', {onclick(e) {
+            submit(p)
+        }}, p.name))),
+    )
 }
 
 function palForm(pal, submit) {
