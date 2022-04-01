@@ -260,8 +260,9 @@ function assetEditor(a) {
     let picsCont = h('')
     let ed = {a, c, el: h(''),
         seq: a.seq && a.seq.length ? a.seq[0] : null, 
-        idx: 0, pic: null,
-        tool:'paint', fg:1, fgcolor:cssColor(assetColor(a, 1)),
+        idx:0, pic:null,
+        tool:'paint', mirror:false,
+        fg:1, fgcolor:cssColor(assetColor(a, 1)),
         repaint() {
             c.clear()
             if (!ed.seq||!ed.seq.ids) return
@@ -357,6 +358,11 @@ function assetEditor(a) {
                 tmp.paint(p.x, p.y, ed.fg)
                 c.ctx.fillStyle = ed.fgcolor
                 c.ctx.fillRect(p.x, p.y, 1, 1)
+                if (ed.mirror) {
+                    let mx = a.w-p.x-1
+                    tmp.paint(mx, p.y, ed.fg)
+                    c.ctx.fillRect(mx, p.y, 1, 1)
+                }
             }
             c.startDrag(paint, e => {
                 paint(e)
@@ -453,11 +459,17 @@ function toolView(ed) {
         {name:'erase'},
         {name:'select'},
     ]
+    let opts = [
+        {name:'mirror'},
+    ]
     return h('section.tool.inline',
         h('header', 'Tools'),
         h('', tools.map(tool => h('span', {onclick: e => {
             ed.tool = tool.name
-        }}, tool.name)))
+        }}, tool.name))),
+        h('', opts.map(opt => h('span', {onclick: e => {
+            ed[opt.name] = !ed[opt.name]
+        }}, opt.name)))
     )
 }
 
