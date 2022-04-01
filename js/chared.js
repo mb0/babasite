@@ -44,24 +44,38 @@ app.addView({name: "chared",
         ))
         listeners = {
             "init": res => {
-                assets.update(res.assets)
+                assets.update(res.assets||[])
             },
-            "asset.new": res => {
+            "asset.new": (res, subj) => {
+                if (isErr(res, subj)) return
+                assets.addInfo(res)
+            },
+            "asset.open": (res, subj) => {
+                if (isErr(res, subj)) return
                 ed = assetEditor(res)
-                assets.addInfo({id:res.id, name:res.name, kind:res.kind})
                 hReplace(cont, ed.el)
             },
-            "asset.open": res => {
-                ed = assetEditor(res)
-                hReplace(cont, ed.el)
+            "asset.del": res => {
+                // TODO
             },
             "seq.new": (res, subj) => {
                 if (isErr(res, subj)||!ed) return
+                if (res.pics) res.pics.forEach(p => ed.addPic(p))
                 ed.addSeq(res)
             },
             "seq.del": (res, subj) => {
                 if (isErr(res, subj)||!ed) return
-                ed.delSeq(res.seq)
+                ed.delSeq(res.name)
+            },
+            "seq.edit": (res, subj) => {
+                if (isErr(res, subj)||!ed) return
+                if (res.pics) res.pics.forEach(p => ed.addPic(p))
+                let s = ed.a.seq.find(s => s.name == res.name)
+                if (!s) return
+                let args = [res.idx||0, res.del||0]
+                if (res.ins) args = args.concat(res.ins)
+                s.ids.splice.apply(s.ids, args)
+                ed.updateSeq(s)
             },
             "pic.new": (res, subj) => {
                 if (isErr(res, subj)||!ed) return
@@ -74,19 +88,13 @@ app.addView({name: "chared",
             "pic.edit": (res, subj) => {
                 if (isErr(res, subj) || !ed) return
                 // get pic
-                let s = ed.a.seq.find(s => s.name == res.seq)
-                if (!s) return
-                let pic = s.pics[res.pic]
+                let pic = ed.a.pics[res.pic]
+                if (!pic) return
                 // update pic
-                for (let i=0; i < res.data.length; i++) {
-                    let p = res.data[i]
-                    if (!p && !res.copy) continue
-                    let x = i%res.w
-                    let y = (i-x)/res.w
-                    pic[(y+res.y)*ed.a.w+(x+res.x)] = p
-                }
+                if (!boxContains(pic, res)) growPic(pic, res)
+                copySel(pic, res)
                 // repaint canvas if current pic
-                if (ed.seq == s && ed.pic == res.pic) {
+                if (pic == ed.pic) {
                     ed.repaint()
                 }
             },
@@ -135,10 +143,11 @@ function assetSelect(infos) {
         }
     }
     let checkInput = () => {
-        let info = res.infos.find(info => info.name == search.value)
+        let name = search.value.trim()
+        let info = res.infos.find(info => info.name == name)
         if (!info) return false
         search.value = ""
-        app.send("asset.open", {id:info.id})
+        app.send("asset.open", {name})
         return true
     }
     search.oninput = e => {
@@ -230,9 +239,10 @@ function renderSeqs(ed) {
 function renderPics(ed) {
     if (!ed.seq) return null
     let s = ed.seq
+    let ids = s.ids || (s.ids = [])
     return h('span', s.name+ ' Pics', h('span', {onclick(e) {
-            app.send("pic.new", {seq:s.name, pic:s.pics.length})
-        }}, '[add]'), ': ', s.pics.map((_, i) => 
+            app.send("seq.edit", {name:s.name, idx:ids.length, ins:[0]})
+        }}, '[add]'), ': ', ids.map((_, i) => 
         h('span', {onclick(e) {
             if (i != ed.pic) ed.sel(s, i) 
         }}, i+' ')
@@ -250,16 +260,25 @@ function assetEditor(a) {
     let picsCont = h('')
     let ed = {a, c, el: h(''),
         seq: a.seq && a.seq.length ? a.seq[0] : null, 
-        pic: 0,
+        idx: 0, pic: null,
         tool:'paint', fg:1, fgcolor:cssColor(assetColor(a, 1)),
         repaint() {
             c.clear()
-            if (!ed.seq) return
-            let pic = ed.seq.pics[ed.pic]
+            if (!ed.seq||!ed.seq.ids) return
+            let id = ed.seq.ids[ed.idx]
+            let pic = ed.pic = ed.a.pics[id]
+            if (!pic) return
             for (let y = 0; y < a.h; y++) {
                 for (let x = 0; x < a.w; x++) {
                     let idx = y*a.w+x
-                    let p = tmp.data[idx] || pic[idx]
+                    let p = tmp.data[idx]
+                    if (!p && pic.w > 0 && pic.h > 0) {
+                        let py = y-pic.y
+                        let px = x-pic.x
+                        if (py >= 0 && py < pic.h && px >= 0 && px < pic.w) {
+                            p = pic.data[py*pic.w+px]
+                        }
+                    }
                     if (p) {
                         c.ctx.fillStyle = cssColor(assetColor(a, p))
                         c.ctx.fillRect(x, y, 1, 1)
@@ -269,56 +288,67 @@ function assetEditor(a) {
         },
         addSeq(s) {
             // add sequence to asset
-            a.seq.push(s)
-            hReplace(seqCont, renderSeqs(ed))
+            let idx = a.seq.findIndex(f => f.name == s.name)
+            if (idx >= 0) {
+                a.seq[idx] = s
+            } else {
+                a.seq.push(s)
+                ed.updateSeq(s)
+            }
             if (!ed.seq) {
                 ed.sel(s, 0)
+            }
+        },
+        updateSeq(s) {
+            hReplace(seqCont, renderSeqs(ed))
+            if (ed.seq == s) {
+                hReplace(picsCont, renderPics(ed))
+                if (!ed.pic && s && ed.idx >= 0) {
+                    ed.pic = a.pics[s.ids[ed.idx]]
+                    ed.repaint()
+                }
             }
         },
         delSeq(name) {
             // remove sequence from asset
             let idx = a.seq.findIndex(s => s.name == name)
             if (idx >= 0) a.seq.splice(idx, 1)
-            hReplace(seqCont, renderSeqs(ed))
+            ed.updateSeq(s)
             if (ed.seq && ed.seq.name == name) {
                 // change selection
                 ed.sel(a.seq.length ? a.seq[0] : null, 0)
             }
         },
-        addPic(name, pic) {
-            // find sequence and add pic
-            let s = a.seq.find(s => s.name == name)
-            if (!s) return
-            s.pics.push(new Array(a.w*a.h))
-            if (ed.seq == s) {
-                hReplace(picsCont, renderPics(ed))
-            }
-        },
-        delPic(name, pic) {
-            // remove pic from asset seq
-            let s = ed.a.seq.find(s => s.name == name)
-            if (!s) return
-            s.pics.splice(pic, 1)
-            // if current sequence
-            if (ed.seq == s) {
-                if (ed.pic == pic) {
-                    ed.sel(s, Math.max(0, pic-1), true)
-                } else {
-                    hReplace(picsCont, renderPics(ed))
+        addPic(pic) {
+            if (!pic||pic.id <= 0) return
+            ed.a.pics[pic.id] = pic
+            if (ed.seq && ed.idx >= 0) {
+                if (pic.id == ed.seq.ids[ed.idx]) {
+                    ed.pic = pic
+                    ed.repaint()
                 }
             }
         },
-        sel(s, pic, force) {
-            pic = pic||0
-            if (!force && ed.seq == s && ed.pic == pic) return
+        delPic(id) {
+            // remove pic from asset seq
+            let p = ed.a.pics[id]
+            if (!p) return
+            delete p[id]
+        },
+        sel(s, idx, force) {
+            idx = idx||0
+            if (!force && ed.seq == s && ed.idx == idx) return
             ed.seq = s
-            ed.pic = pic
+            ed.idx = idx
+            ed.pic = a.pics[s.ids&&s.ids[idx]]
             tmp.reset()
             ed.repaint()
             hReplace(picsCont, renderPics(ed))
         },
     }
+    if (ed.seq && ed.seq.ids) ed.pic = a.pics[ed.seq.ids[ed.idx]]
     c.el.addEventListener("mousedown", e => {
+        if (!ed.pic) return
         if (e.button != 0) return
         if (ed.tool == 'paint') {
             let paint = e => {
@@ -333,8 +363,7 @@ function assetEditor(a) {
                 let sel = tmp.getSel()
                 if (!sel) return
                 app.send("pic.edit", {
-                    seq:ed.seq.name,
-                    pic:ed.pic,
+                    pic:ed.pic.id,
                     ...sel,
                 })
                 tmp.reset()
@@ -351,7 +380,7 @@ function assetEditor(a) {
             h('header', k.name +' '+ a.name +' Sequenzen: ',
                 h('span', {onclick(e) {
                     mount(sequenceForm({}, s => {
-                        app.send("seq.new", {seq:s.name})
+                        app.send("seq.new", {name:s.name})
                         unmount()
                     }))
                 }}, '[add]')
@@ -396,6 +425,7 @@ function sequenceForm(s, submit) {
 
 function colorView(ed) {
     let pal = ed.a.pal
+    if (!pal) return null
     return h('section.pal.inline',
         h('header', 'Pallette: '+ pal.name),
         h('', !pal.feat ? "no features" :
@@ -429,4 +459,50 @@ function toolView(ed) {
             ed.tool = tool.name
         }}, tool.name)))
     )
+}
+
+function boxContains(b, o) {
+    return posInBox(o, b) && posInBox(boxEnd(o), b)
+}
+function boxEnd(b) {
+    let x = b.x+b.w-1
+    let y = b.y+b.h-1
+    return {x, y}
+}
+function posInBox(p, b) {
+    return p.x >= b.x && p.x < b.x+b.w && p.y >= b.y && p.y < b.y+b.h
+}
+
+function growPic(p, o) {
+    if (o.w<=0||o.h<=0) return
+    if (p.w<=0||p.h<=0) {
+        p.x = o.x
+        p.y = o.y
+        p.w = o.w
+        p.h = o.h
+        p.data = new Array(p.w*p.h).fill(0)
+    } else {
+        let e = boxEnd(p)
+        let f = boxEnd(o)
+        let tmp = {}
+        tmp.x = Math.min(p.x, o.x)
+        tmp.y = Math.min(p.y, o.y)
+        e.x = Math.max(e.x, f.x)
+        e.y = Math.max(e.y, f.y)
+        tmp.w = 1+e.x-tmp.x
+        tmp.h = 1+e.y-tmp.y
+        tmp.data = new Array(tmp.w*tmp.h).fill(0)
+        copySel(tmp, p)
+        Object.assign(p, tmp)
+    }
+}
+
+function copySel(pic, sel, copy) {
+    for (let i=0; i < sel.data.length; i++) {
+        let p = sel.data[i]
+        if (!p && !copy) continue
+        let y = sel.y+Math.floor(i/sel.w) - pic.y
+        let x = sel.x+(i%sel.w) - pic.x
+        pic.data[y*pic.w+x] = p
+    }   
 }
