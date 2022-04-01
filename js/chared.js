@@ -213,7 +213,7 @@ function tmpPic(w, h) {
         getSel() {
             const sel = {x:min.x, y:min.y, w:1+max.x-min.x, h:1+max.y-min.y, data:null}
             if (sel.w <= 0 || sel.h <= 0) return null
-            sel.data = new Array(sel.w*sel.h)
+            sel.data = new Array(sel.w*sel.h).fill(0)
             for (let y=0; y < sel.h; y++) {
                 let u = y*sel.w
                 let v = (y+min.y)*w
@@ -356,7 +356,7 @@ function assetEditor(a) {
             let paint = e => {
                 let p = c.stagePos(e)
                 if (!p) return
-                tmp.paint(p.x, p.y, ed.fg)
+                tmp.paint(p.x, p.y, ed.fg || 99)
                 c.ctx.fillStyle = ed.fgcolor
                 c.ctx.fillRect(p.x, p.y, 1, 1)
                 if (ed.mirror) {
@@ -405,6 +405,7 @@ function assetEditor(a) {
 function assetColor(a, pixel) {
     let c = pixel%100
     let f = (pixel-c)/100
+    if (!f && c == 99) c = 0
     if (a && a.pal && a.pal.feat) {
         let feat = a.pal.feat[f]
         if (feat && feat.colors && c < feat.colors.length) {
@@ -457,7 +458,6 @@ function colorView(ed) {
 function toolView(ed) {
     let tools = [
         {name:'paint'},
-        {name:'erase'},
         {name:'select'},
     ]
     let opts = [
@@ -518,6 +518,6 @@ function copySel(pic, sel, copy) {
         if (!p && !copy) continue
         let y = sel.y+Math.floor(i/sel.w) - pic.y
         let x = sel.x+(i%sel.w) - pic.x
-        pic.data[y*pic.w+x] = p
+        pic.data[y*pic.w+x] = p == 99 ? 0 : p
     }   
 }

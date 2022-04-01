@@ -38,6 +38,9 @@ func (pic *Sel) Draw(e Sel, cp bool) {
 		}
 		for i, p := range e.Data {
 			if p != 0 {
+				if p == 99 {
+					p = 0
+				}
 				pic.Data[i] = p
 			}
 		}
@@ -54,6 +57,9 @@ func (pic *Sel) Draw(e Sel, cp bool) {
 		if cp || p != 0 {
 			x := i%e.W + e.X
 			y := i/e.W + e.Y
+			if p == 99 {
+				p = 0
+			}
 			pic.Data[(y-pic.Y)*pic.W+x-pic.X] = p
 		}
 	}
