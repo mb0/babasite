@@ -4,15 +4,20 @@ import "regexp"
 
 var NameCheck = regexp.MustCompile(`^[a-z0-9_]+$`)
 
-type Asset struct {
+type SeqMeta struct {
+	Name string `json:"name"`
+	IDs  []int  `json:"ids"`
+}
+
+type AssetMeta struct {
 	Name string `json:"name"`
 	Kind string `json:"kind"`
 	Size
-	Seq []*Sequence `json:"seq"`
-	Pal Pallette    `json:"pal"`
+	Seq []*SeqMeta `json:"seq"`
+	Pal string     `json:"pal"`
 }
 
-func (a *Asset) GetSeq(name string) *Sequence {
+func (a *AssetMeta) GetSeq(name string) *SeqMeta {
 	for _, s := range a.Seq {
 		if s.Name == name {
 			return s
@@ -20,49 +25,57 @@ func (a *Asset) GetSeq(name string) *Sequence {
 	}
 	return nil
 }
-func (a *Asset) AddSeq(name string) *Sequence {
+
+func (a *AssetMeta) AddSeq(name string, ids ...int) *SeqMeta {
 	if s := a.GetSeq(name); s != nil {
 		return s
 	}
-	s := &Sequence{Name: name, Pics: [][]Pixel{a.newPic()}}
+	if ids == nil {
+		ids = []int{}
+	}
+	s := &SeqMeta{Name: name, IDs: ids}
 	a.Seq = append(a.Seq, s)
 	return s
 }
-func (a *Asset) newPic() []Pixel { return make([]Pixel, a.W*a.H) }
-
-// getPic returns the pic with index in sequence s or nil.
-func (a *Asset) GetPic(seq string, index int) *Pic {
-	pic := a.GetSeq(seq).GetPic(index)
-	if pic != nil {
-		return &Pic{Size: a.Size, Data: pic}
-	}
-	return nil
-}
-
-type Size struct {
-	W int `json:"w"`
-	H int `json:"h"`
-}
-
-type Pixel uint16
-
-type Sequence struct {
-	Name string    `json:"name"`
-	Pics [][]Pixel `json:"pics"`
-}
-
-func (s *Sequence) GetPic(i int) []Pixel {
-	if s != nil && i >= 0 && i < len(s.Pics) {
-		return s.Pics[i]
-	}
-	return nil
-}
 
 type Pic struct {
-	Size
-	Data []Pixel
+	ID int `json:"id"`
+	Sel
 }
 
-func (p Size) ValidSel(s Sel) bool {
-	return s.X >= 0 && s.Y >= 0 && s.X+s.W <= p.W && s.Y+s.H <= p.H
+type Asset struct {
+	AssetMeta
+	Pics map[int]*Pic `json:"pics"`
+	Last int          `json:"-"`
+	Pal  *Pallette    `json:"pal"`
+}
+
+func (a *Asset) GetPics(ids ...int) []*Pic {
+	pics := make(map[int]bool, len(ids))
+	res := make([]*Pic, 0, len(ids))
+	for _, id := range ids {
+		_, ok := pics[id]
+		if !ok {
+			pics[id] = true
+			res = append(res, a.Pics[id])
+		}
+	}
+	return res
+}
+
+func (a *Asset) NewPic() *Pic {
+	a.Last += 1
+	p := &Pic{ID: a.Last}
+	a.Pics[p.ID] = p
+	return p
+}
+
+func DefaultSize(kind string) Size {
+	switch kind {
+	case "char":
+		return Size{48, 48}
+	case "item":
+		return Size{64, 64}
+	}
+	return Size{16, 16}
 }
