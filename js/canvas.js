@@ -7,18 +7,18 @@ export function newZoomCanvas(id, width, height, bg) {
     ctx.imageSmoothingEnabled = false
     let c
     return c = {el, ctx, stage:s,
-        move: (x, y) => {
+        move(x, y) {
             s.x = x
             s.y = y
         },
-        zoom: (v) => {
+        zoom(v) {
             s.zoom = v
         },
-        resize: (w, h) => {
+        resize(w, h) {
             s.w = w
             s.h = h
         },
-        clear: () => {
+        clear() {
             ctx.resetTransform()
             ctx.fillStyle = bg||"gray"
             ctx.fillRect(0, 0, el.width, el.height)
@@ -28,12 +28,37 @@ export function newZoomCanvas(id, width, height, bg) {
             ctx.fillStyle = s.bg
             ctx.fillRect(0, 0, s.w, s.h)
         },
-        stagePos: (e) => {
+        grid(a, b) {
+            ctx.beginPath()
+            ctx.strokeStyle = "black"
+            ctx.lineWidth = 1/s.zoom
+            for (let x=a; x < s.w; x+=b) {
+                ctx.moveTo(x, 0)
+                ctx.lineTo(x, s.h)
+            }
+            for (let y=a; y < s.h; y+=b) {
+                ctx.moveTo(0, y)
+                ctx.lineTo(s.w, y)
+            }
+            ctx.stroke()
+            ctx.beginPath()
+            ctx.lineWidth = 2/s.zoom
+            for (let x=b; x < s.w; x+=b) {
+                ctx.moveTo(x, 0)
+                ctx.lineTo(x, s.h)
+            }
+            for (let y=b; y < s.h; y+=b) {
+                ctx.moveTo(0, y)
+                ctx.lineTo(s.w, y)
+            }
+            ctx.stroke()
+        },
+        stagePos(e) {
             const x = Math.floor((e.offsetX-s.x)/s.zoom)
             const y = Math.floor((e.offsetY-s.y)/s.zoom)
             return x >= 0 && x < s.w && y >= 0 && y < s.h ? {x, y} : null
         },
-        init: (repaint) => {
+        init(repaint) {
             el.addEventListener("wheel", e => {
                 s.zoom += (e.deltaY < 0 ? -1 : 1)
                 if (s.zoom<1) s.zoom = 1
@@ -51,7 +76,7 @@ export function newZoomCanvas(id, width, height, bg) {
                 })
             })
         },
-        startDrag: (move, done) => {
+        startDrag(move, done) {
             let end = e => {
                 c.el.removeEventListener("mousemove", move)
                 c.el.removeEventListener("mouseup", end)

@@ -261,11 +261,12 @@ function assetEditor(a) {
     let ed = {a, c, el: h(''),
         seq: a.seq && a.seq.length ? a.seq[0] : null, 
         idx:0, pic:null,
-        tool:'paint', mirror:false,
+        tool:'paint', mirror:false, grid:true,
         fg:1, fgcolor:cssColor(assetColor(a, 1)),
         repaint() {
             c.clear()
             if (!ed.seq||!ed.seq.ids) return
+            if (ed.grid) c.grid(8, 16)
             let id = ed.seq.ids[ed.idx]
             let pic = ed.pic = ed.a.pics[id]
             if (!pic) return
@@ -461,6 +462,7 @@ function toolView(ed) {
     ]
     let opts = [
         {name:'mirror'},
+        {name:'grid'},
     ]
     return h('section.tool.inline',
         h('header', 'Tools'),
@@ -469,6 +471,7 @@ function toolView(ed) {
         }}, tool.name))),
         h('', opts.map(opt => h('span', {onclick: e => {
             ed[opt.name] = !ed[opt.name]
+            if (opt.name == 'grid') ed.repaint()
         }}, opt.name)))
     )
 }
