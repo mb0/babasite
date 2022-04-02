@@ -4,26 +4,12 @@ babasite
 Aufgaben
 --------
 
-Simon: Rätzelideen sammeln und aufschreiben
--Aufleuchtende Lampen in der richtigen Reihenfolge antippen
--Wasserröhre in die richtige Richtung lenken
--versteckte Codes in einen Treso/… eingeben
--Schilder die in Richtungen zeigen und dann Hebel die man in die Richtige  Richtung
- in der richtigen Reihenfolge machen muss
--Computer Reparieren und dafür Teile finden
--Hinweise Hinter Bildschirmen/Bildern
--Hebel die man nur nach oben/unten bewegen kann in die Richtung von Büchern/andere
- Sachen schieben also muss man da gucken ob sie richtig rum sind
--Ein paar pixel an einer Wand sind anders als andere und man kann an der Stelle in
- einen Nebenraum kommen(man kann es gestallten als gang/ oder das gleiche mit einer
- lockeren Platte die man aufhebeln kann mit einem Item
+Simon, Jakob:
+    * Urlaub genießen
 
-Jakob: Inspirierende Bilder zum Thema Mondbasis zusammenstellen
-
-Martin: Character editor weiter programmieren
-    * Farbgruppen
-    * Server Übertragung und Speicherung
-    * Interface anpassen (siehe Skizze von Jakob)
+Martin
+    * Charakter editor animation vorschau
+    * JavaScript zu TypeScript ändern
 
 Rätselspiel
 -----------
@@ -63,6 +49,18 @@ Raetselideen
 - koordinierte Emotes, Gesichtserkennung 
 - mehrere Schalter gleichzeitig aktivieren
 - Rover, Hacking, Schlösserknacken mini game
+- Aufleuchtende Lampen in der richtigen Reihenfolge antippen
+- Wasserröhre in die richtige Richtung lenken
+- versteckte Codes in einen Treso/… eingeben
+- Schilder die in Richtungen zeigen und dann Hebel die man in die Richtige  Richtung
+  in der richtigen Reihenfolge machen muss
+- Computer Reparieren und dafür Teile finden
+- Hinweise Hinter Bildschirmen/Bildern
+- Hebel die man nur nach oben/unten bewegen kann in die Richtung von Büchern/andere
+  Sachen schieben also muss man da gucken ob sie richtig rum sind
+- Ein paar pixel an einer Wand sind anders als andere und man kann an der Stelle in
+  einen Nebenraum kommen(man kann es gestallten als gang/ oder das gleiche mit einer
+  lockeren Platte die man aufhebeln kann mit einem Item
 
 
 Story
