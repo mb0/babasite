@@ -521,7 +521,7 @@ function palView(ed) {
                 }}, pal.name), ' ',
                 h('span', {onclick(e) {
                     mount(palForm({}, res => {
-                        app.send("pal.new", {name:res.name})
+                        app.send("pal.new", {name:res.name, copy:pal.name})
                         unmount()
                     }))
                 }}, '[new]')

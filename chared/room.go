@@ -75,13 +75,17 @@ func (r *Room) handle(m *hub.Msg) *hub.Msg {
 			return m.ReplyErr(fmt.Errorf("pal %s already exists", name))
 		}
 		var req struct {
-			Copy string
+			Copy string `json:"copy"`
 		}
-		m.Unmarshal(req)
+		m.Unmarshal(&req)
 		p = &Pallette{Name: name}
 		if req.Copy != "" {
 			ref := r.Store.Pal(req.Copy)
-			p.Feat = append(p.Feat, ref.Feat...)
+			p.Feat = make([]*Feature, len(ref.Feat))
+			for i, f := range ref.Feat {
+				colors := append([]Color(nil), f.Colors...)
+				p.Feat[i] = &Feature{Name: f.Name, Colors: colors}
+			}
 		}
 		err = r.Store.SavePal(p)
 		if err != nil {
@@ -95,7 +99,7 @@ func (r *Room) handle(m *hub.Msg) *hub.Msg {
 			a.Bcast(site.RawMsg("pal.open", nameData{p.Name}), 0)
 			return nil
 		}
-		return site.RawMsg("pal.open", p)
+		return site.RawMsg("pal.open", nameData{p.Name})
 	case "pal.open":
 		name, err := nameMsg(m)
 		if err != nil {
