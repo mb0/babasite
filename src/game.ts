@@ -1,6 +1,6 @@
-import {app, h} from './app.js'
-import {chat} from './chat.js'
-import {newZoomCanvas} from './canvas.js'
+import {app, h} from './app'
+import {chat} from './chat'
+import {newZoomCanvas} from './canvas'
 
 let map = null
 let listeners = {}

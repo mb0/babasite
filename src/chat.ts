@@ -1,4 +1,4 @@
-import {app, h} from './app.js'
+import {app, h} from './app'
 
 let listeners = {
 	chat: data => {

@@ -1,5 +1,5 @@
-import {app, h} from './app.js'
-import {chat} from './chat.js'
+import {app, h} from './app'
+import {chat} from './chat'
 
 let stop
 app.addView({name: "simple",

@@ -73,7 +73,7 @@ func main() {
 	srvmux := http.NewServeMux()
 	// serve resources publicly without providing session cookies
 	srvmux.HandleFunc("/favicon.ico", func(w http.ResponseWriter, r *http.Request) {})
-	srvmux.Handle("/js/", http.StripPrefix("/js/", http.FileServer(http.Dir("./js"))))
+	srvmux.Handle("/dist/", http.StripPrefix("/dist/", http.FileServer(http.Dir("./dist"))))
 	// route non-resource requests to the mux the provides sessions
 	srvmux.Handle("/", ses.Provider{Manager: man, Next: sesmux})
 

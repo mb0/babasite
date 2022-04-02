@@ -1,4 +1,4 @@
-import {h} from './app.js'
+import {h} from './app'
 
 export function newZoomCanvas(id, width, height, bg) {
     let s = {x:0, y:0, w:0, h:0, zoom:1, bg: "white"}

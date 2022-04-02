@@ -1,7 +1,7 @@
-import {app, h, hReplace} from './app.js'
-import {chat} from './chat.js'
-import {newZoomCanvas, cssColor} from './canvas.js'
-import {mount, unmount} from './modal.js'
+import {app, h, hReplace} from './app'
+import {chat} from './chat'
+import {newZoomCanvas, cssColor} from './canvas'
+import {mount, unmount} from './modal'
 
 let cssStyle = `
 #chared {

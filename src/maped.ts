@@ -1,6 +1,6 @@
-import {app, h, hReplace} from './app.js'
-import {chat} from './chat.js'
-import {newZoomCanvas, cssColor} from './canvas.js'
+import {app, h, hReplace} from './app'
+import {chat} from './chat'
+import {newZoomCanvas, cssColor} from './canvas'
 
 let sel = 1
 let map = null

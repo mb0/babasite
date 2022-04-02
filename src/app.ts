@@ -165,4 +165,3 @@ function parseMessage(data) {
 	let obj = JSON.parse(data.slice(idx+1))
 	return {subj:subj, data:obj}
 }
-document.addEventListener("DOMContentLoaded", app.start)

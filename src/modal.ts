@@ -1,4 +1,4 @@
-import {h} from './app.js'
+import {h} from './app'
 
 let cssStyle = `
 #modalparent {
