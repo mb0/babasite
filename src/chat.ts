@@ -1,20 +1,25 @@
-import {app, h} from './app'
+import {app, h, App, View, Listeners} from './app'
 
-let listeners = {
+interface ChatData {
+	user:string
+	msg:string
+}
+
+let listeners:Listeners = {
 	chat: data => {
 		addOutput(data.user +": "+ data.msg)
 	},
 	hist: data => {
-		if (data.msgs) data.msgs.forEach(el => 
+		if (data.msgs) data.msgs.forEach((el:ChatData) =>
 			output.appendChild(h('', el.user +": "+ el.msg))
 		)
 		scrollEnd()
 	}
 }
-export let chat = {
+export let chat:View = {
 	name: "chat",
-	start: function(app) {
-		let input = h('input', {name:'chat', type:'text', placeholder:'Chat', autocomplete:'off'})
+	start: function(app:App) {
+		let input = h('input', {name:'chat', type:'text', placeholder:'Chat', autocomplete:'off'}) as HTMLInputElement
 		let form = h('form#chat', input, h('button', 'Send'))
 		form.onsubmit = function(e) {
 			e.preventDefault()
@@ -22,16 +27,16 @@ export let chat = {
 			input.value = ""
 		}
 		app.cont.appendChild(h('#chat-view',
-			h('header', 
+			h('header',
 				h('', 'babasite', h('sup', 'beta'), ' ', h('a', {href:'/logout'}, "Logout")),
 				h('.menu', app.views.filter(v =>
 					v != app.cur && v.name != 'lobby'
 				).map(v =>
-					h('', {onclick:e => {
+					h('', {onclick:() => {
 						app.send("enter", {room:v.name})
 					}}, v.label||v.name)
 				)),
-				h('h2', app.cur.label),
+				h('h2', app.cur?.label),
 			),
 			output, form,
 		))
@@ -44,7 +49,7 @@ export let chat = {
 }
 
 let output = h('code#output')
-function addOutput(text) {
+function addOutput(text:string) {
 	output.appendChild(h('', text))
 	scrollEnd()
 }

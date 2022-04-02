@@ -1,21 +1,23 @@
 import {app, h} from './app'
 import {chat} from './chat'
 
-let stop
+let stop = false
 app.addView({name: "simple",
 	label: "Sunrise Chat",
 	start: function(app) {
 		stop = false
 		chat.start(app)
-		let canvas = h('canvas#our-canvas', {width:800, height:600, style: "background-color:white"})
+		let canvas = h('canvas#our-canvas', {
+			width:800, height:600, style: "background-color:white",
+		}) as HTMLCanvasElement
 		app.cont.appendChild(h('#simple-view',
 			canvas,
 		))
-		let ctx = canvas.getContext("2d")
+		let ctx = canvas.getContext("2d") as CanvasRenderingContext2D
 		canvas.addEventListener("click", onClick)
 		window.addEventListener("keydown", onKey)
 		window.addEventListener("keyup", onKey)
-		function step(n) {
+		function step(n:number) {
 			drawBackground(ctx, n)
 			if (!stop) requestAnimationFrame(step)
 		}
@@ -29,15 +31,31 @@ app.addView({name: "simple",
 	},
 })
 
-let car1 = {x:0, y:0}
-let car2 = {x:200, y:200}
-let ctrl = {up:false, down:false, left:false, right: false}
-
-function random(max) {
-	return (Math.random()*max)
+interface Pos {
+	x:number
+	y:number
 }
 
-let clouds = []
+let car1 = {x:0, y:0}
+interface Ctrl {
+	up:boolean
+	down:boolean
+	left:boolean
+	right:boolean
+}
+let ctrl = {up:false, down:false, left:false, right: false}
+
+function random(max:number):number {
+	return Math.random()*max
+}
+
+interface Cloud extends Pos {
+	w:number
+	h:number
+	v:number
+}
+
+let clouds:Cloud[] = []
 
 for (let i=0; i < 20; i++) {
 	clouds.push({
@@ -49,7 +67,7 @@ for (let i=0; i < 20; i++) {
 	})
 }
 
-function drawClouds(c) {
+function drawClouds(c:CanvasRenderingContext2D) {
 	c.fillStyle = "rgba(255,255,255,.5)"
 	for (let i=0; i < clouds.length; i++) {
 		let cloud = clouds[i]
@@ -66,7 +84,7 @@ function drawClouds(c) {
 	}
 }
 
-function drawCar(c, car, ctrl) {
+function drawCar(c:CanvasRenderingContext2D, car:Pos, ctrl:Ctrl) {
 	let v = 10
 	if (ctrl.up) car.y -= v
 	if (ctrl.down) car.y += v
@@ -82,17 +100,21 @@ function drawCar(c, car, ctrl) {
 	c.fill()
 }
 
-function onKey(e) {
+function onKey(e:KeyboardEvent) {
 	switch (e.key) {
+	case "Up":
 	case "ArrowUp":
 		ctrl.up = e.type == "keydown"
 		break
+	case "Down":
 	case "ArrowDown":
 		ctrl.down = e.type == "keydown"
 		break
+	case "Right":
 	case "ArrowRight":
 		ctrl.right = e.type == "keydown"
 		break
+	case "Left":
 	case "ArrowLeft":
 		ctrl.left = e.type == "keydown"
 		break
@@ -100,13 +122,13 @@ function onKey(e) {
 }
 
 
-function wasHit(sun, mx, my) {
+function wasHit(sun:Sun, mx:number, my:number) {
 	let dy = sun.y - my
 	let dx = sun.x - mx
 	return Math.sqrt(dx*dx + dy*dy) <= sun.rad
 }
 
-function wasHitBox(sun, mx, my) {
+function wasHitBox(sun:Sun, mx:number, my:number) {
 	let x1 = sun.x - sun.rad
 	let x2 = sun.x + sun.rad
 	let y1 = sun.y - sun.rad
@@ -116,10 +138,15 @@ function wasHitBox(sun, mx, my) {
 	return inX && inY
 }
 
+interface Sun {
+	x:number
+	y:number
+	rad:number
+}
 
-let sun = {x: 0, y: 0, rad: 50}
+let sun:Sun = {x: 0, y: 0, rad: 50}
 
-function drawSun(c, sun) {
+function drawSun(c:CanvasRenderingContext2D, sun:Sun) {
 	c.fillStyle = "#FFFF00"
 	c.beginPath()
 	c.arc(sun.x, sun.y, sun.rad, 0, 2 * Math.PI)
@@ -131,7 +158,7 @@ function drawSun(c, sun) {
 }
 let doDrawSun = true
 
-function drawBackground(ctx, n) {
+function drawBackground(ctx:CanvasRenderingContext2D, n:number) {
 	// male grüne box
 	ctx.fillStyle = "green"
 	ctx.fillRect(0, 400, 800, 200)
@@ -153,10 +180,10 @@ function drawBackground(ctx, n) {
 	//drawCar(ctx, car2, ctrl)
 }
 
-function onClick(e) {
+function onClick(e:MouseEvent) {
 	if (doDrawSun) {
-		let mx = e.pageX - e.target.offsetLeft
-		let my = e.pageY - e.target.offsetTop
+		let mx = e.offsetX
+		let my = e.offsetY
 		//let pix = ctx.getImageData(mx, my, 1, 1).data;
 		//let sunhit = pix[0] == 0xff && pix[1] == 0xff
 		let sunhit = wasHit(sun, mx, my)
