@@ -34,13 +34,13 @@ let cssStyle = `
 	padding-left: 4px;
 }
 `
+let ed:AssetEditor|null = null
 app.addView({name: "chared",
 	label: "Character Editor",
 	start(app) {
 		chat.start(app)
 		let assets = assetSelect([])
 		let cont = h('')
-		let ed:AssetEditor|null = null
 		let pals:Pallette[] = []
 		h.add(app.cont, h('#chared',
 			h('style', cssStyle), assets.el, cont,
@@ -105,6 +105,7 @@ app.addView({name: "chared",
 			"asset.open": (res, subj) => {
 				if (isErr(res, subj)) return
 				assets.details.style.display = 'none'
+				if (ed) ed.stop()
 				ed = assetEditor(res, pals)
 				h.repl(cont, ed.el)
 			},
@@ -155,6 +156,7 @@ app.addView({name: "chared",
 	},
 	stop() {
 		chat.stop()
+		if (ed) ed.stop()
 	}
 })
 function isErr(res:any, subj:string) {

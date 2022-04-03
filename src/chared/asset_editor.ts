@@ -1,7 +1,6 @@
 import {app, h} from '../app'
-import {mount, unmount} from '../modal'
 import {newZoomCanvas} from '../canvas'
-import {Asset, Sequence, kinds, assetColor} from './asset'
+import {Asset, Sequence, assetColor} from './asset'
 import {Pallette, cssColor} from './pal'
 import {PalView, PalCtx, palView} from './pal_view'
 import {ToolCtx, PaintCtx, toolView, tmpPic, tools} from './tool'
@@ -22,6 +21,7 @@ export interface AssetEditor extends PalCtx, ToolCtx, PaintCtx {
 	addPic(pic:Pic):void
 	delPic(id:PicID):void
 	sel(s:Sequence|null, idx:number, force?:boolean):void
+	stop():void
 }
 
 export function assetEditor(a:Asset, pals:Pallette[]):AssetEditor {
@@ -123,6 +123,9 @@ export function assetEditor(a:Asset, pals:Pallette[]):AssetEditor {
 			tmp.reset()
 			ed.repaint()
 		},
+		stop() {
+			seqView.stop()
+		}
 	}
 	if (ed.seq && ed.seq.ids) ed.pic = a.pics[ed.seq.ids[ed.idx]]
 	c.el.addEventListener("mousedown", e => {
