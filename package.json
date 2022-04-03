@@ -4,12 +4,14 @@
   "private": true,
   "scripts": {
     "dev": "webpack --mode development --watch",
-    "prod": "webpack --mode production"
+    "prod": "webpack --mode production",
+    "check": "tsc"
   },
   "author": "mb0@mb0.org",
   "license": "BSD-2-Clause",
   "dependencies": {
-    "core-js": "^3.20.3"
+    "core-js": "^3.20.3",
+    "typescript": "^4.6.3"
   },
   "devDependencies": {
     "@babel/core": "^7.16.12",
@@ -23,7 +25,9 @@
       [
         "@babel/preset-typescript",
         {
-          "corejs": {"version": 3},
+          "corejs": {
+            "version": 3
+          },
           "useBuiltIns": "usage",
           "modules": false
         }
@@ -38,4 +42,3 @@
     "not IE 11"
   ]
 }
-
