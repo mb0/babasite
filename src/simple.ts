@@ -1,5 +1,6 @@
 import {app, h} from './app'
 import {chat} from './chat'
+import {Pos, Size} from './geom'
 
 let stop = false
 app.addView({name: "simple",
@@ -31,11 +32,6 @@ app.addView({name: "simple",
 	},
 })
 
-interface Pos {
-	x:number
-	y:number
-}
-
 let car1 = {x:0, y:0}
 interface Ctrl {
 	up:boolean
@@ -49,9 +45,7 @@ function random(max:number):number {
 	return Math.random()*max
 }
 
-interface Cloud extends Pos {
-	w:number
-	h:number
+interface Cloud extends Pos, Size {
 	v:number
 }
 
@@ -138,9 +132,7 @@ function wasHitBox(sun:Sun, mx:number, my:number) {
 	return inX && inY
 }
 
-interface Sun {
-	x:number
-	y:number
+interface Sun extends Pos {
 	rad:number
 }
 

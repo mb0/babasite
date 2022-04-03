@@ -1,11 +1,8 @@
 import {app, h} from './app'
 import {chat} from './chat'
-import {newZoomCanvas, cssColor, ZoomCanvas} from './canvas'
+import {newZoomCanvas, cssColor, Canvas} from './canvas'
+import {Pos, Size} from './geom'
 
-interface Pos {
-	x:number
-	y:number
-}
 interface ModTile extends Pos {
 	tile:number
 }
@@ -19,49 +16,44 @@ export interface Tileset {
 	infos:TileInfo[]
 	lookup?:{[key:number]:TileInfo}
 }
-export interface Map {
-	w:number
-	h:number
+export interface Map extends Size {
 	tiles:number[]
 	tileset:Tileset
 }
 let sel = 1
 let map:Map|null = null
-let listeners = {}
 app.addView({name: "maped",
 	label: "Map Editor",
 	start(app) {
 		chat.start(app)
-		let c = newZoomCanvas("our-canvas", 800, 600)
+		const c = newZoomCanvas("our-canvas", 800, 600)
 		c.zoom(8)
 		c.move(20, 30)
-		let tiles = h('')
-		app.cont.appendChild(h('#maped-view', c.el, tiles))
+		const tiles = h('')
+		h.add(app.cont, h('#maped-view', c.el, tiles))
 		c.el.addEventListener("click", e => {
-			let p = c.stagePos(e)
+			const p = c.stagePos(e)
 			if (!p||!map) return
 			const cur = map.tiles[p.y*map.w+p.x]
 			if (map && sel != cur)
 				app.send("modtile", {x:p.x, y:p.y, tile:sel})
 		})
 		c.init(paintMap)
-		listeners = {
-			modtile: (p:ModTile) => {
+		this.listen = {
+			modtile(p:ModTile) {
 				if (map) map.tiles[p.y*map.w+p.x] = p.tile
 				paintTile(c, p.x, p.y, p.tile)
 			},
-			map: (m:Map) => {
+			map(m:Map) {
 				map = m
 				renderTileset(m.tileset, tiles)
 				c.resize(m.w, m.h)
 				paintMap(c)
 			},
 		}
-		app.on(listeners)
 	},
 	stop() {
 		chat.stop()
-		app.off(listeners)
 	},
 })
 
@@ -81,18 +73,17 @@ function renderTileset(s:Tileset, cont:HTMLElement) {
 	)
 }
 
-function paintMap(c:ZoomCanvas) {
+function paintMap(c:Canvas) {
 	c.clear()
 	if (!map) return
 	for (let y = 0; y < map.h; y++) {
 		for (let x = 0; x < map.w; x++) {
-			let tile = map.tiles[y*map.w+x]
-			paintTile(c, x, y, tile)
+			paintTile(c, x, y, map.tiles[y*map.w+x])
 		}
 	}
 }
 
-function paintTile(c:ZoomCanvas, x:number, y:number, tile:number) {
+function paintTile(c:Canvas, x:number, y:number, tile:number) {
 	c.ctx.fillStyle = tileColor(tile)
 	c.ctx.fillRect(x, y, 1, 1)
 }

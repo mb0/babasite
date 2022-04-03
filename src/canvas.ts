@@ -1,41 +1,46 @@
 import {h} from './app'
+import {Pos, Box} from './geom'
 
-export interface Pos {
-	x:number
-	y:number
+export interface Canvas {
+	el:HTMLCanvasElement
+	ctx:CanvasRenderingContext2D
+	clear():void
 }
 
-export interface Stage extends Pos {
-	w:number
-	h:number
+export function newCanvas(id:string, width:number, height:number, bg?:string):Canvas {
+	const el = h('canvas', {id, width, height}) as HTMLCanvasElement
+	const ctx = el.getContext("2d") as CanvasRenderingContext2D
+	ctx.imageSmoothingEnabled = false
+	return {el, ctx, clear() {
+		ctx.resetTransform()
+		ctx.fillStyle = bg||"gray"
+		ctx.fillRect(0, 0, width, height)
+	}}
+}
+
+export interface Stage extends Box {
 	zoom:number
 	bg:string
 }
 
 export type DragHandler = (e:MouseEvent)=>void
 
-export interface ZoomCanvas {
-	el:HTMLCanvasElement
-	ctx:CanvasRenderingContext2D
+export interface ZoomCanvas extends Canvas {
 	stage:Stage
 	move(x:number, y:number):void
 	zoom(v:number):void
 	resize(w:number, h:number):void
-	clear():void
 	grid(a:number, b:number):void
 	stagePos(e:MouseEvent):Pos|null
-	init(repaint:(c:ZoomCanvas)=>void):void
+	init(repaint:(c:Canvas)=>void):void
 	startDrag(move:DragHandler, done?:DragHandler):void
 
 }
 
 export function newZoomCanvas(id:string, width:number, height:number, bg?:string):ZoomCanvas {
-	let s = {x:0, y:0, w:0, h:0, zoom:1, bg: "white"}
-	let el = h('canvas', {id, width, height}) as HTMLCanvasElement
-	let ctx = el.getContext("2d") as CanvasRenderingContext2D
-	ctx.imageSmoothingEnabled = false
-	let c:ZoomCanvas
-	return c = {el, ctx, stage:s,
+	const {el, ctx, clear} = newCanvas(id, width, height, bg)
+	const s = {x:0, y:0, w:0, h:0, zoom:1, bg: "white"}
+	return {el, ctx, stage:s,
 		move(x, y) {
 			s.x = x
 			s.y = y
@@ -48,9 +53,7 @@ export function newZoomCanvas(id:string, width:number, height:number, bg?:string
 			s.h = h
 		},
 		clear() {
-			ctx.resetTransform()
-			ctx.fillStyle = bg||"gray"
-			ctx.fillRect(0, 0, el.width, el.height)
+			clear()
 			ctx.transform(s.zoom, 0, 0, s.zoom, s.x, s.y)
 			ctx.strokeStyle = "black"
 			ctx.strokeRect(0, 0, s.w, s.h)
@@ -91,30 +94,30 @@ export function newZoomCanvas(id:string, width:number, height:number, bg?:string
 			el.addEventListener("wheel", e => {
 				s.zoom += (e.deltaY < 0 ? -1 : 1)
 				if (s.zoom<1) s.zoom = 1
-				repaint(c)
+				repaint(this)
 			})
 			el.addEventListener("mousedown", e => {
 				if (e.button != 1) return
 				let start = {x:e.offsetX, y:e.offsetY}
-				c.startDrag(e => {
+				this.startDrag(e => {
 					let p = {x:e.offsetX, y:e.offsetY}
 					s.x += p.x-start.x
 					s.y += p.y-start.y
 					start = p
-					repaint(c)
+					repaint(this)
 				})
 			})
 		},
 		startDrag(move, done) {
 			let end = (e:MouseEvent) => {
-				c.el.removeEventListener("mousemove", move)
-				c.el.removeEventListener("mouseup", end)
-				c.el.removeEventListener("mouseleave", end)
+				el.removeEventListener("mousemove", move)
+				el.removeEventListener("mouseup", end)
+				el.removeEventListener("mouseleave", end)
 				if (done) done(e)
 			}
-			c.el.addEventListener("mousemove", move)
-			c.el.addEventListener("mouseup", end)
-			c.el.addEventListener("mouseleave", end)
+			el.addEventListener("mousemove", move)
+			el.addEventListener("mouseup", end)
+			el.addEventListener("mouseleave", end)
 		}
 	}
 }

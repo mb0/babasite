@@ -1,6 +1,7 @@
 export interface View {
 	name:string
 	label?:string
+	listen?:Listeners
 	start(app:App):void
 	stop():void
 }
@@ -8,6 +9,7 @@ export type Listener = (data:any, subj:string)=>void
 export type Listeners = {[key:string]:Listener}
 export interface App {
 	cur:View|null
+	curlis:Listeners|void
 	views:View[]
 	cont:HTMLElement
 	addOutput(text:string):void
@@ -26,22 +28,28 @@ let ws:WebSocket|null = null
 let listeners:{[key:string]:Listener[]} = {}
 export let app:App = {
 	cur: null,
+	curlis: undefined,
 	views: [],
 	cont: document.querySelector("#app")!,
 	addOutput(text) {
 		console.log(text)
 	},
 	addView(view) {
-		this.views.push(view)
+		app.views.push(view)
 		return view
 	},
 	show(name) {
-		let v = this.views.find(v => v.name == name)
+		const v = app.views.find(v => v.name == name)
 		if (!v) return
-		if (this.cur) this.cur.stop()
+		const c = app.cur
+		if (c) {
+			c.stop()
+			app.off(c.listen||{})
+		}
 		app.cont.innerHTML = ''
-		this.cur = v
+		app.cur = v
 		v.start(this)
+		app.on(v.listen||{})
 		if (v.name != 'lobby') location.hash = '#'+ v.name
 	},
 	start() {
@@ -67,7 +75,7 @@ export let app:App = {
 			app.addOutput("websocket connection closed")
 		}
 		ws.onmessage = (e:MessageEvent) => {
-			let msg = parseMessage(e.data)
+			const msg = parseMessage(e.data)
 			console.log("got message "+msg.subj, msg.data)
 			app.trigger(msg.subj, msg.data)
 		}
@@ -83,21 +91,21 @@ export let app:App = {
 	},
 	off(subj, func) {
 		if (typeof subj == "string") {
-			let list = listeners[subj]
+			const list = listeners[subj]
 			if (list) listeners[subj] = list.filter(f => f != func)
 		} else {
 			Object.keys(subj).forEach(key => app.off(key, subj[key]))
 		}
 	},
 	one(subj, func) {
-		let f = (data:any, subj:string) => {
+		const f = (data:any, subj:string) => {
 			func(data, subj)
 			app.off(subj, f)
 		}
 		app.on(subj, f)
 	},
 	trigger(subj, data) {
-		let list = listeners[subj]
+		const list = listeners[subj]
 		if (list) list.forEach(f => f(data, subj))
 	},
 	send(subj, data) {
@@ -139,7 +147,7 @@ app.addView({
 })
 
 export type HArg = {[key:string]:any}
-export type HData = HTMLElement|string|HData[]
+export type HData = HTMLElement|string|HData[]|null
 
 const selRegex = /^(\w+)?(?:#([^.]*))?(?:[.]([^ ]*))?$/
 export function h(sel:string, args?:HArg|HData, ...data:HData[]):HTMLElement {

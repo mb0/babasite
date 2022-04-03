@@ -1,32 +1,21 @@
-import {app, h, App, View, Listeners} from './app'
+import {app, h, App, View} from './app'
 
-interface ChatData {
+export interface ChatData {
 	user:string
 	msg:string
 }
 
-let listeners:Listeners = {
-	chat: data => {
-		addOutput(data.user +": "+ data.msg)
-	},
-	hist: data => {
-		if (data.msgs) data.msgs.forEach((el:ChatData) =>
-			output.appendChild(h('', el.user +": "+ el.msg))
-		)
-		scrollEnd()
-	}
-}
-export let chat:View = {
+export const chat:View = {
 	name: "chat",
 	start: function(app:App) {
-		let input = h('input', {name:'chat', type:'text', placeholder:'Chat', autocomplete:'off'}) as HTMLInputElement
-		let form = h('form#chat', input, h('button', 'Send'))
+		const input = h('input', {name:'chat', type:'text', placeholder:'Chat', autocomplete:'off'}) as HTMLInputElement
+		const form = h('form#chat', input, h('button', 'Send'))
 		form.onsubmit = function(e) {
 			e.preventDefault()
 			app.send('chat', {msg:input.value})
 			input.value = ""
 		}
-		app.cont.appendChild(h('#chat-view',
+		h.add(app.cont, h('#chat-view',
 			h('header',
 				h('', 'babasite', h('sup', 'beta'), ' ', h('a', {href:'/logout'}, "Logout")),
 				h('.menu', app.views.filter(v =>
@@ -40,15 +29,24 @@ export let chat:View = {
 			),
 			output, form,
 		))
-		app.on(listeners)
+		return {
+			chat(data:ChatData) {
+				addOutput(data.user +": "+ data.msg)
+			},
+			hist(data:{msgs:ChatData[]}) {
+				if (data.msgs) data.msgs.forEach((el:ChatData) =>
+					output.appendChild(h('', el.user +": "+ el.msg))
+				)
+				scrollEnd()
+			}
+		}
 	},
 	stop: function() {
-		app.off(listeners)
 		output.innerHTML = ""
 	}
 }
 
-let output = h('code#output')
+const output = h('code#output')
 function addOutput(text:string) {
 	output.appendChild(h('', text))
 	scrollEnd()
