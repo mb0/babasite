@@ -50,14 +50,14 @@ type Feature struct {
 type Color uint32
 
 func RGB(r, g, b uint8) Color { return Color(r)<<16 | Color(g)<<8 | Color(b) }
-func (c Color) R() uint8      { return uint8((c >> 16) & 0xff) }
-func (c Color) G() uint8      { return uint8((c >> 8) & 0xff) }
-func (c Color) B() uint8      { return uint8(c & 0xff) }
+func (c Color) R() uint8      { return uint8(c >> 16) }
+func (c Color) G() uint8      { return uint8(c >> 8) }
+func (c Color) B() uint8      { return uint8(c) }
 func (c Color) O() uint8      { return uint8((c >> 24) & 0x7f) }
 func (c Color) A() uint8      { return 100 - c.O() }
 func (c Color) Max() (m uint8) {
 	for i := 0; i < 3; i++ {
-		if v := uint8(c & 0xff); v > m {
+		if v := uint8(c >> (i * 8)); v > m {
 			m = v
 		}
 	}
