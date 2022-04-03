@@ -42,7 +42,7 @@ app.addView({name: "maped",
 		this.listen = {
 			modtile(p:ModTile) {
 				if (map) map.tiles[p.y*map.w+p.x] = p.tile
-				paintTile(c, p.x, p.y, p.tile)
+				c.paintPixel(p, tileColor(p.tile))
 			},
 			map(m:Map) {
 				map = m
@@ -78,14 +78,9 @@ function paintMap(c:Canvas) {
 	if (!map) return
 	for (let y = 0; y < map.h; y++) {
 		for (let x = 0; x < map.w; x++) {
-			paintTile(c, x, y, map.tiles[y*map.w+x])
+			c.paintPixel({x,y}, tileColor(map.tiles[y*map.w+x]))
 		}
 	}
-}
-
-function paintTile(c:Canvas, x:number, y:number, tile:number) {
-	c.ctx.fillStyle = tileColor(tile)
-	c.ctx.fillRect(x, y, 1, 1)
 }
 
 function tileColor(tile:number) {

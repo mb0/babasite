@@ -36,7 +36,7 @@ app.addView({name: "gol",
 					color = "white"
 					map.tiles[i] = 0
 				}
-				paintAt(c, p.x, p.y, color)
+				c.paintPixel(p, color)
 			},
 			map(m) {
 				map = m
@@ -50,11 +50,6 @@ app.addView({name: "gol",
 	}
 })
 
-function paintAt(c:Canvas, x:number, y:number, color:string) {
-	c.ctx.fillStyle = color
-	c.ctx.fillRect(x, y, 1, 1)
-}
-
 function paintMap(c:Canvas) {
 	c.clear()
 	if (!map) return
@@ -62,7 +57,7 @@ function paintMap(c:Canvas) {
 		for (let x = 0; x < map.w; x++) {
 			let tile = map.tiles[y*map.w+x]
 			if (tile > 0) {
-				paintAt(c, x, y, "green")
+				c.paintPixel({x, y}, "green")
 			}
 		}
 	}

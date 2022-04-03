@@ -26,7 +26,7 @@ export interface AssetEditor extends PalCtx, ToolCtx, PaintCtx {
 export function assetEditor(a:Asset, pals:Pallette[]):AssetEditor {
 	const c = newZoomCanvas("our-canvas", 800, 600)
 	c.resize(a.w, a.h)
-	c.zoom(8)
+	c.zoom(12)
 	c.move(8, 8)
 	c.stage.bg = cssColor(assetColor(a, 0))
 	let tmp = tmpPic(a.w, a.h)
@@ -56,8 +56,7 @@ export function assetEditor(a:Asset, pals:Pallette[]):AssetEditor {
 						}
 					}
 					if (p) {
-						c.ctx.fillStyle = cssColor(assetColor(a, p))
-						c.ctx.fillRect(x, y, 1, 1)
+						c.paintPixel({x, y}, cssColor(assetColor(a, p)))
 					}
 				}
 			}
@@ -153,6 +152,7 @@ export function assetEditor(a:Asset, pals:Pallette[]):AssetEditor {
 			})
 		}
 	})
+	ed.pal.update(ed)
 	c.init(ed.repaint)
 	ed.repaint()
 	let k = kinds.find(k => k.kind == a.kind)!

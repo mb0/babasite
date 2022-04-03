@@ -1,4 +1,5 @@
 import {app, h} from './app'
+import {Canvas, newCanvas} from './canvas'
 import {chat} from './chat'
 import {Pos, Size} from './geom'
 
@@ -8,18 +9,13 @@ app.addView({name: "simple",
 	start: function(app) {
 		stop = false
 		chat.start(app)
-		let canvas = h('canvas#our-canvas', {
-			width:800, height:600, style: "background-color:white",
-		}) as HTMLCanvasElement
-		app.cont.appendChild(h('#simple-view',
-			canvas,
-		))
-		let ctx = canvas.getContext("2d") as CanvasRenderingContext2D
-		canvas.addEventListener("click", onClick)
+		let c = newCanvas('our-canvas', 800, 600, "white")
+		h.add(app.cont, h('#simple-view', c.el))
+		c.el.addEventListener("click", onClick)
 		window.addEventListener("keydown", onKey)
 		window.addEventListener("keyup", onKey)
 		function step(n:number) {
-			drawBackground(ctx, n)
+			drawBackground(c, n)
 			if (!stop) requestAnimationFrame(step)
 		}
 		requestAnimationFrame(step)
@@ -61,13 +57,11 @@ for (let i=0; i < 20; i++) {
 	})
 }
 
-function drawClouds(c:CanvasRenderingContext2D) {
-	c.fillStyle = "rgba(255,255,255,.5)"
+function drawClouds(c:Canvas) {
+	const color = "rgba(255,255,255,.5)"
 	for (let i=0; i < clouds.length; i++) {
 		let cloud = clouds[i]
-		c.beginPath()
-		c.rect(cloud.x, cloud.y, cloud.w, cloud.h)
-		c.fill()
+		c.paintRect(cloud, color)
 		cloud.x += cloud.v
 		if (cloud.x > 800) {
 			cloud.w = 30+random(20)
@@ -78,7 +72,7 @@ function drawClouds(c:CanvasRenderingContext2D) {
 	}
 }
 
-function drawCar(c:CanvasRenderingContext2D, car:Pos, ctrl:Ctrl) {
+function drawCar(c:Canvas, car:Pos, ctrl:Ctrl) {
 	let v = 10
 	if (ctrl.up) car.y -= v
 	if (ctrl.down) car.y += v
@@ -88,10 +82,7 @@ function drawCar(c:CanvasRenderingContext2D, car:Pos, ctrl:Ctrl) {
 	car.y = Math.max(400, car.y)
 	car.x = Math.min(800-20, car.x)
 	car.y = Math.min(600-30, car.y)
-	c.fillStyle = "black"
-	c.beginPath()
-	c.rect(car.x, car.y, 20, 30)
-	c.fill()
+	c.paintRect({...car, w:20, h:30}, "black")
 }
 
 function onKey(e:KeyboardEvent) {
@@ -138,38 +129,30 @@ interface Sun extends Pos {
 
 let sun:Sun = {x: 0, y: 0, rad: 50}
 
-function drawSun(c:CanvasRenderingContext2D, sun:Sun) {
-	c.fillStyle = "#FFFF00"
-	c.beginPath()
-	c.arc(sun.x, sun.y, sun.rad, 0, 2 * Math.PI)
-	c.fill()
-	//c.beginPath()
-	//c.strokeStyle = "white"
-	//c.rect(sun.x - sun.rad, sun.y - sun.rad, 2 * sun.rad, 2 * sun.rad)
-	//c.stroke()
+function drawSun({ctx}:Canvas, sun:Sun) {
+	ctx.fillStyle = "#FFFF00"
+	ctx.beginPath()
+	ctx.arc(sun.x, sun.y, sun.rad, 0, 2 * Math.PI)
+	ctx.fill()
 }
 let doDrawSun = true
 
-function drawBackground(ctx:CanvasRenderingContext2D, n:number) {
+function drawBackground(c:Canvas, n:number) {
 	// male grüne box
-	ctx.fillStyle = "green"
-	ctx.fillRect(0, 400, 800, 200)
+	c.paintRect({x:0, y:400, w:800, h:200}, "green")
 	// draw blue sky with gradient
-	let skyGrad = ctx.createLinearGradient(400, 0, 400, 600)
+	let skyGrad = c.ctx.createLinearGradient(400, 0, 400, 600)
 	skyGrad.addColorStop(0, 'blue')
 	skyGrad.addColorStop(1, 'white')
-	ctx.fillStyle = skyGrad
-	//ctx.fillStyle = 'blue'
-	ctx.fillRect(0, 0, 800, 400)
-	drawClouds(ctx)
+	c.paintRect({x:0, y:0, w:800, h:400}, skyGrad)
+	drawClouds(c)
 	if (doDrawSun) {
 		sun.x = ((n / 10) % 900) -50
 		let u = (sun.x - 400) / 50
 		sun.y = (u * u) + 250
-		drawSun(ctx, sun)
+		drawSun(c, sun)
 	}
-	drawCar(ctx, car1, ctrl)
-	//drawCar(ctx, car2, ctrl)
+	drawCar(c, car1, ctrl)
 }
 
 function onClick(e:MouseEvent) {

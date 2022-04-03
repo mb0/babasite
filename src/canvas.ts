@@ -5,17 +5,29 @@ export interface Canvas {
 	el:HTMLCanvasElement
 	ctx:CanvasRenderingContext2D
 	clear():void
+	paintPixel(p:Pos, color:string):void
+	paintRect(b:Box, color:string|CanvasGradient):void
 }
 
 export function newCanvas(id:string, width:number, height:number, bg?:string):Canvas {
 	const el = h('canvas', {id, width, height}) as HTMLCanvasElement
 	const ctx = el.getContext("2d") as CanvasRenderingContext2D
 	ctx.imageSmoothingEnabled = false
-	return {el, ctx, clear() {
-		ctx.resetTransform()
-		ctx.fillStyle = bg||"gray"
-		ctx.fillRect(0, 0, width, height)
-	}}
+	return {el, ctx,
+		clear() {
+			ctx.resetTransform()
+			ctx.fillStyle = bg||"gray"
+			ctx.fillRect(0, 0, width, height)
+		},
+		paintPixel(p, color) {
+			ctx.fillStyle = color
+			ctx.fillRect(p.x, p.y, 1, 1)
+		},
+		paintRect(b, color) {
+			ctx.fillStyle = color
+			ctx.fillRect(b.x, b.y, b.w, b.h)
+		}
+	}
 }
 
 export interface Stage extends Box {
@@ -38,9 +50,10 @@ export interface ZoomCanvas extends Canvas {
 }
 
 export function newZoomCanvas(id:string, width:number, height:number, bg?:string):ZoomCanvas {
-	const {el, ctx, clear} = newCanvas(id, width, height, bg)
+	const c = newCanvas(id, width, height, bg)
+	const {el, ctx, clear} = c
 	const s = {x:0, y:0, w:0, h:0, zoom:1, bg: "white"}
-	return {el, ctx, stage:s,
+	return {...c, stage:s,
 		move(x, y) {
 			s.x = x
 			s.y = y
