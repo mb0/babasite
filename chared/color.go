@@ -49,7 +49,7 @@ type Feature struct {
 
 type Color uint32
 
-func RGB(r, g, b uint8) Color { return Color(r)<<16 | Color(g)<<16 | Color(b) }
+func RGB(r, g, b uint8) Color { return Color(r)<<16 | Color(g)<<8 | Color(b) }
 func (c Color) R() uint8      { return uint8((c >> 16) & 0xff) }
 func (c Color) G() uint8      { return uint8((c >> 8) & 0xff) }
 func (c Color) B() uint8      { return uint8(c & 0xff) }
