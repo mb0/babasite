@@ -212,17 +212,16 @@ func (s *FileStore) SavePic(a *Asset, id int) (pic *Pic, err error) {
 		return nil, fmt.Errorf("invalid asset %v", a)
 	}
 	if id <= 0 {
-		a.Last++
-		id = a.Last
+		pic = a.NewPic()
 	} else {
 		pic = a.Pics[id]
-	}
-	if pic == nil {
-		if id > a.Last {
-			a.Last = id
+		if pic == nil {
+			if id > a.Last {
+				a.Last = id
+			}
+			pic = &Pic{ID: id}
+			a.Pics[id] = pic
 		}
-		pic = &Pic{ID: id}
-		a.Pics[id] = pic
 	}
 	path := filepath.Join(s.path, a.Name, fmt.Sprintf("%03d", id))
 	return pic, writeSel(pic.Sel, path)

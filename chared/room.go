@@ -283,6 +283,7 @@ func (r *Room) handleSub(m *hub.Msg, a *AssetSubs) *hub.Msg {
 			Del  int    `json:"del"`
 			Ins  []int  `json:"ins"`
 			Pics []*Pic `json:"pics"`
+			Copy bool   `json:"copy,omitempty"`
 		}
 		err := m.Unmarshal(&req)
 		s := a.GetSeq(req.Name)
@@ -290,14 +291,31 @@ func (r *Room) handleSub(m *hub.Msg, a *AssetSubs) *hub.Msg {
 			return m.ReplyErr(fmt.Errorf("sequence not found"))
 		}
 		for i, id := range req.Ins {
-			p := a.Pics[id]
-			if p == nil {
-				p, err = r.Store.SavePic(a.Asset, id)
-				if err != nil {
-					return m.ReplyErr(fmt.Errorf("failed to save pic: %v", err))
+			var p *Pic
+			var save bool
+			if id <= 0 {
+				p = a.NewPic()
+				save = true
+			} else {
+				p = a.Pics[id]
+				if p == nil {
+					p = a.NewPic()
+					save = true
+				} else if req.Copy {
+					np := a.NewPic()
+					np.Box = p.Box
+					np.Data = append(np.Data[:0], p.Data...)
+					p = np
+					save = true
 				}
+			}
+			if save {
 				req.Ins[i] = p.ID
 				req.Pics = append(req.Pics, p)
+				_, err = r.Store.SavePic(a.Asset, p.ID)
+				if err != nil {
+					return m.ReplyErr(err)
+				}
 			}
 		}
 		tmp := make([]int, 0, len(s.IDs)-req.Del+len(req.Ins))
@@ -328,17 +346,17 @@ func (r *Room) handleSub(m *hub.Msg, a *AssetSubs) *hub.Msg {
 	}
 	return nil
 }
-func (g *Room) getSub(c hub.Conn) *AssetSubs {
-	return g.Subs[c.ID()].Asset
+func (r *Room) getSub(c hub.Conn) *AssetSubs {
+	return r.Subs[c.ID()].Asset
 }
-func (g *Room) sub(c hub.Conn, a *AssetSubs) {
+func (r *Room) sub(c hub.Conn, a *AssetSubs) {
 	a.Subs = append(a.Subs, c)
-	g.Subs[c.ID()] = Sub{Asset: a}
+	r.Subs[c.ID()] = Sub{Asset: a}
 }
-func (g *Room) unsub(id int64) {
-	sub, ok := g.Subs[id]
+func (r *Room) unsub(id int64) {
+	sub, ok := r.Subs[id]
 	if ok {
-		delete(g.Subs, id)
+		delete(r.Subs, id)
 		if sub.Asset != nil {
 			asubs := sub.Asset.Subs
 			for i, s := range asubs {
