@@ -6,6 +6,7 @@ import {Pallette, cssColor} from './pal'
 import {PalView, PalCtx, palView} from './pal_view'
 import {ToolCtx, PaintCtx, toolView, tmpPic, tools} from './tool'
 import {Pic, PicID} from './pic'
+import {sequenceView} from './seq_view'
 
 export interface AssetEditor extends PalCtx, ToolCtx, PaintCtx {
 	el:HTMLElement
@@ -30,8 +31,7 @@ export function assetEditor(a:Asset, pals:Pallette[]):AssetEditor {
 	c.move(8, 8)
 	c.stage.bg = cssColor(assetColor(a, 0))
 	let tmp = tmpPic(a.w, a.h)
-	let seqCont = h('')
-	let picsCont = h('')
+	const seqView = sequenceView(a)
 	let ed:AssetEditor = {a, c, el: h(''), tmp, pals, pal: palView(),
 		seq: a.seq && a.seq.length ? a.seq[0] : null,
 		idx:0, pic:null,
@@ -80,9 +80,8 @@ export function assetEditor(a:Asset, pals:Pallette[]):AssetEditor {
 			}
 		},
 		updateSeq(s:Sequence) {
-			h.repl(seqCont, renderSeqs(ed))
+			seqView.update(ed)
 			if (ed.seq == s) {
-				h.repl(picsCont, renderPics(ed))
 				if (!ed.pic && s && ed.idx >= 0) {
 					ed.pic = a.pics[s.ids[ed.idx]]
 					ed.repaint()
@@ -120,9 +119,9 @@ export function assetEditor(a:Asset, pals:Pallette[]):AssetEditor {
 			ed.seq = s
 			ed.idx = idx
 			ed.pic = s?.ids ? a.pics[s.ids[idx]] : null
+			seqView.update(ed)
 			tmp.reset()
 			ed.repaint()
-			h.repl(picsCont, renderPics(ed))
 		},
 	}
 	if (ed.seq && ed.seq.ids) ed.pic = a.pics[ed.seq.ids[ed.idx]]
@@ -152,68 +151,13 @@ export function assetEditor(a:Asset, pals:Pallette[]):AssetEditor {
 			})
 		}
 	})
-	ed.pal.update(ed)
 	c.init(ed.repaint)
 	ed.repaint()
-	let k = kinds.find(k => k.kind == a.kind)!
-	h.repl(seqCont, renderSeqs(ed))
-	h.repl(picsCont, renderPics(ed))
-	h.repl(ed.el,
-		h('section.seq',
-			h('header', k.name +' '+ a.name +' Sequenzen: ',
-				h('span', {onclick() {
-					mount(sequenceForm({}, s => {
-						app.send("seq.new", {name:s.name})
-						unmount()
-					}))
-				}}, '[add]')
-			),
-			seqCont,
-		),
-		picsCont,
-		// canvas
-		c.el,
+	seqView.update(ed)
+	ed.pal.update(ed)
+	h.repl(ed.el, seqView.el, c.el,
 		// tools and color pallette
 		h('', toolView(ed), ed.pal.el),
 	)
 	return ed
 }
-
-function renderSeqs(ed:AssetEditor) {
-	let seq = ed.a.seq
-	if (!seq) return "Keine Sequenzen"
-	return seq.map(s =>
-		h('span', {onclick() {
-			ed.sel(s, 0)
-		}}, s.name)
-	)
-}
-
-function renderPics(ed:AssetEditor) {
-	if (!ed.seq) return null
-	let s = ed.seq
-	let ids:number[] = s.ids || (s.ids = [])
-	return h('span', s.name+ ' Pics', h('span', {onclick() {
-			app.send("seq.edit", {name:s.name, idx:ids.length, ins:[0]})
-		}}, '[add]'), ': ', ids.map((_, i:number) =>
-		h('span', {onclick() {
-			if (i != ed.idx) ed.sel(s, i)
-		}}, i+' ')
-	))
-}
-
-function sequenceForm(s:Partial<Sequence>, submit:(res:Partial<Sequence>)=>void) {
-	let name = h('input', {type:'text', value:s.name||''}) as HTMLInputElement
-	let onsubmit = (e:Event) => {
-		e.preventDefault()
-		submit({name: name.value})
-	}
-	return h('section.form',
-		h('header', 'Sequenz erstellen'),
-		h('form', {onsubmit},
-			h('', h('label', "Name"), name),
-			h('button', 'Neu Anlegen')
-		)
-	)
-}
-
