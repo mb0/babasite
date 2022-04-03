@@ -221,7 +221,7 @@ func (r *Room) handle(m *hub.Msg) *hub.Msg {
 		r.sub(m.From, as)
 		r.Bcast(site.RawMsg("asset.new", AssetInfo{Name: a.Name, Kind: a.Kind}))
 		return site.RawMsg("asset.open", a)
-	case "seq.new", "seq.del", "seq.edit", "pic.new", "pic.del", "pic.edit":
+	case "seq.new", "seq.del", "seq.edit", "pic.edit":
 		a := r.getSub(m.From)
 		if a == nil {
 			return m.ReplyErr(fmt.Errorf("not subscribed"))

@@ -131,14 +131,7 @@ app.addView({name: "chared",
 				s.ids.splice.apply(s.ids, args)
 				ed.updateSeq(s)
 			},
-			"pic.new": (res, subj) => {
-				if (isErr(res, subj)||!ed) return
-				ed.addPic(res.seq)
-			},
-			"pic.del": (res, subj) => {
-				if (isErr(res, subj)||!ed) return
-				ed.delPic(res.pic)
-			},
+			// TODO pic.del for garbage collection
 			"pic.edit": (res, subj) => {
 				if (isErr(res, subj) || !ed) return
 				// get pic
