@@ -24,6 +24,7 @@ export interface App {
 	send(subj:string, data?:any):void
 }
 
+let retry = 0
 let ws:WebSocket|null = null
 let listeners:{[key:string]:Listener[]} = {}
 export let app:App = {
@@ -53,7 +54,10 @@ export let app:App = {
 		if (v.name != 'lobby') location.hash = '#'+ v.name
 	},
 	start() {
-		app.on('_close', () => app.show('lobby'))
+		app.on('_close', () => {
+			retry++
+			app.show('lobby')
+		})
 		app.show('lobby')
 	},
 	connect() {
@@ -63,6 +67,7 @@ export let app:App = {
 		}
 		ws = new WebSocket(url)
 		ws.onopen = () => {
+			retry = 0
 			app.trigger('_open')
 			app.addOutput("websocket connected to "+ url)
 		}
@@ -122,26 +127,35 @@ export let app:App = {
 app.addView({
 	name: "lobby",
 	start(app) {
-		let el = h('#lobby-view', 'Verbindet...')
-		app.on('enter', (data) => app.show(data.room))
-		app.one("_open", () => {
-			if (location.hash?.length > 0) {
-				app.send("enter", {room:location.hash.slice(1)})
-			} else {
-				h.repl(el,
-				    h('', 'babasite', h('sup', 'beta')),
-				    h('.menu', app.views.filter(v =>
-				        v != app.cur && v.name != 'lobby'
-				    ).map(v =>
-				        h('', {onclick:() => {
-				            app.send("enter", {room:v.name})
-				        }}, v.label||v.name)
-				    )),
-				)
+		const dots = '......'
+		let el = h('#lobby-view', retry < 7 ? 'Verbindet'+dots.slice(6-retry): h('',
+			'Verbindung fehlgeschlagen ', h('span', {onclick() {
+				h.repl(el, 'Verbindet...')
+				retry = 0
+				app.connect()
+			}}, 'Erneut versuchen'),
+		))
+		this.listen = {
+			enter: (data) => app.show(data.room),
+			_open: () => {
+				if (location.hash?.length > 0) {
+					app.send("enter", {room:location.hash.slice(1)})
+				} else {
+					h.repl(el,
+					    h('', 'babasite', h('sup', 'beta')),
+					    h('.menu', app.views.filter(v =>
+						v != app.cur && v.name != 'lobby'
+					    ).map(v =>
+						h('', {onclick:() => {
+						    app.send("enter", {room:v.name})
+						}}, v.label||v.name)
+					    )),
+					)
+				}
 			}
-		})
-		app.connect()
-		app.cont.appendChild(el)
+		}
+		if (retry < 7) app.connect()
+		h.add(app.cont, el)
 	},
 	stop(){}
 })
