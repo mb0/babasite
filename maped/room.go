@@ -23,9 +23,7 @@ func (g *Room) Route(m *hub.Msg) {
 	switch m.Subj {
 	case "enter":
 		g.ChatRoom.Route(m)
-		if site.FromID(m) != 0 {
-			m.From.Chan() <- site.RawMsg("map", g.Map)
-		}
+		site.Send(m.From, site.RawMsg("map", g.Map))
 	case "exit", "chat":
 		g.ChatRoom.Route(m)
 	case "modtile":

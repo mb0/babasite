@@ -40,7 +40,7 @@ func NewChat(name string) *ChatRoom {
 func (c *ChatRoom) Name() string { return c.Room }
 func (c *ChatRoom) Bcast(m *hub.Msg) {
 	for _, conn := range c.Conns {
-		conn.Chan() <- m
+		Send(conn, m)
 	}
 }
 
@@ -75,7 +75,7 @@ func (c *ChatRoom) addUser(u *User) {
 	c.Infos = append(c.Infos, info)
 	sort.Sort(sortInfos(c.Infos))
 	c.Bcast(RawMsg("join", info))
-	u.Chan() <- RawMsg("hist", c.ChatData)
+	Send(u, RawMsg("hist", c.ChatData))
 	c.Conns = append(c.Conns, u.Conn)
 }
 
@@ -116,3 +116,12 @@ type sortInfos []UserInfo
 func (a sortInfos) Len() int           { return len(a) }
 func (a sortInfos) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
 func (a sortInfos) Less(i, j int) bool { return a[i].Name < a[j].Name }
+
+func Send(c hub.Conn, m *hub.Msg) {
+	if c != nil {
+		select {
+		case c.Chan() <- m:
+		default:
+		}
+	}
+}

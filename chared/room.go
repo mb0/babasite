@@ -20,7 +20,7 @@ type Sub struct {
 func (a *AssetSubs) Bcast(m *hub.Msg, except int64) {
 	for _, c := range a.Subs {
 		if c.ID() != except {
-			c.Chan() <- m
+			site.Send(c, m)
 		}
 	}
 }
@@ -49,7 +49,7 @@ func NewRoom(name string, datapath string) *Room {
 func (r *Room) Route(m *hub.Msg) {
 	res := r.handle(m)
 	if res != nil {
-		m.From.Chan() <- res
+		site.Send(m.From, res)
 	}
 }
 func (r *Room) handle(m *hub.Msg) *hub.Msg {

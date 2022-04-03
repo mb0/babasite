@@ -67,7 +67,7 @@ func (s *Site) Route(m *hub.Msg) {
 				if user.Room != nil {
 					user.Room.Route(&hub.Msg{Subj: "exit", From: m.From})
 				}
-				user.Chan() <- m.Reply(EnterMsg{Room: data.Room})
+				Send(user, m.Reply(EnterMsg{Room: data.Room}))
 				user.Room = room
 				user.Room.Route(m)
 			}
