@@ -1,4 +1,5 @@
 import {app, h} from '../app'
+import {pickColor} from '../html'
 import {mount, unmount} from '../modal'
 import {Asset} from './asset'
 import {Color, Pixel, Feature, Pallette, cssColor} from './pal'
@@ -43,28 +44,24 @@ export function palView():PalView {
 							ctx.fgcolor = cssColor(color)
 						},
 						ondblclick() {
-							let titel = 'Ändere Farbe für '+feat.name
-							mount(colorForm(titel, color, res => {
+							pickColor(cssColor(color), res => {
 								app.send("pal.edit", {
 									name:pal.name,
 									feat:feat.name,
 									idx:c, del:1, ins:[res],
 								})
-								unmount()
-							}))
+							})
 						},
 					})),
 					h('span', {onclick() {
-						let titel = 'Neue Farbe für '+feat.name
-						mount(colorForm(titel, 0, res => {
+						pickColor('#7f7575', res => {
 							app.send("pal.edit", {
 								name:pal.name,
 								feat:feat.name,
 								idx:feat.colors.length,
 								ins:[res],
 							})
-							unmount()
-						}))
+						})
 					}}, '[add]')
 				)),
 				h('span', {onclick() {
@@ -117,20 +114,6 @@ export function featForm(feat:Partial<Feature>, submit:(res:Partial<Feature>)=>v
 		h('form', {onsubmit},
 			h('', h('label', "Name"), name),
 			h('button', 'Neu Anlegen')
-		)
-	)
-}
-export function colorForm(titel:string, c:Color, submit:(cssColor:string)=>void) {
-	const color = h('input', {type:'color', value:cssColor(c)}) as HTMLInputElement
-	const onsubmit = (e:Event) => {
-		e.preventDefault()
-		submit(color.value.slice(1))
-	}
-	return h('section.form',
-		h('header', titel),
-		h('form', {onsubmit},
-			h('', h('label', "Farbe"), color),
-			h('button', 'Speichern')
 		)
 	)
 }
