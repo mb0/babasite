@@ -1,0 +1,156 @@
+Projekt Moon
+============
+
+Moon ist ein mehr-spieler Rätsel spiel mit 2D Pixel Grafik aus Vogelperspektive.
+
+Wir benutzen ein eigenen und angepassten Karten- und Grafikeditor.
+
+Jeder Spieler steuert einen Charakter(Char) auf einer Karte. Name und Aussehen können vom Spieler
+angepasst werden. Eventuell haben Charaktere noch weiter Eigenschaften.
+Der Char kann zu einem anderen Ort auf der Karte gehen und Gegenstände oder Objekte benutzen.
+
+Objekte(Obj) sind interaktive Teile der Karte wie z.B. Schalter, Türen oder Kisten.
+
+Gegenstände(Item) können aufgehoben werden und mit bestimmten anderen Gegenständen kombiniert oder
+mit Objekten benutzt werden.
+
+Chars haben ein Inventar für Gegenstände, das entweder durch Platz oder Tragkraft begrenzt ist.
+
+Die Karte basiert auf Kacheln(Tile), die Informationen zu Grafik, Begehbarkeit und Objs enthalten.
+Zusätzlich speichert eine Karte noch eine Liste von enthaltenen Objs.
+
+Rätselideen
+-----------
+
+- Versteckte Codes für Türen/Tresore
+- koordinierte Emotes, Gesichtserkennung 
+- mehrere Schalter gleichzeitig aktivieren
+- Rover, Hacking, Schlösserknacken mini game
+- Aufleuchtende Lampen in der richtigen Reihenfolge antippen
+- Wasserröhre in die richtige Richtung lenken
+- versteckte Codes in einen Treso/… eingeben
+- Schilder die in Richtungen zeigen und dann Hebel die man in die Richtige  Richtung
+  in der richtigen Reihenfolge machen muss
+- Computer Reparieren und dafür Teile finden
+- Hinweise Hinter Bildschirmen/Bildern
+- Hebel die man nur nach oben/unten bewegen kann in die Richtung von Büchern/andere
+  Sachen schieben also muss man da gucken ob sie richtig rum sind
+- Ein paar pixel an einer Wand sind anders als andere und man kann an der Stelle in
+  einen Nebenraum kommen(man kann es gestalten als gang/ oder das gleiche mit einer
+  lockeren Platte die man aufhebeln kann mit einem Item
+
+
+Story Akt 0: Kapsel
+-------------------
+
+Ort:   Mond (Spieler dürfen durch Spielname oder Grafiken wissen, dass es auf dem Mond spielt.)
+Datum: unbekannt
+Szene: Chars sind im Tiefschlaf in einer Kapsel.
+Ziel:  Char Auswahl, Lobby und Start starten.
+
+Ideen:
+ * Hier können Spieler später vielleicht gespeicherte Chars und Spielstände auswählen.
+
+Story Akt 1: Raum
+-----------------
+
+Szene: Chars erwachen ohne Gedächtnis aus Tiefschlaf in einem Raum mit einer verschlossenen Tür.
+Ziel:  Chars müssen ihre Identität herausfinden um die Tür zu öffnen.
+
+Dieser Akt sollte ein überschaubares Rätsel (5min) für eine einzelne oder wenigen Spielern sein.
+
+Ideen:
+
+ * Die Chars können einen Namen wählen.
+
+ * Die Chars sind nackt und müssen sich erst anziehen, und bekommen damit ihr Inventar.
+   Obj: Kleiderschrank, Kommode
+   Item: Kleidung
+
+ * Tür ist Schleuse und braucht Schlüssel(Armband o.s.) und Biometrie-Scan.
+   Schleuse lässt zur gleichen Zeit nur einen Char mit einem Schlüssel im Inventar durch.
+   Obj:  Schleuse
+   Item: Armband
+
+ * Die Seriennummern der Kapsel muss zugeordnet werden, um den richtigen Schlüssel auszuwählen.
+   Die Spieler können Ihre Kapsel erinnern und die Nummer ablesen oder an einem Info-Terminal die
+   Angaben zum Aussehen ihrem Char zuordnen.
+   Sonst muss durch Probieren herausgefunden bis alle mit ihrem Schlüssel durch die Schleuse sind.
+
+ * Die Tür ist versperrt und das Hindernis kann nicht von einem Char bewegt werden?
+   Hindernis muss von drei Chars bewegt werden.
+   Mit Seil und Rädern bauen ein Flaschenzug und das Hindernis kann alleine bewegt werden.
+   Obj: Tür, Hindernis, Hindernis mit Seil?
+   Item: Seil, Räder, Flaschenzug
+ 
+ * Das Hindernis hat auch die Tür beschädigt.
+   Techniker Char kann Werkzeuge und Materialien finde und mit der Tür benutzen.
+   Obj: beschädigte und reparierte Tür
+   Item: Klebeband, Kabel
+
+ * Tür fehlt Energie. Energiezelle muss getauscht werden und die Tiefschlaf-Kapseln haben Ersatz.
+   Kapseln müssen genauer untersucht werden um an die Zellen zu kommen.
+   Terminal muss benutzt werden um die Kapsel zu deaktivieren und eine Wartungsklappe zu öffnen.
+
+ * Die Schleuse ist ein Medizinischer Scanner und stellt beim letzten Char eine Infektion fest?
+
+Story Akt 2: Basis
+------------------
+
+Szene: Chars kommen aus dem Startraum in eine offenen Mehrzweck-Wohnraum in der Basis.
+Ziel:  Basis erkunden, freischalten und pflegen, mehr herausfinden und mit Rover starten
+
+Ideen:
+
+ * Basis erkunden, freischalten, pflegen
+
+ * Energiesteuerung und Generatoren
+   Item: Metallplatte 
+
+ * Kommunikationszentrale
+   Kontakt mit Erde versuchen: Story info!
+   Daten-Archiv finden und letzte Übertragung anhören: Story info!
+   Item: Datenträger
+
+ * Klimasteuerung braucht Aktivierung/Wartung
+   Bereiche der Basis müssen aktiviert werden, damit sie betreten werden können.
+   Ausfall und Alarm wenn die Wartung zu lange aufgeschoben wird.
+
+ * Wassermanagement
+   Obj: Tanks, Recycler
+   Item: Filter, Bakterien-Starter
+
+ * Hydroponics muss für Ernährung und Sauerstoffversorgung aufgebaut werden 
+   Item: Kräuter, Gemüse, Samen, Dünger, Gasflaschen (Sauerstoff, CO2, Stickstoff), Lampen, Energie
+
+ * Aquaponics mit Fischen für Dünger und Proteine.
+   Item: Fischlaich, Fische, Fischfutter
+
+ * Mondfahrzeug und Raumanzüge aktivieren/reparieren/ausrüsten
+   Obj:  Mondfahrzeug
+   Item: Raumanzug, Motorteile
+
+Story Akt 3: Krater
+-------------------
+
+Ideen:
+
+ * Krater erkunden
+
+ * Andere Basen finden (Observatorium, Raketen-Platform)
+
+ * Observatorium benutzen um die Erde zu untersuchen: Story info!
+
+ * Raketen-Platform benutzen um in Richtung Erde/Ende zu starten.
+
+Story Akt 4: Ende
+-----------------
+
+Ideen:
+
+ * Alien Mothership? Argumente zur Rettung der Menschheit
+
+ * Erde? Game-Over? Next Game: Survival?
+
+(Wir sollten natürlich konzentriert an Akt 0 und 1 arbeiten, damit wir möglichst schnell eine
+spielbare Demo haben die wir testen und präsentieren können).

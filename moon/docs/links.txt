@@ -1,0 +1,86 @@
+
+Links
+=====
+
+Algorithms
+----------
+
+Flood Fill
+
+	https://de.wikipedia.org/wiki/Floodfill
+	https://en.wikipedia.org/wiki/Flood_fill
+
+Dithering
+
+	https://de.wikipedia.org/wiki/Dithering_(Bildbearbeitung)
+	https://en.wikipedia.org/wiki/Dither
+
+Path-finding
+
+	https://de.wikipedia.org/wiki/A*-Algorithmus
+	https://www.redblobgames.com/pathfinding/a-star/introduction.html
+	https://simblob.blogspot.com/2015/02/optimizing-for-grid-maps.html
+
+Pixel Art
+---------
+
+Item Icons
+
+	https://platinumgod.co.uk/
+
+Stylish Low Color mockups
+
+	https://twitter.com/nekocrocodile/status/1509601634309087243/photo/1
+	https://twitter.com/the08games/status/1510944543394439174/photo/1
+	https://twitter.com/the08games/status/1510641065879126019?cxt=HHwWhoC-rfaC8PYpAAAA
+	https://twitter.com/FreddyPixelart/status/1509720282747056130
+	https://twitter.com/slmnll/status/1149041436991430656/photo/2
+
+Tiles
+
+	https://opengameart.org/content/bunker-office-tiles
+	https://opengameart.org/content/futuristic-space-buildings-and-dome-walls
+	https://opengameart.org/content/futuristic-doctors-office
+	https://opengameart.org/content/factory-tileset
+	
+
+Chars
+
+	https://twitter.com/lightee02/status/1508325387247681542/photo/1
+	https://twitter.com/trizG_/status/1509567313552437251/photo/1
+	https://www.wired.com/2014/02/movie-8-bit-gifs/
+	https://opengameart.org/content/cyber-city
+
+Moon
+
+	https://twitter.com/damianartclub/status/1510062634242093058/photo/1
+	https://twitter.com/Risa_Base/status/1511044680171069449/photo/1
+
+Other
+
+	https://twitter.com/ko_dll/status/1508556865529077767/photo/1
+	https://twitter.com/mushroom_rt/status/1508438358464544781/photo/1
+
+Moon
+----
+	
+	https://en.wikipedia.org/wiki/Moonbase
+	http://www.learningaboutelectronics.com/Artikeln/Gewicht-auf-dem-mond-rechner.php
+
+Moon base building articles with ideas, artworks and renderings:
+
+	https://phys.org/news/2013-01-lunar-base-3d.html
+	https://www.fastcompany.com/90381082/how-to-build-a-moon-base
+
+Moon Movie 2009
+
+	https://www.imdb.com/title/tt1182345/
+	https://www.imdb.com/title/tt1182345/mediaviewer/rm1786481408/
+	https://www.imdb.com/title/tt1182345/mediaviewer/rm1490194177/
+	https://www.imdb.com/title/tt1182345/mediaviewer/rm2898366209/
+	https://www.imdb.com/title/tt1182345/mediaviewer/rm2730594049/
+	https://www.imdb.com/title/tt1182345/mediaviewer/rm2797702913/
+	https://www.imdb.com/title/tt1182345/mediaviewer/rm1592284928/
+	https://www.imdb.com/title/tt1182345/mediaviewer/rm3162584320/
+	https://www.imdb.com/title/tt1182345/mediaviewer/rm3733009664/
+
