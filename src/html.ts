@@ -8,7 +8,7 @@ export function hInput(sel:string, opts?:any) {
 	return h(sel, opts) as HTMLInputElement
 }
 
-export function datalistInput(id:string, hand:(opt:string)=>void) {
+export function datalistInput(id:string, hand?:(opt:string)=>void) {
 	let opts:string[] = []
 	const list = h('datalist', {id})
 	const input = hInput('', {list:id})
@@ -16,12 +16,14 @@ export function datalistInput(id:string, hand:(opt:string)=>void) {
 		let name = input.value.trim()
 		let opt = opts.find(opt => opt == name)
 		if (!opt) return false
-		input.value = ""
-		hand(opt)
+		if (hand) {
+			hand(opt)
+			input.value = ""
+		}
 		return true
 	}
 	input.oninput = check
-	return {el: h('', list, input), list, input, check, update(names:string[]) {
+	return {el: h('span', list, input), list, input, check, update(names:string[]) {
 		opts = names
 		h.repl(list, opts.map(name => h('option', name)))
 	}}

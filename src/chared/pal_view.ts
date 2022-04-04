@@ -1,8 +1,8 @@
 import {app, h} from '../app'
-import {pickColor} from '../html'
+import {hInput, datalistInput, pickColor} from '../html'
 import {mount, unmount} from '../modal'
 import {Asset} from './asset'
-import {Color, Pixel, Feature, Pallette, cssColor} from './pal'
+import {Pixel, Feature, Pallette, cssColor} from './pal'
 
 export interface PalCtx {
 	a:Asset
@@ -27,8 +27,8 @@ export function palView():PalView {
 					}))
 				}}, pal.name), ' ',
 				h('span', {onclick() {
-					mount(palForm({}, res => {
-						app.send("pal.new", {name:res.name, copy:pal.name})
+					mount(palForm(ctx, {}, res => {
+						app.send("pal.new", res)
 						unmount()
 					}))
 				}}, '[new]')
@@ -89,22 +89,30 @@ function palSelect(pals:Pallette[], submit:(p:Pallette)=>void) {
 	)
 }
 
-export function palForm(pal:Partial<Pallette>, submit:(res:Partial<Pallette>)=>void) {
-	const name = h('input', {type:'text', value:pal.name||''}) as HTMLInputElement
+interface PalRes extends Partial<Pallette> {
+	copy:string
+}
+
+export function palForm(ctx:PalCtx, pal:Partial<Pallette>, submit:(res:PalRes)=>void) {
+	const name = hInput('', {value:pal.name||''})
+	const dl = datalistInput('dl-pals')
+	dl.update(["--"].concat(ctx.pals.map(p => p.name)))
 	const onsubmit = (e:Event) => {
 		e.preventDefault()
-		submit({name: name.value})
+		const pal = ctx.pals.find(p => p.name == dl.input.value)
+		submit({name: name.value, copy: pal?.name||''})
 	}
 	return h('section.form',
 		h('header', 'Pallette erstellen'),
 		h('form', {onsubmit},
 			h('', h('label', "Name"), name),
+			h('', h('label', "Copy"), dl.el),
 			h('button', 'Neu Anlegen')
 		)
 	)
 }
 export function featForm(feat:Partial<Feature>, submit:(res:Partial<Feature>)=>void) {
-	const name = h('input', {type:'text', value:feat.name||''}) as HTMLInputElement
+	const name = hInput('', {value:feat.name||''})
 	const onsubmit = (e:Event) => {
 		e.preventDefault()
 		submit({name: name.value})
