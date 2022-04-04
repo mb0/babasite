@@ -49,9 +49,9 @@ export function mount(el:HTMLElement) {
 	let layer:Layer = {id:++last, el, foc: document.activeElement}
 	stack.forEach(l => l.el.style.display = 'none')
 	stack.push(layer)
-	cont.appendChild(el)
-	focus(layer.el)
+	h.add(cont, el)
 	start()
+	focus(layer.el)
 }
 
 export function mounted() {
