@@ -1,4 +1,5 @@
 import {app, h} from '../app'
+import {hInput} from '../html'
 import {mount, unmount} from '../modal'
 import {Canvas, newCanvas} from '../canvas'
 import {Asset, Sequence, kinds, assetColor} from './asset'
@@ -33,7 +34,7 @@ export function sequenceView(a:Asset) {
 }
 
 function sequenceForm(s:Partial<Sequence>, submit:(res:Partial<Sequence>)=>void) {
-	let name = h('input', {type:'text', value:s.name||''}) as HTMLInputElement
+	let name = hInput('', {value:s.name||''})
 	let onsubmit = (e:Event) => {
 		e.preventDefault()
 		submit({name: name.value})
@@ -54,13 +55,42 @@ function picSelect() {
 		let s = ed.seq
 		let ids:number[] = s.ids || (s.ids = [])
 		h.repl(el, h('span', s.name+ ' Pics', h('span', {onclick() {
-				app.send("seq.edit", {name:s.name, idx:ids.length, ins:[0]})
+				mount(picForm({}, r => {
+					const id = r.idx < 0 || r.idx >= ids.length ? 0 : ids[r.idx]
+					app.send("seq.edit", {
+						name:s.name,
+						idx:ids.length,
+						ins:[id],
+						copy:!r.ref,
+					})
+					unmount()
+				}))
 			}}, '[add]'), ': ', ids.map((_, i:number) =>
 			h('span', {onclick() {
 				if (i != ed.idx) ed.sel(s, i)
 			}}, i+' ')
 		)))
 	}}
+}
+interface PicFormRes {
+	idx:number
+	ref:boolean
+}
+function picForm(r:Partial<PicFormRes>, submit:(res:PicFormRes)=>void) {
+	let idx = hInput('', {value:''+(r.idx||0)})
+	let ref = hInput('', {type:'checkbox', checked:r.ref||false})
+	let onsubmit = (e:Event) => {
+		e.preventDefault()
+		submit({idx: parseInt(idx.value, 10), ref:ref.checked})
+	}
+	return h('section.form',
+		h('header', 'Pic hinzufügen'),
+		h('form', {onsubmit},
+			h('', h('label', "Starte mit Seq Pic"), idx),
+			h('', h('label', "Als Referenz"), ref),
+			h('button', 'Neu Anlegen')
+		)
+	)
 }
 
 function sequencePreview(a:Asset) {
