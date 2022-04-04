@@ -54,10 +54,10 @@ export let app:App = {
 		if (v.name != 'lobby') location.hash = '#'+ v.name
 	},
 	start() {
-		app.on('_close', () => {
+		app.on({_close:() => {
 			retry++
 			app.show('lobby')
-		})
+		}, enter:(data) => app.show(data.room)})
 		app.show('lobby')
 	},
 	connect() {
@@ -136,7 +136,6 @@ app.addView({
 			}}, 'Erneut versuchen'),
 		))
 		this.listen = {
-			enter: (data) => app.show(data.room),
 			_open: () => {
 				if (location.hash?.length > 0) {
 					app.send("enter", {room:location.hash.slice(1)})
