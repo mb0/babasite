@@ -96,10 +96,11 @@ function picForm(r:Partial<PicFormRes>, submit:(res:PicFormRes)=>void) {
 function sequencePreview(a:Asset) {
 	const id = 'seqPreview_'+ a.name
 	const c = newCanvas(id, a.w, a.h, "white")
+	let pause = false
 	let ed:AssetEditor|null = null
 	const stop = () => { ed = null }
 	const paint = (tick:number) => {
-		if (!ed) return
+		if (pause || !ed) return
 		const ids = ed.seq?.ids
 		if (!ids?.length) return
 		const idx = Math.floor(tick/500)%ids.length
@@ -107,6 +108,10 @@ function sequencePreview(a:Asset) {
 		const pic = a.pics[ids[idx]]
 		if (pic) paintPic(c, a, pic)
 		requestAnimationFrame(paint)
+	}
+	c.el.onclick = () => {
+		pause = !pause
+		if (!pause && ed) paint(0)
 	}
 	return {el:c.el, c, stop, update(e:AssetEditor) {
 		ed = e
