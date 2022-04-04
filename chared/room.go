@@ -358,13 +358,14 @@ func (r *Room) unsub(id int64) {
 	if ok {
 		delete(r.Subs, id)
 		if sub.Asset != nil {
-			asubs := sub.Asset.Subs
-			for i, s := range asubs {
+			subs := sub.Asset.Subs
+			for i, s := range subs {
 				if s.ID() == id {
-					asubs = append(asubs[:i], asubs[i+1:]...)
+					subs = append(subs[:i], subs[i+1:]...)
 					break
 				}
 			}
+			sub.Asset.Subs = subs
 		}
 	}
 }
