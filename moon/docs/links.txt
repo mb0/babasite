@@ -21,6 +21,20 @@ Path-finding
 	https://www.redblobgames.com/pathfinding/a-star/introduction.html
 	https://simblob.blogspot.com/2015/02/optimizing-for-grid-maps.html
 
+Web APIs
+--------
+
+	https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API
+	https://developer.mozilla.org/en-US/docs/Web/API/WebSockets_API
+	https://developer.mozilla.org/en-US/docs/Web/API/Pointer_events
+	https://developer.mozilla.org/en-US/docs/Web/API/Pointer_Lock_API
+	https://developer.mozilla.org/en-US/docs/Web/API/HTML_Drag_and_Drop_API
+	https://developer.mozilla.org/en-US/docs/Web/API/Gamepad_API
+	https://developer.mozilla.org/en-US/docs/Web/API/SpeechSynthesis
+	https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API
+	https://mdn.github.io/webaudio-examples/step-sequencer/
+	https://513waves.github.io/
+
 Pixel Art
 ---------
 
