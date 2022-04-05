@@ -105,8 +105,12 @@ export function newZoomCanvas(id:string, width:number, height:number, bg?:string
 		},
 		init(repaint) {
 			el.addEventListener("wheel", e => {
-				s.zoom += (e.deltaY < 0 ? -1 : 1)
+				const x1 = (e.offsetX-s.x)/s.zoom
+				const y1 = (e.offsetY-s.y)/s.zoom
+				s.zoom += (e.deltaY < 0 ? 1 : -1)
 				if (s.zoom<1) s.zoom = 1
+				s.x = -x1*s.zoom+e.offsetX
+				s.y = -y1*s.zoom+e.offsetY
 				repaint(this)
 			})
 			el.addEventListener("mousedown", e => {
