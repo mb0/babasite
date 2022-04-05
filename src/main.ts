@@ -1,6 +1,6 @@
 import {app} from './app'
-import './simple'
-import './game'
+import './sunrise'
+import './gol'
 import './maped'
 import './chared'
 
