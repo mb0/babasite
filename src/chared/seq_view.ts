@@ -2,14 +2,15 @@ import {app, h} from '../app'
 import {hInput} from '../html'
 import {mount, unmount} from '../modal'
 import {Canvas, newCanvas} from '../canvas'
+import {Animator} from '../ani'
 import {Asset, Sequence, kinds, assetColor} from './asset'
 import {AssetEditor} from './asset_editor'
 import {cssColor} from './pal'
 import {Pic} from './pic'
 
-export function sequenceView(a:Asset) {
+export function sequenceView(a:Asset, ani:Animator) {
 	const picSel = picSelect()
-	const seqPrev = sequencePreview(a)
+	const seqPrev = sequencePreview(a, ani)
 	const k = kinds.find(k => k.kind == a.kind)!
 	const cont = h('')
 	const el = h('section.seq',
@@ -22,7 +23,7 @@ export function sequenceView(a:Asset) {
 			}}, '[add]')
 		), cont, seqPrev.el, picSel.el,
 	)
-	return {el, stop:seqPrev.stop, update(ed:AssetEditor) {
+	return {el, update(ed:AssetEditor) {
 		const {seq} = ed.a
 		if (!seq) return "Keine Sequenzen"
 		h.repl(cont, seq.map(s => h('span', {onclick() {
@@ -93,29 +94,23 @@ function picForm(r:Partial<PicFormRes>, submit:(res:PicFormRes)=>void) {
 	)
 }
 
-function sequencePreview(a:Asset) {
+function sequencePreview(a:Asset, ator:Animator) {
 	const id = 'seqPreview_'+ a.name
 	const c = newCanvas(id, a.w, a.h, "white")
-	let pause = false
 	let ed:AssetEditor|null = null
-	const stop = () => { ed = null }
-	const paint = (tick:number) => {
-		if (pause || !ed) return
-		const ids = ed.seq?.ids
-		if (!ids?.length) return
-		const idx = Math.floor(tick/500)%ids.length
+	const paint = (fn:number) => {
+		console.count("preview paint")
 		c.clear()
-		const pic = a.pics[ids[idx]]
+		const ids = ed?.seq?.ids
+		if (!ids?.length) return
+		const pic = a.pics[ids[fn%ids.length]]
 		if (pic) paintPic(c, a, pic)
-		requestAnimationFrame(paint)
 	}
-	c.el.onclick = () => {
-		pause = !pause
-		if (!pause && ed) paint(0)
-	}
-	return {el:c.el, c, stop, update(e:AssetEditor) {
+	const ani = ator.animate(500, paint, 0, true)
+	c.el.onclick = () => ani.toggle()
+	return {el:c.el, c, update(e:AssetEditor) {
 		ed = e
-		paint(0)
+		if (ani.paused()) ani.toggle()
 	}}
 }
 

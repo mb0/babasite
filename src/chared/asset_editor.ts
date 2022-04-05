@@ -1,5 +1,6 @@
 import {app, h} from '../app'
 import {newZoomCanvas} from '../canvas'
+import {newAnimator} from '../ani'
 import {Asset, Sequence, assetColor} from './asset'
 import {Pallette, cssColor} from './pal'
 import {PalView, PalCtx, palView} from './pal_view'
@@ -25,13 +26,14 @@ export interface AssetEditor extends PalCtx, ToolCtx, PaintCtx {
 }
 
 export function assetEditor(a:Asset, pals:Pallette[]):AssetEditor {
+	const ani = newAnimator()
 	const c = newZoomCanvas("our-canvas", 800, 600)
 	c.resize(a.w, a.h)
 	c.zoom(12)
 	c.move(8, 8)
 	c.stage.bg = cssColor(assetColor(a, 0))
 	let tmp = tmpPic(a.w, a.h)
-	const seqView = sequenceView(a)
+	const seqView = sequenceView(a, ani)
 	let ed:AssetEditor = {a, c, el: h(''), tmp, pals, pal: palView(),
 		seq: a.seq && a.seq.length ? a.seq[0] : null,
 		idx:0, pic:null,
@@ -124,7 +126,7 @@ export function assetEditor(a:Asset, pals:Pallette[]):AssetEditor {
 			ed.repaint()
 		},
 		stop() {
-			seqView.stop()
+			ani.close()
 		}
 	}
 	if (ed.seq && ed.seq.ids) ed.pic = a.pics[ed.seq.ids[ed.idx]]
