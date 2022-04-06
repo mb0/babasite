@@ -1,4 +1,4 @@
-import {Size} from '../geom'
+import {Dim} from '../geom'
 import {Pallette, Pixel, palColor} from './pal'
 import {Pic, PicID} from './pic'
 
@@ -19,7 +19,7 @@ export interface Sequence {
 	ids:number[]
 }
 
-export interface Asset extends AssetInfo, Size {
+export interface Asset extends AssetInfo, Dim {
 	seq:Sequence[]
 	pal:Pallette
 	pics:{[id:PicID]:Pic}

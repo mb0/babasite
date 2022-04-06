@@ -1,9 +1,9 @@
 import {app, h} from './app'
 import {chat} from './chat'
 import {newZoomCanvas, Canvas} from './canvas'
-import {Size} from './geom'
+import {Dim} from './geom'
 
-export interface Map extends Size {
+export interface Map extends Dim {
 	tiles:number[]
 }
 

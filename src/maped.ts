@@ -1,7 +1,7 @@
 import {app, h} from './app'
 import {chat} from './chat'
 import {newZoomCanvas, cssColor, Canvas} from './canvas'
-import {Pos, Size} from './geom'
+import {Pos, Dim} from './geom'
 
 interface ModTile extends Pos {
 	tile:number
@@ -16,7 +16,7 @@ export interface Tileset {
 	infos:TileInfo[]
 	lookup?:{[key:number]:TileInfo}
 }
-export interface Map extends Size {
+export interface Map extends Dim {
 	tiles:number[]
 	tileset:Tileset
 }

@@ -1,5 +1,5 @@
 import {h} from '../app'
-import {Pos, MinMax} from '../geom'
+import {Pos, Box, posIn, dimBox, boxGrow, boxCrop} from '../geom'
 import {Canvas} from '../canvas'
 import {Pixel} from './pal'
 
@@ -60,41 +60,38 @@ export interface TmpPic {
 }
 
 export function tmpPic(w:number, h:number) {
-	const len = w*h
 	const data = new Array(w*h)
-	let mm = new MinMax({w, h})
+	const d = dimBox({w, h})
+	let bb:Box = {x:0, y:0, w:0, h:0}
 	let tmp = {data,
 		// reset min, max and map
 		reset() {
-			mm = new MinMax({w, h})
-			for (let i=0; i<len; i++) data[i] = 0
+			bb = {x:0, y:0, w:0, h:0}
+			data.fill(0)
 		},
 		paint(x:number, y:number, pixel:number) {
-			mm.add({x, y})
+			if (!posIn({x, y}, d)) return
+			bb = boxGrow(bb, {x, y})
 			data[y*w+x] = pixel
 		},
 		rect(rx:number, ry:number, rw:number, rh:number, pixel:number) {
-			let x2 = Math.min(rx+rw-1, w-1)
-			let y2 = Math.min(ry+rh-1, h-1)
-			let x1 = Math.max(rx, 0)
-			let y1 = Math.max(ry, 0)
-			mm.add({x:x1, y:y1})
-			mm.add({x:x2, y:y2})
-			for (let y=y1; y<=y2; y++) {
-				for (let x=x1; x<=x2; x++) {
+			const b = boxCrop(d, {x:rx, y:ry, w:rw, h:rh})
+			bb = boxGrow(bb, b)
+			for (let y=b.y; y<b.x+b.h; y++) {
+				for (let x=b.x; x<b.x+b.w; x++) {
 					data[y*w+x] = pixel
 				}
 			}
 		},
 		getSel() {
-			const b = mm.box()
-			if (b.w <= 0 || b.h <= 0) return null
-			const sel = {...b, data:new Array(b.w*b.h).fill(0)}
-			for (let y=0; y < b.h; y++) {
-				let u = y*b.w
-				let v = (y+b.y)*w
-				for (let x=0; x < b.w; x++) {
-					sel.data[u+x] = data[v+(x+b.x)]
+			const l = bb.w*bb.h
+			if (l <= 0) return null
+			const sel = {...bb, data:new Array(l).fill(0)}
+			for (let y=0; y < bb.h; y++) {
+				let u = y*bb.w
+				let v = (y+bb.y)*w
+				for (let x=0; x < bb.w; x++) {
+					sel.data[u+x] = data[v+(x+bb.x)]
 				}
 			}
 			return sel

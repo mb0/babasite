@@ -1,7 +1,7 @@
 import {app, h} from './app'
 import {Canvas, newCanvas} from './canvas'
 import {chat} from './chat'
-import {Pos, Size} from './geom'
+import {Pos, Dim} from './geom'
 
 let stop = false
 app.addView({name: "simple",
@@ -41,7 +41,7 @@ function random(max:number):number {
 	return Math.random()*max
 }
 
-interface Cloud extends Pos, Size {
+interface Cloud extends Pos, Dim {
 	v:number
 }
 

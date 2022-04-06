@@ -1,6 +1,6 @@
 import {app, h} from '../app'
 import {chat} from '../chat'
-import {boxContains} from '../geom'
+import {boxIn} from '../geom'
 import {Pallette} from './pal'
 import {assetSelect} from './asset_sel'
 import {AssetEditor, assetEditor} from './asset_editor'
@@ -138,7 +138,7 @@ app.addView({name: "chared",
 				let pic = ed.a.pics[res.pic]
 				if (!pic) return
 				// update pic
-				if (!boxContains(pic, res)) growPic(pic, res)
+				if (!boxIn(pic, res)) growPic(pic, res)
 				copySel(pic, res)
 				// repaint canvas if current pic
 				if (pic == ed.pic) {
