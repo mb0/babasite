@@ -2,7 +2,7 @@ module github.com/mb0/babasite
 
 go 1.17
 
-require xelf.org/daql v0.0.0-20220130075634-9a6317987292
+require xelf.org/daql v0.0.0-20220406210145-4e37577e19c1
 
 require (
 	github.com/gorilla/securecookie v1.1.1

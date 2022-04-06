@@ -43,7 +43,7 @@ func (g *Room) handle(m *hub.Msg) {
 	switch m.Subj {
 	case "enter":
 		g.ChatRoom.Route(m)
-		site.Send(m.From, site.RawMsg("map", g.Map))
+		hub.Send(m.From, site.RawMsg("map", g.Map))
 	case "exit", "chat":
 		g.ChatRoom.Route(m)
 	case "click":
