@@ -200,7 +200,7 @@ func (r *Room) handle(m *hub.Msg) *hub.Msg {
 		if a := r.Store.Asset(req.Name); a != nil {
 			return m.ReplyErr(fmt.Errorf("asset named %s exists", req.Name))
 		}
-		req.Size = DefaultSize(req.Kind)
+		req.Dim = DefaultSize(req.Kind)
 		if req.Pal == "" {
 			req.Pal = "default"
 		}

@@ -1,4 +1,4 @@
-package chared
+package geom
 
 import "fmt"
 
@@ -17,20 +17,20 @@ func (p Pos) In(b Box) bool {
 	return p.X >= b.X && p.X < b.X+b.W && p.Y >= b.Y && p.Y < b.Y+b.H
 }
 
-type Size struct {
+type Dim struct {
 	W int `json:"w"`
 	H int `json:"h"`
 }
 
-func (p Size) Empty() bool { return p.W == 0 || p.H == 0 }
+func (p Dim) Empty() bool { return p.W == 0 || p.H == 0 }
 
 type Box struct {
 	Pos
-	Size
+	Dim
 }
 
 func MakeBox(x, y, w, h int) Box {
-	return Box{Pos: Pos{X: x, Y: y}, Size: Size{W: w, H: h}}
+	return Box{Pos: Pos{X: x, Y: y}, Dim: Dim{W: w, H: h}}
 }
 
 func (b Box) End() Pos { return b.Add(b.W-1, b.H-1) }
@@ -54,7 +54,7 @@ func (b Box) Grow(o Box) Box {
 	if e.Y < be.Y {
 		e.Y = be.Y
 	}
-	o.Size = Size{W: 1 + e.X - o.X, H: 1 + e.Y - o.Y}
+	o.Dim = Dim{W: 1 + e.X - o.X, H: 1 + e.Y - o.Y}
 	return o
 }
 func (b Box) Crop(o Box) Box {
@@ -71,7 +71,7 @@ func (b Box) Crop(o Box) Box {
 	if e.Y > be.Y {
 		e.Y = be.Y
 	}
-	o.Size = Size{W: 1 + e.X - o.X, H: 1 + e.Y - o.Y}
+	o.Dim = Dim{W: 1 + e.X - o.X, H: 1 + e.Y - o.Y}
 	return o
 }
 func (b Box) MarshalBinary() ([]byte, error) {

@@ -2,16 +2,18 @@ package chared
 
 import (
 	"fmt"
+
+	"github.com/mb0/babasite/game/geom"
 )
 
 type Pixel uint16
 
 type Sel struct {
-	Box
+	geom.Box
 	Data []Pixel `json:"data"`
 }
 
-func (s Sel) Global(p Pos) Pixel {
+func (s Sel) Global(p geom.Pos) Pixel {
 	if !p.In(s.Box) {
 		return 0
 	}
@@ -24,7 +26,7 @@ func MakeSel(x, y, w, h int, pix ...Pixel) Sel {
 		pix = make([]Pixel, n)
 		copy(pix, old)
 	}
-	return Sel{Box: MakeBox(x, y, w, h), Data: pix}
+	return Sel{Box: geom.MakeBox(x, y, w, h), Data: pix}
 }
 
 func (pic *Sel) Draw(e Sel, cp bool) {
@@ -74,7 +76,7 @@ type EditPic struct {
 // Apply changes asset a with the given edit or returns an error.
 func Apply(a *Asset, e EditPic) error {
 	// TODO validate edit
-	b := Box{Size: a.Size}
+	b := geom.Box{Dim: a.Dim}
 	if !b.ValidSel(e.Sel.Box) {
 		return fmt.Errorf("edit selection invalid")
 	}

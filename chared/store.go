@@ -11,6 +11,8 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+
+	"github.com/mb0/babasite/game/geom"
 )
 
 // in diesem moment speichern wir ganze assets inklusive aller bilder im json
@@ -315,7 +317,7 @@ func readSel(dir fs.FS, path string) (sel Sel, err error) {
 	if err != nil {
 		return sel, err
 	}
-	var box Box
+	var box geom.Box
 	err = box.UnmarshalBinary(raw)
 	if err != nil {
 		return sel, err
@@ -374,4 +376,14 @@ func ensureDir(path string) error {
 		return fmt.Errorf("expect dir")
 	}
 	return nil
+}
+
+func readUint16(raw []byte) uint16 {
+	return uint16(raw[0])<<8 | uint16(raw[1])
+}
+func writeUint16(b []byte, us ...uint16) []byte {
+	for _, u := range us {
+		b = append(b, byte(u>>8), byte(u))
+	}
+	return b
 }
