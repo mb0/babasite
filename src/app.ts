@@ -1,18 +1,17 @@
 import h from 'web/html'
 import {Conn, connect, wsUrl} from 'web/socket'
+import {Hub, Subs, newHub} from 'app/hub'
 
 export interface View {
 	name:string
 	label?:string
-	listen?:Listeners
+	subs?:Subs
 	start(app:App):void
 	stop():void
 }
-export type Listener = (data:any, subj:string)=>void
-export type Listeners = {[key:string]:Listener}
-export interface App {
+export interface App extends Hub {
 	cur:View|null
-	curlis:Listeners|void
+	curlis:Subs|void
 	views:View[]
 	cont:HTMLElement
 	addOutput(text:string):void
@@ -20,17 +19,13 @@ export interface App {
 	show(name:string):void
 	start():void
 	connect():void
-	on(subj:string|Listeners, func?:Listener):void
-	off(subj:string|Listeners, func?:Listener):void
-	one(subj:string, func:Listener):void
-	trigger(subj:string, data?:any):void
 	send(subj:string, data?:any):void
 }
 
 let retry = 0
 let conn:Conn|null = null
-let listeners:{[key:string]:Listener[]} = {}
-export let app:App = {
+let hub = newHub()
+export let app:App = {...hub,
 	cur: null,
 	curlis: undefined,
 	views: [],
@@ -48,12 +43,12 @@ export let app:App = {
 		const c = app.cur
 		if (c) {
 			c.stop()
-			app.off(c.listen||{})
+			app.off(c.subs||{})
 		}
 		app.cont.innerHTML = ''
 		app.cur = v
 		v.start(this)
-		app.on(v.listen||{})
+		app.on(v.subs||{})
 		if (v.name != 'lobby') location.hash = '#'+ v.name
 	},
 	start() {
@@ -83,34 +78,6 @@ export let app:App = {
 			app.trigger(subj, data)
 		})
 	},
-	on(subj, func) {
-		if (typeof subj == "string") {
-			let list = listeners[subj]
-			if (!list) listeners[subj] = [func!]
-			else list.push(func!)
-		} else {
-			Object.keys(subj).forEach(key => app.on(key, subj[key]))
-		}
-	},
-	off(subj, func) {
-		if (typeof subj == "string") {
-			const list = listeners[subj]
-			if (list) listeners[subj] = list.filter(f => f != func)
-		} else {
-			Object.keys(subj).forEach(key => app.off(key, subj[key]))
-		}
-	},
-	one(subj, func) {
-		const f = (data:any, subj:string) => {
-			func(data, subj)
-			app.off(subj, f)
-		}
-		app.on(subj, f)
-	},
-	trigger(subj, data) {
-		const list = listeners[subj]
-		if (list) list.forEach(f => f(data, subj))
-	},
 	send(subj, data) {
 		if (!conn || conn.ws.readyState != WebSocket.OPEN) {
 			console.log("not connected. trying to send:", subj, data)
@@ -131,7 +98,7 @@ app.addView({
 				app.connect()
 			}}, 'Erneut versuchen'),
 		))
-		this.listen = {
+		this.subs = {
 			_open: () => {
 				if (location.hash?.length > 0) {
 					app.send("enter", {room:location.hash.slice(1)})

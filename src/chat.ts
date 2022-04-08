@@ -30,7 +30,7 @@ export const chat:View = {
 			),
 			output, form,
 		))
-		return {
+		this.subs = {
 			chat(data:ChatData) {
 				addOutput(data.user +": "+ data.msg)
 			},

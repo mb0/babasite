@@ -25,7 +25,7 @@ app.addView({name: "gol",
 			if (p) app.send("click", p)
 		})
 		c.init(paintMap)
-		this.listen = {
+		this.subs = {
 			click(p) {
 				if (!map) return
 				let color = "green"

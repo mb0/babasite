@@ -46,7 +46,7 @@ app.addView({name: "chared",
 		h.add(app.cont, h('#chared',
 			h('style', cssStyle), assets.el, cont,
 		))
-		this.listen = {
+		this.subs = {
 			"init": res => {
 				assets.details.style.display = 'block'
 				assets.update(res.assets||[])

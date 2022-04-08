@@ -40,7 +40,7 @@ app.addView({name: "maped",
 				app.send("modtile", {x:p.x, y:p.y, tile:sel})
 		})
 		c.init(paintMap)
-		this.listen = {
+		this.subs = {
 			modtile(p:ModTile) {
 				if (map) map.tiles[p.y*map.w+p.x] = p.tile
 				c.paintPixel(p, tileColor(p.tile))
