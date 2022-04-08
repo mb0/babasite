@@ -1,6 +1,6 @@
-import {h} from '../app'
+import h from 'web/html'
+import {Canvas} from 'web/canvas'
 import {Pos, Box, posIn, dimBox, boxGrow, boxCrop} from 'game/geo'
-import {Canvas} from '../canvas'
 import {Pixel} from './pal'
 
 export interface PaintCtx {

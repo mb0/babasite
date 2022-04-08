@@ -1,4 +1,5 @@
-import {app, h, App, View} from './app'
+import h from 'web/html'
+import {app, App, View} from './app'
 
 export interface ChatData {
 	user:string

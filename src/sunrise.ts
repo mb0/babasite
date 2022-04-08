@@ -1,5 +1,6 @@
-import {app, h} from './app'
-import {Canvas, newCanvas} from './canvas'
+import h from 'web/html'
+import {Canvas, newCanvas} from 'web/canvas'
+import {app} from './app'
 import {chat} from './chat'
 import {Pos, Dim} from 'game/geo'
 

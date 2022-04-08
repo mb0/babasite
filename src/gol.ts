@@ -1,7 +1,8 @@
-import {app, h} from './app'
-import {chat} from './chat'
-import {newZoomCanvas, Canvas} from './canvas'
+import h from 'web/html'
+import {Canvas, newZoomCanvas} from 'web/canvas'
 import {Dim} from 'game/geo'
+import {app} from './app'
+import {chat} from './chat'
 
 export interface Map extends Dim {
 	tiles:number[]

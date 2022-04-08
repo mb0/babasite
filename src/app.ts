@@ -1,3 +1,5 @@
+import h from 'web/html'
+
 export interface View {
 	name:string
 	label?:string
@@ -158,47 +160,6 @@ app.addView({
 	},
 	stop(){}
 })
-
-export type HArg = {[key:string]:any}
-export type HData = HTMLElement|string|HData[]|null
-
-const selRegex = /^(\w+)?(?:#([^.]*))?(?:[.]([^ ]*))?$/
-export function h(sel:string, args?:HArg|HData, ...data:HData[]):HTMLElement {
-	let m = sel.match(selRegex)
-	if (!m) throw new Error("invalid selector: "+sel)
-	let el = document.createElement(m[1]||'div')
-	if (m[2]) el.id = m[2]
-	if (m[3]) el.className = m[3].replace('.', ' ')
-	if (args && !addChild(el, args)) {
-		Object.keys(args).forEach(key => {
-			if (key == 'list' || key == 'for')
-				el.setAttribute(key, args[key])
-			else (el as any)[key] = args[key]
-		})
-	}
-	if (data) addChild(el, data)
-	return el
-}
-h.add = (el:HTMLElement, ...data:HData[]) => addChild(el, data)
-h.repl = (el:HTMLElement, ...data:HData[]) => {
-	el.innerHTML = ""
-	return addChild(el, data)
-}
-
-function addChild(el:HTMLElement, data:HArg|HData):data is HData {
-	if (typeof data == "string") {
-		el.appendChild(document.createTextNode(data))
-	} else if (Array.isArray(data)) {
-		data.forEach(d => {
-			addChild(el, d)
-		})
-	} else if (data instanceof HTMLElement) {
-		el.appendChild(data)
-	} else {
-		return false
-	}
-	return true
-}
 
 export interface Msg {
 	subj:string

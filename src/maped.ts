@@ -1,7 +1,8 @@
-import {app, h} from './app'
-import {chat} from './chat'
-import {newZoomCanvas, cssColor, Canvas} from './canvas'
+import h from 'web/html'
+import {newZoomCanvas, cssColor, Canvas} from 'web/canvas'
 import {Pos, Dim} from 'game/geo'
+import {app} from './app'
+import {chat} from './chat'
 
 interface ModTile extends Pos {
 	tile:number
