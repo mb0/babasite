@@ -3,30 +3,26 @@ package chared
 import (
 	"fmt"
 
-	"github.com/mb0/babasite/game/geom"
+	"github.com/mb0/babasite/game/geo"
+	"github.com/mb0/babasite/game/grid"
 )
 
 type Pixel uint16
 
 type Sel struct {
-	geom.Box
-	Data []Pixel `json:"data"`
+	grid.Tiles[Pixel]
 }
 
-func (s Sel) Global(p geom.Pos) Pixel {
-	if !p.In(s.Box) {
-		return 0
-	}
-	return s.Data[(p.Y-s.Y)*s.W+p.X-s.X]
-}
-
-func MakeSel(x, y, w, h int, pix ...Pixel) Sel {
+func MakeSel(x, y, w, h int, pix ...uint16) Sel {
 	if n := w * h; len(pix) < n {
 		old := pix
-		pix = make([]Pixel, n)
+		pix = make([]uint16, n)
 		copy(pix, old)
 	}
-	return Sel{Box: geom.MakeBox(x, y, w, h), Data: pix}
+	return Sel{Tiles: grid.Tiles[Pixel]{Data: grid.Data{
+		Box: geo.MakeBox(x, y, w, h),
+		Raw: pix,
+	}}}
 }
 
 func (pic *Sel) Draw(e Sel, cp bool) {
@@ -35,34 +31,35 @@ func (pic *Sel) Draw(e Sel, cp bool) {
 	}
 	if pic.Box == e.Box { // simple case same box
 		if cp {
-			copy(pic.Data, e.Data)
+			copy(pic.Raw, e.Raw)
 			return
 		}
-		for i, p := range e.Data {
+		for i, p := range e.Raw {
 			if p != 0 {
 				if p == 99 {
 					p = 0
 				}
-				pic.Data[i] = p
+				pic.Raw[i] = p
 			}
 		}
 		return
 	}
-	if !pic.Contains(e.Box) { // we need to grow
-		tmp := &Sel{Box: pic.Grow(e.Box)}
-		tmp.Data = make([]Pixel, tmp.W*tmp.H)
+	if !e.In(pic.Box) { // we need to grow
+		var tmp Sel
+		tmp.Box = pic.Grow(e.Box)
+		tmp.Raw = make([]uint16, tmp.W*tmp.H)
 		tmp.Draw(*pic, true)
-		*pic = *tmp
+		*pic = tmp
 	}
 	// we can calculate
-	for i, p := range e.Data {
+	for i, p := range e.Raw {
 		if cp || p != 0 {
 			x := i%e.W + e.X
 			y := i/e.W + e.Y
 			if p == 99 {
 				p = 0
 			}
-			pic.Data[(y-pic.Y)*pic.W+x-pic.X] = p
+			pic.Raw[(y-pic.Y)*pic.W+x-pic.X] = p
 		}
 	}
 }
@@ -76,8 +73,8 @@ type EditPic struct {
 // Apply changes asset a with the given edit or returns an error.
 func Apply(a *Asset, e EditPic) error {
 	// TODO validate edit
-	b := geom.Box{Dim: a.Dim}
-	if !b.ValidSel(e.Sel.Box) {
+	b := geo.Box{Dim: a.Dim}
+	if !e.Sel.In(b) {
 		return fmt.Errorf("edit selection invalid")
 	}
 	// first look up the pic to edit

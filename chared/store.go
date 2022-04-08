@@ -11,8 +11,6 @@ import (
 	"sort"
 	"strconv"
 	"strings"
-
-	"github.com/mb0/babasite/game/geom"
 )
 
 // in diesem moment speichern wir ganze assets inklusive aller bilder im json
@@ -317,17 +315,8 @@ func readSel(dir fs.FS, path string) (sel Sel, err error) {
 	if err != nil {
 		return sel, err
 	}
-	var box geom.Box
-	err = box.UnmarshalBinary(raw)
-	if err != nil {
-		return sel, err
-	}
-	raw = raw[8:]
-	data := make([]Pixel, box.W*box.H)
-	for i := range data {
-		data[i] = Pixel(readUint16(raw[i*2:]))
-	}
-	return Sel{Box: box, Data: data}, nil
+	err = sel.UnmarshalBinary(raw)
+	return sel, err
 }
 
 func writePal(p *Pallette, path string) error {
@@ -354,14 +343,7 @@ func writeAsset(a *Asset, path string) error {
 }
 
 func writeSel(sel Sel, path string) error {
-	b := make([]byte, 0, 8+2*sel.W*sel.H)
-	b = writeUint16(b,
-		uint16(sel.X), uint16(sel.Y),
-		uint16(sel.W), uint16(sel.H),
-	)
-	for _, p := range sel.Data {
-		b = writeUint16(b, uint16(p))
-	}
+	b, _ := sel.MarshalBinary()
 	return os.WriteFile(path, b, 0644)
 }
 
@@ -376,14 +358,4 @@ func ensureDir(path string) error {
 		return fmt.Errorf("expect dir")
 	}
 	return nil
-}
-
-func readUint16(raw []byte) uint16 {
-	return uint16(raw[0])<<8 | uint16(raw[1])
-}
-func writeUint16(b []byte, us ...uint16) []byte {
-	for _, u := range us {
-		b = append(b, byte(u>>8), byte(u))
-	}
-	return b
 }

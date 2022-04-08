@@ -1,6 +1,6 @@
 module github.com/mb0/babasite
 
-go 1.17
+go 1.18
 
 require xelf.org/daql v0.0.0-20220406210145-4e37577e19c1
 

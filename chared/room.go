@@ -304,7 +304,7 @@ func (r *Room) handleSub(m *hub.Msg, a *AssetSubs) *hub.Msg {
 				} else if req.Copy {
 					np := a.NewPic()
 					np.Box = p.Box
-					np.Data = append(np.Data[:0], p.Data...)
+					np.Raw = append(np.Raw[:0], p.Raw...)
 					p = np
 					save = true
 				}

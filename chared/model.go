@@ -3,7 +3,7 @@ package chared
 import (
 	"regexp"
 
-	"github.com/mb0/babasite/game/geom"
+	"github.com/mb0/babasite/game/geo"
 )
 
 var NameCheck = regexp.MustCompile(`^[a-z0-9_]+$`)
@@ -16,7 +16,7 @@ type SeqMeta struct {
 type AssetMeta struct {
 	Name string `json:"name"`
 	Kind string `json:"kind"`
-	geom.Dim
+	geo.Dim
 	Seq []*SeqMeta `json:"seq"`
 	Pal string     `json:"pal"`
 }
@@ -74,12 +74,13 @@ func (a *Asset) NewPic() *Pic {
 	return p
 }
 
-func DefaultSize(kind string) geom.Dim {
+func DefaultSize(kind string) (d geo.Dim) {
+	d.W, d.H = 16, 16
 	switch kind {
 	case "char":
-		return geom.Dim{48, 48}
+		d.W, d.H = 48, 48
 	case "item":
-		return geom.Dim{64, 64}
+		d.W, d.H = 64, 64
 	}
-	return geom.Dim{16, 16}
+	return d
 }
