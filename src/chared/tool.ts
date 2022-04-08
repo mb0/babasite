@@ -1,5 +1,5 @@
 import {h} from '../app'
-import {Pos, Box, posIn, dimBox, boxGrow, boxCrop} from '../geom'
+import {Pos, Box, posIn, dimBox, boxGrow, boxCrop} from 'game/geo'
 import {Canvas} from '../canvas'
 import {Pixel} from './pal'
 

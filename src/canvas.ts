@@ -1,5 +1,5 @@
 import {h} from './app'
-import {Pos, Box} from './geom'
+import {Pos, Box} from './game/geo'
 
 export interface Canvas {
 	el:HTMLCanvasElement

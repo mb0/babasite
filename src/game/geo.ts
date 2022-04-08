@@ -33,7 +33,7 @@ export function boxIdx(b:Box, p:Pos) {
 }
 
 export function boxCrop(b:Box, o:Box):Box {
-	if (b.w*b.h<=0) return {x:0, y:0, w:0, h:0}
+	if (b.w*b.h<=0||o.w*o.h<=0) return {x:0, y:0, w:0, h:0}
 	const {x, y} = posMax(o, b)
 	const e = posMin(boxEnd(o), boxEnd(b))
 	return {x, y, w:1+e.x-x, h:1+e.y-y}

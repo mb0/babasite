@@ -1,4 +1,4 @@
-import {Dim} from '../geom'
+import {Dim} from 'game/geo'
 import {Pallette, Pixel, palColor} from './pal'
 import {Pic, PicID} from './pic'
 

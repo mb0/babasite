@@ -1,4 +1,4 @@
-import {Box, boxEnd} from '../geom'
+import {Box, boxEnd} from 'game/geo'
 import {Pixel} from './pal'
 
 export interface Sel extends Box { data:Pixel[] }

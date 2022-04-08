@@ -1,6 +1,6 @@
 import {app, h} from '../app'
 import {chat} from '../chat'
-import {boxIn} from '../geom'
+import {boxIn} from 'game/geo'
 import {Pallette} from './pal'
 import {assetSelect} from './asset_sel'
 import {AssetEditor, assetEditor} from './asset_editor'

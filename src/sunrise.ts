@@ -1,7 +1,7 @@
 import {app, h} from './app'
 import {Canvas, newCanvas} from './canvas'
 import {chat} from './chat'
-import {Pos, Dim} from './geom'
+import {Pos, Dim} from 'game/geo'
 
 let stop = false
 app.addView({name: "simple",
