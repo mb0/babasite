@@ -1,6 +1,6 @@
 import {h, hInput, datalistInput, pickColor} from 'web/html'
 import {mount, unmount} from 'web/modal'
-import {app} from '../app'
+import app from 'app'
 import {Asset} from './asset'
 import {Pixel, Feature, Pallette, cssColor} from './pal'
 

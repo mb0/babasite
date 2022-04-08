@@ -1,7 +1,7 @@
 import h from 'web/html'
 import {newAnimator} from 'web/animate'
 import {newZoomCanvas} from 'web/canvas'
-import {app} from '../app'
+import app from 'app'
 import {Asset, Sequence, assetColor} from './asset'
 import {Pallette, cssColor} from './pal'
 import {PalView, PalCtx, palView} from './pal_view'

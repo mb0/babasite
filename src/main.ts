@@ -1,4 +1,4 @@
-import {app} from './app'
+import app from 'app'
 import './sunrise'
 import './gol'
 import './maped'

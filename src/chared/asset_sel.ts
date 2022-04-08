@@ -1,6 +1,6 @@
 import {h, hInput, datalistInput} from 'web/html'
 import {mount, unmount} from 'web/modal'
-import {app} from '../app'
+import app from 'app'
 import {Asset, AssetInfo, kinds} from './asset'
 
 export function assetSelect(infos:AssetInfo[]) {

@@ -25,7 +25,7 @@ export interface App extends Hub {
 let retry = 0
 let conn:Conn|null = null
 let hub = newHub()
-export let app:App = {...hub,
+export const app:App = {...hub,
 	cur: null,
 	curlis: undefined,
 	views: [],
@@ -86,6 +86,8 @@ export let app:App = {...hub,
 		}
 	}
 }
+
+export default app
 
 app.addView({
 	name: "lobby",

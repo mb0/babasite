@@ -1,5 +1,5 @@
 import h from 'web/html'
-import {app, App, View} from './app'
+import {app, App, View} from 'app'
 
 export interface ChatData {
 	user:string

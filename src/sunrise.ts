@@ -1,7 +1,7 @@
 import h from 'web/html'
 import {Canvas, newCanvas} from 'web/canvas'
-import {app} from './app'
-import {chat} from './chat'
+import app from 'app'
+import {chat} from 'app/chat'
 import {Pos, Dim} from 'game/geo'
 
 let stop = false
