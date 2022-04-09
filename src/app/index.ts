@@ -1,6 +1,6 @@
-import h from 'web/html'
 import {Conn, connect, wsUrl} from 'web/socket'
 import {Hub, Subs, newHub} from 'app/hub'
+import lobby from 'app/lobby'
 
 export interface View {
 	name:string
@@ -11,7 +11,6 @@ export interface View {
 }
 export interface App extends Hub {
 	cur:View|null
-	curlis:Subs|void
 	views:View[]
 	cont:HTMLElement
 	addOutput(text:string):void
@@ -22,12 +21,10 @@ export interface App extends Hub {
 	send(subj:string, data?:any):void
 }
 
-let retry = 0
 let conn:Conn|null = null
-let hub = newHub()
-export const app:App = {...hub,
+
+export const app:App = {...newHub(),
 	cur: null,
-	curlis: undefined,
 	views: [],
 	cont: document.querySelector("#app")!,
 	addOutput(text) {
@@ -53,7 +50,7 @@ export const app:App = {...hub,
 	},
 	start() {
 		app.on({_close:() => {
-			retry++
+			lobby.retry++
 			app.show('lobby')
 		}, enter:(data) => app.show(data.room)})
 		app.show('lobby')
@@ -63,7 +60,7 @@ export const app:App = {...hub,
 		conn = connect(url, (subj, data) => {
 			switch (subj) {
 			case '_open':
-				retry = 0
+				lobby.retry = 0
 				app.addOutput("websocket connected to "+ data)
 				break
 			case '_error':
@@ -87,39 +84,7 @@ export const app:App = {...hub,
 	}
 }
 
+app.addView(lobby)
+
 export default app
 
-app.addView({
-	name: "lobby",
-	start(app) {
-		const dots = '......'
-		let el = h('#lobby-view', retry < 7 ? 'Verbindet'+dots.slice(6-retry): h('',
-			'Verbindung fehlgeschlagen ', h('span', {onclick() {
-				h.repl(el, 'Verbindet...')
-				retry = 0
-				app.connect()
-			}}, 'Erneut versuchen'),
-		))
-		this.subs = {
-			_open: () => {
-				if (location.hash?.length > 0) {
-					app.send("enter", {room:location.hash.slice(1)})
-				} else {
-					h.repl(el,
-					    h('', 'babasite', h('sup', 'beta')),
-					    h('.menu', app.views.filter(v =>
-						v != app.cur && v.name != 'lobby'
-					    ).map(v =>
-						h('', {onclick:() => {
-						    app.send("enter", {room:v.name})
-						}}, v.label||v.name)
-					    )),
-					)
-				}
-			}
-		}
-		if (retry < 7) app.connect()
-		h.add(app.cont, el)
-	},
-	stop(){}
-})
