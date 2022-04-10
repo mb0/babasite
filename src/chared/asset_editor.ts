@@ -2,7 +2,7 @@ import h from 'web/html'
 import {newAnimator} from 'web/animate'
 import {newZoomCanvas} from 'web/canvas'
 import {Pos, posIn, boxGrow} from 'game/geo'
-import {GridSel, gridSel, gridTiles} from 'game/grid'
+import {GridSel, gridSel, gridTiles, gridEach} from 'game/grid'
 import app from 'app'
 import {Asset, Sequence, assetColor} from './asset'
 import {Pixel, Pallette, cssColor} from './pal'
@@ -33,6 +33,18 @@ export interface AssetEditor extends ToolCtx, PaintCtx {
 	stop():void
 }
 
+async function selPattern(c:ZoomCanvas):Promise<CanvasPattern> {
+	const img:ImageData = c.ctx.createImageData(2, 2)
+	for (let i=0; i<img.data.length; i += 4) {
+		img.data[i+2] = 127
+		img.data[i+2] = 127
+		img.data[i+2] = 255
+		img.data[i+3] = (!i||i>=12) ? 45 : 15
+	}
+	const bitmap = await createImageBitmap(img)
+	return c.ctx.createPattern(bitmap, "repeat")!
+}
+
 export function assetEditor(a:Asset, pals:Pallette[]):AssetEditor {
 	Object.keys(a.pics).forEach((k:any) => {
 		let p = a.pics[k]
@@ -44,6 +56,8 @@ export function assetEditor(a:Asset, pals:Pallette[]):AssetEditor {
 	c.zoom(12)
 	c.move(8, 8)
 	c.stage.bg = cssColor(assetColor(a, 0))
+	let selPat:CanvasPattern|null
+	selPattern(c).then(pat => selPat = pat)
 	let tmp = tmpPic(a.w, a.h)
 	const seqView = sequenceView(a, ani)
 	let ed:AssetEditor = {a, c, el: h(''), tmp, pals, pal: palView(),
@@ -72,10 +86,16 @@ export function assetEditor(a:Asset, pals:Pallette[]):AssetEditor {
 				}
 			}
 			if (ed.sel) {
-				c.paintRect(ed.sel, "#0000bb15")
-				c.ctx.strokeStyle = "#0000bb"
 				let {x,y,w,h} = ed.sel
+				c.ctx.strokeStyle = "#0000bb"
 				c.ctx.strokeRect(x, y, w, h)
+				c.ctx.save()
+				c.ctx.transform(.5, 0, 0, .5, 0, 0)
+				c.ctx.fillStyle = selPat || '#0000bb15'
+				gridEach(ed.sel, ({x, y}) => {
+					c.ctx.fillRect(x*2, y*2, 2, 2)
+				}, ed.sel, false)
+				c.ctx.restore()
 			}
 		},
 		updatePal(p) {
@@ -193,9 +213,10 @@ export function assetEditor(a:Asset, pals:Pallette[]):AssetEditor {
 			}, e => {
 				let p = c.stagePos(e)
 				if (p) cur = boxGrow(b, p)
-				// TODO update permanent selection and repaint
+				// update permanent selection and repaint
 				let size = cur.w*cur.h
-				ed.sel = size > 0 ? gridSel(cur, new Array(size).fill(1)) : null
+				ed.sel = size > 0 ? gridSel(cur) : null
+				if (ed.sel) ed.sel.raw.fill(0xffff)
 				ed.repaint()
 			})
 		}
