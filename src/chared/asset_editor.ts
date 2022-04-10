@@ -17,6 +17,7 @@ export interface AssetEditor extends PalCtx, ToolCtx, PaintCtx {
 	seq:Sequence|null
 	idx:number
 	pic:Pic|null
+	sel:GridSel|null
 
 	updatePal(p:Pallette):void
 	addSeq(s:Sequence):void
@@ -46,6 +47,7 @@ export function assetEditor(a:Asset, pals:Pallette[]):AssetEditor {
 		idx:0, pic:null,
 		tool:'pen', mirror:false, grid:true,
 		fg:1, fgcolor:cssColor(assetColor(a, 1)),
+		sel: null,
 		repaint() {
 			c.clear()
 			if (!ed.seq||!ed.seq.ids) return
@@ -64,6 +66,12 @@ export function assetEditor(a:Asset, pals:Pallette[]):AssetEditor {
 						c.paintPixel({x, y}, cssColor(assetColor(a, p)))
 					}
 				}
+			}
+			if (ed.sel) {
+				c.paintRect(ed.sel, "#0000bb15")
+				c.ctx.strokeStyle = "#0000bb"
+				let {x,y,w,h} = ed.sel
+				c.ctx.strokeRect(x, y, w, h)
 			}
 		},
 		updatePal(p) {
@@ -162,6 +170,28 @@ export function assetEditor(a:Asset, pals:Pallette[]):AssetEditor {
 					...sel,
 				})
 				tmp.reset()
+			})
+		} else if (ed.tool == 'select') {
+			const fst = c.stagePos(e)
+			if (!fst) return
+			let b = {...fst, w:1, h:1}
+			let cur = b
+			c.startDrag(e => {
+				let p = c.stagePos(e)
+				if (!p) return
+				cur = boxGrow(b, p)
+				// repaint with temporary selection
+				ed.repaint()
+				c.paintRect(cur, "#0000ff15")
+				c.ctx.strokeStyle = "blue"
+				c.ctx.strokeRect(cur.x, cur.y, cur.w, cur.h)
+			}, e => {
+				let p = c.stagePos(e)
+				if (p) cur = boxGrow(b, p)
+				// TODO update permanent selection and repaint
+				let size = cur.w*cur.h
+				ed.sel = size > 0 ? gridSel(cur, new Array(size).fill(1)) : null
+				ed.repaint()
 			})
 		}
 	})

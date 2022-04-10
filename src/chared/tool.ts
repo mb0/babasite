@@ -15,6 +15,7 @@ export interface PaintCtx {
 export const tools = [
 	{name:'pen'},
 	{name:'brush'},
+	{name:'select'},
 ]
 
 export const opts = [
