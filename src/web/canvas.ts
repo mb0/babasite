@@ -1,23 +1,37 @@
 import h from 'web/html'
 import {Pos, Box} from 'game/geo'
 
+export interface Stage extends Box {
+	zoom:number
+	bg:string
+}
+
 export interface Canvas {
 	el:HTMLCanvasElement
 	ctx:CanvasRenderingContext2D
+	bg?:string
+	stage:Stage
 	clear():void
+	setStage(b:Partial<Stage>):Stage
 	paintPixel(p:Pos, color:string):void
 	paintRect(b:Box, color:string|CanvasGradient):void
 }
 
 export function newCanvas(id:string, width:number, height:number, bg?:string):Canvas {
 	const el = h('canvas', {id, width, height}) as HTMLCanvasElement
+	el.style.backgroundColor = bg || "gray"
 	const ctx = el.getContext("2d") as CanvasRenderingContext2D
 	ctx.imageSmoothingEnabled = false
-	return {el, ctx,
+	const stage = {x:0, y:0, w:0, h:0, zoom:1, bg: "white"}
+	return {el, bg, ctx, stage,
+		setStage(s) {
+			return Object.assign(stage, s)
+		},
 		clear() {
 			ctx.resetTransform()
-			ctx.fillStyle = bg||"gray"
-			ctx.fillRect(0, 0, width, height)
+			ctx.fillStyle = el.style.backgroundColor
+			ctx.fillRect(0, 0, el.width, el.height)
+			ctx.transform(stage.zoom, 0, 0, stage.zoom, stage.x, stage.y)
 		},
 		paintPixel(p, color) {
 			ctx.fillStyle = color
@@ -30,18 +44,9 @@ export function newCanvas(id:string, width:number, height:number, bg?:string):Ca
 	}
 }
 
-export interface Stage extends Box {
-	zoom:number
-	bg:string
-}
-
 export type DragHandler = (e:MouseEvent)=>void
 
 export interface ZoomCanvas extends Canvas {
-	stage:Stage
-	move(x:number, y:number):void
-	zoom(v:number):void
-	resize(w:number, h:number):void
 	grid(a:number, b:number):void
 	stagePos(e:MouseEvent):Pos|null
 	init(repaint:(c:Canvas)=>void):void
@@ -51,23 +56,10 @@ export interface ZoomCanvas extends Canvas {
 
 export function newZoomCanvas(id:string, width:number, height:number, bg?:string):ZoomCanvas {
 	const c = newCanvas(id, width, height, bg)
-	const {el, ctx, clear} = c
-	const s = {x:0, y:0, w:0, h:0, zoom:1, bg: "white"}
-	return {...c, stage:s,
-		move(x, y) {
-			s.x = x
-			s.y = y
-		},
-		zoom(v) {
-			s.zoom = v
-		},
-		resize(w, h) {
-			s.w = w
-			s.h = h
-		},
+	const {el, ctx, clear, stage:s} = c
+	return {...c,
 		clear() {
 			clear()
-			ctx.transform(s.zoom, 0, 0, s.zoom, s.x, s.y)
 			ctx.strokeStyle = "black"
 			ctx.strokeRect(0, 0, s.w, s.h)
 			ctx.fillStyle = s.bg

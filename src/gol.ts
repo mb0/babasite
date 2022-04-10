@@ -14,7 +14,7 @@ app.addView({name: "gol",
 	start(app) {
 		chat.start(app)
 		const c = newZoomCanvas("our-canvas", 800, 600)
-		c.zoom(10)
+		c.setStage({zoom:10})
 		app.cont.appendChild(h('#game-view', c.el, h('',
 			h('button',{type:'button', onclick:() => app.send("step")}, 'Step'),
 			h('button',{type:'button', onclick:() => app.send("reset")}, 'Reset'),
@@ -41,7 +41,7 @@ app.addView({name: "gol",
 			},
 			map(m) {
 				map = m
-				c.resize(m.w, m.h)
+				c.setStage({w:m.w, h:m.h})
 				paintMap(c)
 			},
 		}

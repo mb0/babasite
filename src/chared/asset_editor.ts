@@ -52,10 +52,7 @@ export function assetEditor(a:Asset, pals:Pallette[]):AssetEditor {
 	})
 	const ani = newAnimator()
 	const c = newZoomCanvas("our-canvas", 800, 600)
-	c.resize(a.w, a.h)
-	c.zoom(12)
-	c.move(8, 8)
-	c.stage.bg = cssColor(assetColor(a, 0))
+	c.setStage({x:8, y:8, w:a.w, h:a.h, zoom:12, bg: cssColor(assetColor(a, 0))})
 	let selPat:CanvasPattern|null
 	selPattern(c).then(pat => selPat = pat)
 	let tmp = tmpPic(a.w, a.h)

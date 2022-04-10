@@ -28,8 +28,7 @@ app.addView({name: "maped",
 	start(app) {
 		chat.start(app)
 		const c = newZoomCanvas("our-canvas", 800, 600)
-		c.zoom(8)
-		c.move(20, 30)
+		c.setStage({x:20, y:30, zoom:8})
 		const tiles = h('')
 		h.add(app.cont, h('#maped-view', c.el, tiles))
 		c.el.addEventListener("click", e => {
@@ -48,7 +47,7 @@ app.addView({name: "maped",
 			map(m:Map) {
 				map = m
 				renderTileset(m.tileset, tiles)
-				c.resize(m.w, m.h)
+				c.setStage({w:m.w, h:m.h})
 				paintMap(c)
 			},
 		}
