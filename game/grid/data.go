@@ -8,7 +8,7 @@ import (
 
 type Data struct {
 	geo.Box
-	Raw []uint16 `json:"data"`
+	Raw []uint16 `json:"raw"`
 }
 
 func (g *Data) B() geo.Box { return g.Box }
