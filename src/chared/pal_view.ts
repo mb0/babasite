@@ -1,22 +1,16 @@
 import {h, hInput, datalistInput, pickColor} from 'web/html'
 import {mount, unmount} from 'web/modal'
 import app from 'app'
-import {Asset} from './asset'
-import {Pixel, Feature, Pallette, cssColor} from './pal'
+import {AssetEditor} from './asset_editor'
+import {Feature, Pallette, cssColor} from './pal'
 
-export interface PalCtx {
-	a:Asset
-	pals:Pallette[]
-	fg:Pixel
-	fgcolor:string
-}
 export interface PalView {
 	el:HTMLElement
-	update(ctx:PalCtx):void
+	update(ctx:AssetEditor):void
 }
 export function palView():PalView {
 	const el = h('section.pal.inline')
-	const update = (ctx:PalCtx) => {
+	const update = (ctx:AssetEditor) => {
 		let pal = ctx.a.pal
 		if (!pal) return null
 		h.repl(el, h('header',
@@ -93,7 +87,7 @@ interface PalRes extends Partial<Pallette> {
 	copy:string
 }
 
-export function palForm(ctx:PalCtx, pal:Partial<Pallette>, submit:(res:PalRes)=>void) {
+export function palForm(ctx:AssetEditor, pal:Partial<Pallette>, submit:(res:PalRes)=>void) {
 	const name = hInput('', {value:pal.name||''})
 	const dl = datalistInput('dl-pals')
 	dl.update(["--"].concat(ctx.pals.map(p => p.name)))

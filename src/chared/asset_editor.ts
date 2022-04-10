@@ -6,18 +6,22 @@ import {GridSel, gridSel, gridTiles} from 'game/grid'
 import app from 'app'
 import {Asset, Sequence, assetColor} from './asset'
 import {Pixel, Pallette, cssColor} from './pal'
-import {PalView, PalCtx, palView} from './pal_view'
+import {PalView, palView} from './pal_view'
 import {ToolCtx, PaintCtx, toolView, tmpPic} from './tool'
 import {Pic, PicID} from './pic'
 import {sequenceView} from './seq_view'
 
-export interface AssetEditor extends PalCtx, ToolCtx, PaintCtx {
+export interface AssetEditor extends ToolCtx, PaintCtx {
+	a:Asset
 	el:HTMLElement
 	pal:PalView
+	pals:Pallette[]
 	seq:Sequence|null
 	idx:number
 	pic:Pic|null
 	sel:GridSel|null
+	fg:Pixel
+	fgcolor:string
 
 	updatePal(p:Pallette):void
 	addSeq(s:Sequence):void
