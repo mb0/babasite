@@ -166,16 +166,22 @@ export function assetEditor(a:Asset, pals:Pallette[]):AssetEditor {
 		}
 	}
 	if (ed.seq && ed.seq.ids) ed.pic = a.pics[ed.seq.ids[ed.idx]]
+	c.el.addEventListener("contextmenu", e => e.preventDefault())
 	c.el.addEventListener("mousedown", e => {
 		if (!ed.pic) return
-		if (e.button != 0) return
+		if (e.button != 2 && e.button != 0) return
 		if (ed.tool == 'pen' || ed.tool == 'brush') {
+			let t = ed.fg||99, color = ed.fgcolor
+			if (e.button == 2) {
+				t = 99
+				color = "#ffffff"
+			}
 			let draw:(p:Pos)=>void = ed.tool == "pen" ? p => {
-					tmp.paint(p.x, p.y, ed.fg || 99)
-					c.paintPixel(p, ed.fgcolor)
+					tmp.paint(p.x, p.y, t)
+					c.paintPixel(p, color)
 				} : ({x, y}) => {
-					tmp.rect(x-1, y-1, 3, 3, ed.fg || 99)
-					c.paintRect({x:x-1, y:y-1, w:3, h:3}, ed.fgcolor)
+					tmp.rect(x-1, y-1, 3, 3, t)
+					c.paintRect({x:x-1, y:y-1, w:3, h:3}, color)
 				}
 			let paint = (e:MouseEvent) => {
 				let p = c.stagePos(e)
@@ -197,6 +203,11 @@ export function assetEditor(a:Asset, pals:Pallette[]):AssetEditor {
 				tmp.reset()
 			})
 		} else if (ed.tool == 'select') {
+			if (e.button == 2) {
+				ed.sel = null
+				ed.repaint()
+				return
+			}
 			const fst = c.stagePos(e)
 			if (!fst) return
 			let b = {...fst, w:1, h:1}
