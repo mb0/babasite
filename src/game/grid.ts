@@ -9,7 +9,7 @@ export interface Grid<T> extends GridData {
 }
 
 export function gridTiles<T extends number>(b:Box, raw?:number[]):Grid<T> {
-	return {...b, raw: raw || (new Array(b.w*b.h)).fill(0),
+	return {...b, raw: raw || Array(b.w*b.h).fill(0),
 		get(p) { return this.raw[boxIdx(this, p)] as T },
 		set(p, t) { this.raw[boxIdx(this, p)] = t },
 	}
@@ -17,15 +17,15 @@ export function gridTiles<T extends number>(b:Box, raw?:number[]):Grid<T> {
 
 export interface GridSel extends Grid<boolean> {}
 export function gridSel(b:Box, raw?:number[]):Grid<boolean> {
-	return {...b, raw: raw || (new Array(Math.ceil(b.w*b.h/8)).fill(0)),
+	return {...b, raw: raw || Array(Math.ceil(b.w*b.h/8)).fill(0),
 		get(p) {
 			const idx = boxIdx(this, p)
-			const bit = 1<<(idx&0xff)
+			const bit = 1<<(idx&0xf)
 			return (this.raw[idx>>4]&bit) != 0
 		},
 		set(p, t) {
 			const idx = boxIdx(this, p)
-			const bit = 1<<(idx&0xff)
+			const bit = 1<<(idx&0xf)
 			const u = this.raw[idx>>4]
 			this.raw[idx>>4] = t ? u|bit : u&(~bit)
 		},
