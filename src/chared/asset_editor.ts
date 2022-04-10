@@ -135,6 +135,7 @@ export function assetEditor(a:Asset, pals:Pallette[]):AssetEditor {
 			if (!force && ed.seq == s && ed.idx == idx) return
 			ed.seq = s
 			ed.idx = idx
+			ed.sel = null
 			ed.pic = s?.ids ? a.pics[s.ids[idx]] : null
 			seqView.update(ed)
 			tmp.reset()
