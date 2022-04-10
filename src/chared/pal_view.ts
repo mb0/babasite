@@ -1,5 +1,7 @@
 import {h, hInput, datalistInput, pickColor} from 'web/html'
 import {mount, unmount} from 'web/modal'
+import {posIn, boxGrow} from 'game/geo'
+import {gridSel, gridEach} from 'game/grid'
 import app from 'app'
 import {AssetEditor} from './asset_editor'
 import {Feature, Pallette, cssColor} from './pal'
@@ -28,7 +30,10 @@ export function palView():PalView {
 				}}, '[new]')
 			),
 			h('', !pal.feat ? "no features" :
-				pal.feat.map((feat, f) => h('', h('label', feat.name),
+				pal.feat.map((feat, f) => h('',
+					h('label', {onclick() {
+						selectFeatPixel(ctx, f)
+					}}, feat.name),
 					feat.colors.map((color, c) => h('span', {
 						style:"background-color:"+cssColor(color),
 						onclick() {
@@ -72,6 +77,25 @@ export function palView():PalView {
 		)
 	}
 	return {el, update}
+}
+
+function selectFeatPixel(ed:AssetEditor, fid:number) {
+	if (!ed.pic) return
+	let b = {x:0,y:0,w:0,h:0}
+	gridEach(ed.pic, (p, t) => {
+		if (fid == Math.floor(t/100) && !posIn(p, b))
+			b = boxGrow(b, p)
+	})
+	if (b.w*b.h>0) {
+		const sel = gridSel(b)
+		gridEach(ed.pic, (p, t) => {
+			if (fid == Math.floor(t/100)) sel.set(p, true)
+		}, b)
+		ed.sel = sel
+	} else {
+		ed.sel = null
+	}
+	ed.repaint()
 }
 
 function palSelect(pals:Pallette[], submit:(p:Pallette)=>void) {
