@@ -1,7 +1,7 @@
 import h from 'web/html'
 import {newAnimator} from 'web/animate'
-import {newZoomCanvas} from 'web/canvas'
-import {Pos, posIn, boxGrow} from 'game/geo'
+import {ZoomCanvas, newZoomCanvas} from 'web/canvas'
+import {Pos, posIn, boxIn, boxCrop, boxGrow} from 'game/geo'
 import {GridSel, gridSel, gridTiles, gridEach} from 'game/grid'
 import app from 'app'
 import {Asset, Sequence, assetColor} from './asset'
@@ -202,7 +202,7 @@ export function assetEditor(a:Asset, pals:Pallette[]):AssetEditor {
 			let b = {...fst, w:1, h:1}
 			let cur = b
 			c.startDrag(e => {
-				let p = c.stagePos(e)
+				const p = c.stagePos(e)
 				if (!p) return
 				cur = boxGrow(b, p)
 				// repaint with temporary selection
@@ -211,12 +211,30 @@ export function assetEditor(a:Asset, pals:Pallette[]):AssetEditor {
 				c.ctx.strokeStyle = "blue"
 				c.ctx.strokeRect(cur.x, cur.y, cur.w, cur.h)
 			}, e => {
-				let p = c.stagePos(e)
+				const p = c.stagePos(e)
 				if (p) cur = boxGrow(b, p)
 				// update permanent selection and repaint
-				let size = cur.w*cur.h
-				ed.sel = size > 0 ? gridSel(cur) : null
-				if (ed.sel) ed.sel.raw.fill(0xffff)
+				const size = cur.w*cur.h
+				let sel = size > 0 ? gridSel(cur) : null
+				if (sel) sel.raw.fill(0xffff)
+				if (e.altKey) {
+					if (!ed.sel||!sel) return
+					const crop = boxCrop(sel, ed.sel)
+					if (crop.w*crop.h<=0) return
+					// remove sel from ed.sel
+					gridEach(sel, p => ed.sel!.set(p, false), crop, false)
+					// TODO shrink selection?
+				} else if (e.ctrlKey && ed.sel) {
+					if (!sel) return
+					if (!boxIn(sel, ed.sel)) {
+						const nsel = gridSel(boxGrow(ed.sel, sel))
+						gridEach(ed.sel, p => nsel.set(p, true), ed.sel, false)
+						ed.sel = nsel
+					}
+					gridEach(sel, p => ed.sel!.set(p, true), ed.sel, false)
+				} else {
+					ed.sel = sel
+				}
 				ed.repaint()
 			})
 		}
