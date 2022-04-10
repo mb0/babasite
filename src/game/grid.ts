@@ -47,13 +47,3 @@ export function gridEach<T>(g:Grid<T>, f:EachFunc<T>, b?:Box, not?:T) {
 		}
 	}
 }
-
-function setSel(dst:GridSel, src:GridSel) { gridEach(src, (p, t) => dst.set(p, t), dst) }
-function addSel(dst:GridSel, src:GridSel) { gridEach(src, p => dst.set(p, true), dst, false) }
-function subSel(dst:GridSel, src:GridSel) { gridEach(src, p => dst.set(p, false), dst, false) }
-function fill<T>(g:Grid<T>, s:GridSel, t:T) { gridEach(s, p => g.set(p, t), g, false) }
-function selGrid<T extends number>(g:Grid<T>, s:GridSel) {
-	let b = boxCrop(s, boxCrop(g, s))
-	let n = gridTiles<T>(b)
-	gridEach(s, p => n.set(p, g.get(p)), b, false)
-}
