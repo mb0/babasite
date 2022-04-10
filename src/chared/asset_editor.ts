@@ -4,25 +4,26 @@ import {ZoomCanvas, newZoomCanvas} from 'web/canvas'
 import {Pos, posIn, boxIn, boxCrop, boxGrow} from 'game/geo'
 import {GridSel, gridSel, gridTiles, gridEach} from 'game/grid'
 import app from 'app'
-import {Asset, Sequence, assetColor} from './asset'
-import {Pixel, Pallette, cssColor} from './pal'
+import {Asset, Sequence} from './asset'
+import {Pixel, Pallette} from './pal'
 import {PalView, palView} from './pal_view'
-import {ToolCtx, PaintCtx, toolView, tmpPic} from './tool'
+import {ToolView, TmpPic, toolView, tmpPic} from './tool'
 import {Pic, PicID} from './pic'
 import {sequenceView} from './seq_view'
 
-export interface AssetEditor extends ToolCtx, PaintCtx {
-	a:Asset
+export interface AssetEditor {
 	el:HTMLElement
+	a:Asset
+	c:ZoomCanvas
+	tmp:TmpPic
+	tool:ToolView
 	pal:PalView
-	pals:Pallette[]
 	seq:Sequence|null
 	idx:number
 	pic:Pic|null
 	sel:GridSel|null
-	fg:Pixel
-	fgcolor:string
 
+	repaint():void
 	updatePal(p:Pallette):void
 	addSeq(s:Sequence):void
 	updateSeq(s:Sequence):void
@@ -33,18 +34,6 @@ export interface AssetEditor extends ToolCtx, PaintCtx {
 	stop():void
 }
 
-async function selPattern(c:ZoomCanvas):Promise<CanvasPattern> {
-	const img:ImageData = c.ctx.createImageData(2, 2)
-	for (let i=0; i<img.data.length; i += 4) {
-		img.data[i+2] = 127
-		img.data[i+2] = 127
-		img.data[i+2] = 255
-		img.data[i+3] = (!i||i>=12) ? 45 : 15
-	}
-	const bitmap = await createImageBitmap(img)
-	return c.ctx.createPattern(bitmap, "repeat")!
-}
-
 export function assetEditor(a:Asset, pals:Pallette[]):AssetEditor {
 	Object.keys(a.pics).forEach((k:any) => {
 		let p = a.pics[k]
@@ -52,33 +41,31 @@ export function assetEditor(a:Asset, pals:Pallette[]):AssetEditor {
 	})
 	const ani = newAnimator()
 	const c = newZoomCanvas("our-canvas", 800, 600)
-	c.setStage({x:8, y:8, w:a.w, h:a.h, zoom:12, bg: cssColor(assetColor(a, 0))})
 	let selPat:CanvasPattern|null
-	selPattern(c).then(pat => selPat = pat)
-	let tmp = tmpPic(a.w, a.h)
 	const seqView = sequenceView(a, ani)
-	let ed:AssetEditor = {a, c, el: h(''), tmp, pals, pal: palView(),
+	let ed:AssetEditor = {a, c, el: h(''),
+		tmp: tmpPic(a.w, a.h),
+		pal: palView(a.pal, pals),
+		tool: toolView(),
 		seq: a.seq && a.seq.length ? a.seq[0] : null,
 		idx:0, pic:null,
-		tool:'pen', mirror:false, grid:true,
-		fg:1, fgcolor:cssColor(assetColor(a, 1)),
 		sel: null,
 		repaint() {
 			c.clear()
 			if (!ed.seq||!ed.seq.ids) return
-			if (ed.grid) c.grid(8, 16)
+			if (ed.tool.grid) c.grid(8, 16)
 			let id = ed.seq.ids[ed.idx]
 			let pic = ed.pic = ed.a.pics[id]||null
 			if (!pic) return
 			for (let y = 0; y < a.h; y++) {
 				for (let x = 0; x < a.w; x++) {
 					let pos = {x,y}
-					let p = tmp.img.get(pos)
+					let p = ed.tmp.img.get(pos)
 					if (!p && posIn(pos, pic)) {
 						p = pic.get(pos)
 					}
 					if (p) {
-						c.paintPixel({x, y}, cssColor(assetColor(a, p)))
+						c.paintPixel({x, y}, ed.pal.color(p))
 					}
 				}
 			}
@@ -97,8 +84,8 @@ export function assetEditor(a:Asset, pals:Pallette[]):AssetEditor {
 		},
 		updatePal(p) {
 			ed.a.pal = p
+			ed.pal.update(p)
 			ed.repaint()
-			ed.pal.update(ed)
 		},
 		addSeq(s) {
 			// add sequence to asset
@@ -155,7 +142,7 @@ export function assetEditor(a:Asset, pals:Pallette[]):AssetEditor {
 			ed.sel = null
 			ed.pic = s?.ids ? a.pics[s.ids[idx]] : null
 			seqView.update(ed)
-			tmp.reset()
+			ed.tmp.reset()
 			ed.repaint()
 		},
 		stop() {
@@ -163,43 +150,47 @@ export function assetEditor(a:Asset, pals:Pallette[]):AssetEditor {
 		}
 	}
 	if (ed.seq && ed.seq.ids) ed.pic = a.pics[ed.seq.ids[ed.idx]]
+	c.setStage({x:8, y:8, w:a.w, h:a.h, zoom:12, bg: ed.pal.color(0)})
+	selPattern(c).then(pat => selPat = pat)
+
 	c.el.addEventListener("contextmenu", e => e.preventDefault())
 	c.el.addEventListener("mousedown", e => {
 		if (!ed.pic) return
 		if (e.button != 2 && e.button != 0) return
-		if (ed.tool == 'pen' || ed.tool == 'brush') {
-			let t = ed.fg||99, color = ed.fgcolor
+		const {active, mirror} = ed.tool
+		if (active == 'pen' || active == 'brush') {
+			let t = ed.pal.fg||99, color = ed.pal.color(ed.pal.fg)
 			if (e.button == 2) {
 				t = 99
 				color = "#ffffff"
 			}
-			let draw:(p:Pos)=>void = ed.tool == "pen" ? p => {
-					tmp.paint(p.x, p.y, t)
+			let draw:(p:Pos)=>void = active == "pen" ? p => {
+					ed.tmp.paint(p.x, p.y, t)
 					c.paintPixel(p, color)
 				} : ({x, y}) => {
-					tmp.rect(x-1, y-1, 3, 3, t)
+					ed.tmp.rect(x-1, y-1, 3, 3, t)
 					c.paintRect({x:x-1, y:y-1, w:3, h:3}, color)
 				}
 			let paint = (e:MouseEvent) => {
 				let p = c.stagePos(e)
 				if (!p) return
 				draw(p)
-				if (ed.mirror) {
+				if (mirror) {
 					p.x = a.w-p.x-1
 					draw(p)
 				}
 			}
 			c.startDrag(paint, e => {
 				paint(e)
-				let sel = tmp.getSel()
+				let sel = ed.tmp.getSel()
 				if (!sel||!ed.pic) return
 				app.send("pic.edit", {
 					pic:ed.pic.id,
 					...sel,
 				})
-				tmp.reset()
+				ed.tmp.reset()
 			})
-		} else if (ed.tool == 'select') {
+		} else if (active == 'select') {
 			if (e.button == 2) {
 				ed.sel = null
 				ed.repaint()
@@ -247,13 +238,45 @@ export function assetEditor(a:Asset, pals:Pallette[]):AssetEditor {
 			})
 		}
 	})
+	ed.pal.clickFeat = idx => clickFeat(ed, idx)
+	ed.tool.repaint = () => ed.repaint
 	c.init(ed.repaint)
 	ed.repaint()
 	seqView.update(ed)
-	ed.pal.update(ed)
 	h.repl(ed.el, seqView.el, c.el,
 		// tools and color pallette
-		h('', toolView(ed), ed.pal.el),
+		h('', ed.tool.el, ed.pal.el),
 	)
 	return ed
+}
+
+function clickFeat(ed:AssetEditor, idx:number) {
+	if (!ed.pic) return
+	let b = {x:0,y:0,w:0,h:0}
+	gridEach(ed.pic, (p, t) => {
+		if (idx == Math.floor(t/100) && !posIn(p, b))
+			b = boxGrow(b, p)
+	})
+	if (b.w*b.h>0) {
+		const sel = gridSel(b)
+		gridEach(ed.pic, (p, t) => {
+			if (idx == Math.floor(t/100)) sel.set(p, true)
+		}, b)
+		ed.sel = sel
+	} else {
+		ed.sel = null
+	}
+	ed.repaint()
+}
+
+async function selPattern(c:ZoomCanvas):Promise<CanvasPattern> {
+	const img:ImageData = c.ctx.createImageData(2, 2)
+	for (let i=0; i<img.data.length; i += 4) {
+		img.data[i+2] = 127
+		img.data[i+2] = 127
+		img.data[i+2] = 255
+		img.data[i+3] = (!i||i>=12) ? 45 : 15
+	}
+	const bitmap = await createImageBitmap(img)
+	return c.ctx.createPattern(bitmap, "repeat")!
 }

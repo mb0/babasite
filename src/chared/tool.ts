@@ -1,50 +1,37 @@
 import h from 'web/html'
-import {Canvas} from 'web/canvas'
 import {Box, posIn, dimBox, boxIn, boxGrow, boxCrop} from 'game/geo'
 import {Grid, GridSel, gridTiles, gridSel, gridEach} from 'game/grid'
 import {Pixel} from './pal'
 import {Sel} from './pic'
 
-export interface PaintCtx {
-	c:Canvas
-	tmp:TmpPic
-	fg:number
-	fgcolor:string
-}
+const tools = ['pen', 'brush', 'select']
 
-export const tools = [
-	{name:'pen'},
-	{name:'brush'},
-	{name:'select'},
-]
+const opts = ['mirror', 'grid']
 
-export const opts = [
-	{name:'mirror'},
-	{name:'grid'},
-]
-
-export interface ToolCtx {
-	tool:string
+export interface ToolView {
+	el:HTMLElement
+	active:string
 	mirror:boolean
 	grid:boolean
 	repaint():void
 }
 
-export function toolView(ctx:ToolCtx) {
-	return h('section.tool.inline',
+export function toolView(part?:Partial<ToolView>):ToolView {
+	const el = h('section.tool.inline')
+	const ctx = {el, active:'pen', mirror:false, grid:true, repaint:()=>{}}
+	if (part) Object.assign(ctx, part)
+	h.add(el,
 		h('header', 'Tools'),
 		h('', tools.map(tool => h('span', {onclick() {
-			ctx.tool = tool.name
-		}}, tool.name))),
+			ctx.active = tool
+		}}, tool))),
 		h('', opts.map(opt => h('span', {onclick() {
-			toggleOpt(ctx, opt.name)
-			if (opt.name == 'grid') ctx.repaint()
-		}}, opt.name)))
+			const c:any = ctx
+			c[opt] = !c[opt]
+			if (opt == 'grid') ctx.repaint()
+		}}, opt)))
 	)
-}
-
-function toggleOpt(ctx:any, opt:string) {
-	ctx[opt] = !ctx[opt]
+	return ctx
 }
 
 export interface TmpPic {

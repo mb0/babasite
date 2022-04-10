@@ -1,29 +1,42 @@
 import {h, hInput, datalistInput, pickColor} from 'web/html'
 import {mount, unmount} from 'web/modal'
-import {posIn, boxGrow} from 'game/geo'
-import {gridSel, gridEach} from 'game/grid'
 import app from 'app'
-import {AssetEditor} from './asset_editor'
-import {Feature, Pallette, cssColor} from './pal'
+import {Pallette, Feature, Pixel, cssColor, palColor} from './pal'
 
 export interface PalView {
 	el:HTMLElement
-	update(ctx:AssetEditor):void
+	pal:Pallette
+	pals:Pallette[]
+	fg:Pixel
+	bg:Pixel
+	update(pal:Pallette):void
+	color(p:Pixel):string
+	clickFeat?:(idx:number)=>void
 }
-export function palView():PalView {
+
+export function palView(pal:Pallette, pals:Pallette[]):PalView {
 	const el = h('section.pal.inline')
-	const update = (ctx:AssetEditor) => {
-		let pal = ctx.a.pal
-		if (!pal) return null
+	const cmap:Map<Pixel, string> = new Map()
+	const view:PalView = {el, pal, pals, fg:1, bg:0, color: (p:Pixel) => {
+		if (!view.pal) return ''
+		let res = cmap.get(p)
+		if (!res) {
+			res = cssColor(palColor(view.pal, p))
+			cmap.set(p, res)
+		}
+		return res
+	}, update: (pal:Pallette) => {
+		if (view.pal != pal) cmap.clear()
+		view.pal = pal
 		h.repl(el, h('header',
 				h('label', {onclick() {
-					mount(palSelect(ctx.pals, res => {
+					mount(palSelect(view.pals, res => {
 						app.send("pal.open", {name:res.name})
 						unmount()
 					}))
 				}}, pal.name), ' ',
 				h('span', {onclick() {
-					mount(palForm(ctx, {}, res => {
+					mount(palForm(view.pals, {}, res => {
 						app.send("pal.new", res)
 						unmount()
 					}))
@@ -32,15 +45,17 @@ export function palView():PalView {
 			h('', !pal.feat ? "no features" :
 				pal.feat.map((feat, f) => h('',
 					h('label', {onclick() {
-						selectFeatPixel(ctx, f)
+						const func = view.clickFeat
+						if (func) func(f)
 					}}, feat.name),
 					feat.colors.map((color, c) => h('span', {
 						style:"background-color:"+cssColor(color),
 						onclick() {
-							let pixel = f*100+c
-							if (ctx.fg == pixel) return
-							ctx.fg = pixel
-							ctx.fgcolor = cssColor(color)
+							view.fg = f*100+c
+						},
+						oncontextmenu(e) {
+							e.preventDefault()
+							view.bg = f*100+c
 						},
 						ondblclick() {
 							pickColor(cssColor(color), res => {
@@ -75,27 +90,9 @@ export function palView():PalView {
 				}}, '[new]')
 			),
 		)
-	}
-	return {el, update}
-}
-
-function selectFeatPixel(ed:AssetEditor, fid:number) {
-	if (!ed.pic) return
-	let b = {x:0,y:0,w:0,h:0}
-	gridEach(ed.pic, (p, t) => {
-		if (fid == Math.floor(t/100) && !posIn(p, b))
-			b = boxGrow(b, p)
-	})
-	if (b.w*b.h>0) {
-		const sel = gridSel(b)
-		gridEach(ed.pic, (p, t) => {
-			if (fid == Math.floor(t/100)) sel.set(p, true)
-		}, b)
-		ed.sel = sel
-	} else {
-		ed.sel = null
-	}
-	ed.repaint()
+	}}
+	view.update(pal)
+	return view
 }
 
 function palSelect(pals:Pallette[], submit:(p:Pallette)=>void) {
@@ -111,13 +108,13 @@ interface PalRes extends Partial<Pallette> {
 	copy:string
 }
 
-export function palForm(ctx:AssetEditor, pal:Partial<Pallette>, submit:(res:PalRes)=>void) {
+export function palForm(pals:Pallette[], pal:Partial<Pallette>, submit:(res:PalRes)=>void) {
 	const name = hInput('', {value:pal.name||''})
 	const dl = datalistInput('dl-pals')
-	dl.update(["--"].concat(ctx.pals.map(p => p.name)))
+	dl.update(["--"].concat(pals.map(p => p.name)))
 	const onsubmit = (e:Event) => {
 		e.preventDefault()
-		const pal = ctx.pals.find(p => p.name == dl.input.value)
+		const pal = pals.find(p => p.name == dl.input.value)
 		submit({name: name.value, copy: pal?.name||''})
 	}
 	return h('section.form',
