@@ -68,7 +68,9 @@ export const app:App = {...newHub(),
 				break
 			case '_close':
 				app.addOutput("websocket connection closed")
+				break
 			case '_msg':
+				break
 			default:
 				console.log("got message "+subj, data)
 			}
