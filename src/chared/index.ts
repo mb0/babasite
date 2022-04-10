@@ -1,8 +1,9 @@
 import h from 'web/html'
 import {boxIn} from 'game/geo'
+import {gridTiles} from 'game/grid'
 import app from 'app'
 import {chat} from 'app/chat'
-import {Pallette} from './pal'
+import {Pixel, Pallette} from './pal'
 import {assetSelect} from './asset_sel'
 import {AssetEditor, assetEditor} from './asset_editor'
 import {Pic, growPic, copySel} from './pic'
@@ -138,6 +139,7 @@ app.addView({name: "chared",
 				// get pic
 				let pic = ed.a.pics[res.pic]
 				if (!pic) return
+				res = gridTiles<Pixel>(res, res.raw)
 				// update pic
 				if (!boxIn(pic, res)) growPic(pic, res)
 				copySel(pic, res)

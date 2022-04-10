@@ -1,7 +1,9 @@
 import h from 'web/html'
 import {Canvas} from 'web/canvas'
-import {Pos, Box, posIn, dimBox, boxGrow, boxCrop} from 'game/geo'
+import {Box, posIn, dimBox, boxIn, boxGrow, boxCrop} from 'game/geo'
+import {Grid, GridSel, gridTiles, gridSel, gridEach} from 'game/grid'
 import {Pixel} from './pal'
+import {Sel} from './pic'
 
 export interface PaintCtx {
 	c:Canvas
@@ -11,16 +13,8 @@ export interface PaintCtx {
 }
 
 export const tools = [
-	{name:'pen', paint({c, tmp, fg, fgcolor}:PaintCtx, {x, y}:Pos) {
-		tmp.paint(x, y, fg || 99)
-		c.ctx.fillStyle = fgcolor
-		c.ctx.fillRect(x, y, 1, 1)
-	}},
-	{name:'brush', paint({c, tmp, fg, fgcolor}:PaintCtx, {x, y}:Pos) {
-		tmp.rect(x-1, y-1, 3, 3, fg || 99)
-		c.ctx.fillStyle = fgcolor
-		c.ctx.fillRect(x-1, y-1, 3, 3)
-	}},
+	{name:'pen'},
+	{name:'brush'},
 ]
 
 export const opts = [
@@ -53,49 +47,50 @@ function toggleOpt(ctx:any, opt:string) {
 }
 
 export interface TmpPic {
-	data:Pixel[]
+	img:Grid<Pixel>
+	sel:GridSel
 	reset():void
 	paint(x:number, y:number, pixel:number):void
 	rect(x:number, y:number, w:number, h:number, pixel:number):void
+	getSel():Sel
 }
 
-export function tmpPic(w:number, h:number) {
-	const data = new Array(w*h)
+export function tmpPic(w:number, h:number):TmpPic {
 	const d = dimBox({w, h})
-	let bb:Box = {x:0, y:0, w:0, h:0}
-	let tmp = {data,
+	const img = gridTiles<Pixel>(d)
+	const sel = gridSel(d)
+	let min:Box = {x:0,y:0,w:0,h:0}
+	let tmp = {img, sel,
 		// reset min, max and map
 		reset() {
-			bb = {x:0, y:0, w:0, h:0}
-			data.fill(0)
+			min = {x:0,y:0,w:0,h:0}
+			img.raw.fill(0)
+			sel.raw.fill(0)
 		},
 		paint(x:number, y:number, pixel:number) {
-			if (!posIn({x, y}, d)) return
-			bb = boxGrow(bb, {x, y})
-			data[y*w+x] = pixel
+			let p = {x, y}
+			if (!posIn(p, img)) return
+			if (!posIn(p, min)) min = boxGrow(min, p)
+			sel.set(p, true)
+			img.set(p, pixel)
 		},
 		rect(rx:number, ry:number, rw:number, rh:number, pixel:number) {
-			const b = boxCrop(d, {x:rx, y:ry, w:rw, h:rh})
-			bb = boxGrow(bb, b)
-			for (let y=b.y; y<b.x+b.h; y++) {
-				for (let x=b.x; x<b.x+b.w; x++) {
-					data[y*w+x] = pixel
+			const r = boxCrop(img, {x:rx, y:ry, w:rw, h:rh})
+			if (r.w*r.h<=0) return
+			if (!boxIn(r, min)) min = boxGrow(min, r)
+			for (let y=r.y; y<r.y+r.h; y++) {
+				for (let x=r.x; x<r.x+r.w; x++) {
+					let p = {x, y}
+					sel.set(p, true)
+					img.set(p, pixel)
 				}
 			}
 		},
-		getSel() {
-			const l = bb.w*bb.h
-			if (l <= 0) return null
-			const sel = {...bb, data:new Array(l).fill(0)}
-			for (let y=0; y < bb.h; y++) {
-				let u = y*bb.w
-				let v = (y+bb.y)*w
-				for (let x=0; x < bb.w; x++) {
-					sel.data[u+x] = data[v+(x+bb.x)]
-				}
-			}
-			return sel
-		}
+		getSel():Sel {
+			let n = gridTiles<Pixel>(min)
+			gridEach(sel, p => n.set(p, img.get(p)), n, false)
+			return n
+		},
 	}
 	return tmp
 }

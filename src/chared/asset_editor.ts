@@ -1,11 +1,13 @@
 import h from 'web/html'
 import {newAnimator} from 'web/animate'
 import {newZoomCanvas} from 'web/canvas'
+import {Pos, posIn, boxGrow} from 'game/geo'
+import {GridSel, gridSel, gridTiles} from 'game/grid'
 import app from 'app'
 import {Asset, Sequence, assetColor} from './asset'
-import {Pallette, cssColor} from './pal'
+import {Pixel, Pallette, cssColor} from './pal'
 import {PalView, PalCtx, palView} from './pal_view'
-import {ToolCtx, PaintCtx, toolView, tmpPic, tools} from './tool'
+import {ToolCtx, PaintCtx, toolView, tmpPic} from './tool'
 import {Pic, PicID} from './pic'
 import {sequenceView} from './seq_view'
 
@@ -22,11 +24,15 @@ export interface AssetEditor extends PalCtx, ToolCtx, PaintCtx {
 	delSeq(name:string):void
 	addPic(pic:Pic):void
 	delPic(id:PicID):void
-	sel(s:Sequence|null, idx:number, force?:boolean):void
+	goto(s:Sequence|null, idx:number, force?:boolean):void
 	stop():void
 }
 
 export function assetEditor(a:Asset, pals:Pallette[]):AssetEditor {
+	Object.keys(a.pics).forEach((k:any) => {
+		let p = a.pics[k]
+		a.pics[k] = {id:p.id, ...gridTiles<Pixel>(p, p.raw)}
+	})
 	const ani = newAnimator()
 	const c = newZoomCanvas("our-canvas", 800, 600)
 	c.resize(a.w, a.h)
@@ -49,14 +55,10 @@ export function assetEditor(a:Asset, pals:Pallette[]):AssetEditor {
 			if (!pic) return
 			for (let y = 0; y < a.h; y++) {
 				for (let x = 0; x < a.w; x++) {
-					let idx = y*a.w+x
-					let p = tmp.data[idx]
-					if (!p && pic.w > 0 && pic.h > 0) {
-						let py = y-pic.y
-						let px = x-pic.x
-						if (py >= 0 && py < pic.h && px >= 0 && px < pic.w) {
-							p = pic.data[py*pic.w+px]
-						}
+					let pos = {x,y}
+					let p = tmp.img.get(pos)
+					if (!p && posIn(pos, pic)) {
+						p = pic.get(pos)
 					}
 					if (p) {
 						c.paintPixel({x, y}, cssColor(assetColor(a, p)))
@@ -79,7 +81,7 @@ export function assetEditor(a:Asset, pals:Pallette[]):AssetEditor {
 				ed.updateSeq(s)
 			}
 			if (!ed.seq) {
-				ed.sel(s, 0)
+				ed.goto(s, 0)
 			}
 		},
 		updateSeq(s:Sequence) {
@@ -97,7 +99,7 @@ export function assetEditor(a:Asset, pals:Pallette[]):AssetEditor {
 			if (idx >= 0) a.seq.splice(idx, 1)
 			if (ed.seq && ed.seq.name == name) {
 				// change selection
-				ed.sel(a.seq.length ? a.seq[0] : null, 0)
+				ed.goto(a.seq.length ? a.seq[0] : null, 0)
 			}
 		},
 		addPic(pic) {
@@ -116,7 +118,7 @@ export function assetEditor(a:Asset, pals:Pallette[]):AssetEditor {
 			if (!p) return
 			delete ed.a.pics[id]
 		},
-		sel(s, idx, force) {
+		goto(s, idx, force) {
 			idx = idx||0
 			if (!force && ed.seq == s && ed.idx == idx) return
 			ed.seq = s
@@ -134,15 +136,21 @@ export function assetEditor(a:Asset, pals:Pallette[]):AssetEditor {
 	c.el.addEventListener("mousedown", e => {
 		if (!ed.pic) return
 		if (e.button != 0) return
-		let t = tools.find(t => t.name == ed.tool)
 		if (ed.tool == 'pen' || ed.tool == 'brush') {
+			let draw:(p:Pos)=>void = ed.tool == "pen" ? p => {
+					tmp.paint(p.x, p.y, ed.fg || 99)
+					c.paintPixel(p, ed.fgcolor)
+				} : ({x, y}) => {
+					tmp.rect(x-1, y-1, 3, 3, ed.fg || 99)
+					c.paintRect({x:x-1, y:y-1, w:3, h:3}, ed.fgcolor)
+				}
 			let paint = (e:MouseEvent) => {
 				let p = c.stagePos(e)
-				if (!p||!t) return
-				t.paint(ed, p)
+				if (!p) return
+				draw(p)
 				if (ed.mirror) {
 					p.x = a.w-p.x-1
-					t.paint(ed, p)
+					draw(p)
 				}
 			}
 			c.startDrag(paint, e => {

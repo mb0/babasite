@@ -27,7 +27,7 @@ export function sequenceView(a:Asset, ani:Animator) {
 		const {seq} = ed.a
 		if (!seq) return "Keine Sequenzen"
 		h.repl(cont, seq.map(s => h('span', {onclick() {
-			ed.sel(s, 0)
+			ed.goto(s, 0)
 		}}, s.name)))
 		picSel.update(ed)
 		seqPrev.update(ed)
@@ -68,7 +68,7 @@ function picSelect() {
 				}))
 			}}, '[add]'), ': ', ids.map((_, i:number) =>
 			h('span', {onclick() {
-				if (i != ed.idx) ed.sel(s, i)
+				if (i != ed.idx) ed.goto(s, i)
 			}}, i+' ')
 		)))
 	}}
@@ -99,7 +99,6 @@ function sequencePreview(a:Asset, ator:Animator) {
 	const c = newCanvas(id, a.w, a.h, "white")
 	let ed:AssetEditor|null = null
 	const paint = (fn:number) => {
-		console.count("preview paint")
 		c.clear()
 		const ids = ed?.seq?.ids
 		if (!ids?.length) return
@@ -115,7 +114,7 @@ function sequencePreview(a:Asset, ator:Animator) {
 }
 
 function paintPic(c:Canvas, a:Asset, pic:Pic) {
-	const {data} = pic
+	const {raw: data} = pic
 	if (!data?.length) return
 	for (let i = 0; i < data.length; i++) {
 		let x = i%pic.w
