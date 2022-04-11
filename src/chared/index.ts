@@ -92,6 +92,7 @@ app.addView({name: "chared",
 				} else {
 					return
 				}
+				p.cache?.reset()
 				if (ed) {
 					if (ed.a.pal.name == p.name) {
 						ed.updatePal(p)
@@ -143,9 +144,10 @@ app.addView({name: "chared",
 				// update pic
 				if (!boxIn(pic, res)) growPic(pic, res)
 				copySel(pic, res)
-				// repaint canvas if current pic
-				if (pic == ed.pic) {
-					ed.repaint()
+				// repaint canvas if pic is active sequence
+				if (ed.seq?.ids?.includes(pic.id)) {
+					ed.updateSeq(ed.seq)
+					if (ed.pic?.id == pic.id) ed.repaint()
 				}
 			},
 		}

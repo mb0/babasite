@@ -86,7 +86,10 @@ export function assetEditor(a:Asset, pals:Pallette[]):AssetEditor {
 			ed.a.pal = p
 			ed.pal.update(p)
 			c.setStage({bg:ed.pal.color(0)})
-			ed.repaint()
+			if (ed.seq) {
+				ed.updateSeq(ed.seq)
+				ed.repaint()
+			}
 		},
 		addSeq(s) {
 			// add sequence to asset
