@@ -92,7 +92,7 @@ export function palView(pal:Palette, pals:Palette[]):PalView {
 
 function palSelect(pals:Palette[], submit:(p:Palette)=>void) {
 	return h('section.form',
-		h('header', 'Pallette auswählen'),
+		h('header', 'Palette auswählen'),
 		h('ul', pals.map(p => h('li', {onclick() {
 			submit(p)
 		}}, p.name))),
@@ -113,7 +113,7 @@ export function palForm(pals:Palette[], pal:Partial<Palette>, submit:(res:PalRes
 		submit({name: name.value, copy: pal?.name||''})
 	}
 	return h('section.form',
-		h('header', 'Pallette erstellen'),
+		h('header', 'Palette erstellen'),
 		h('form', {onsubmit},
 			h('', h('label', "Name"), name),
 			h('', h('label', "Copy"), dl.el),

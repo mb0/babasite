@@ -264,7 +264,7 @@ export function assetEditor(a:Asset, pals:Palette[]):AssetEditor {
 	ed.repaint()
 	seqView.update(ed)
 	h.repl(ed.el, seqView.el, c.el,
-		// tools and color pallette
+		// tools and color palette
 		h('', ed.tool.el, ed.pal.el),
 	)
 	return ed

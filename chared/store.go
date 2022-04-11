@@ -104,7 +104,7 @@ func (s *FileStore) LoadAll() error {
 	}
 	pal := DefaultPalette()
 	s.pals[pal.Name] = pal
-	// on the first pass read only pallettes and save asset candidates for second pass
+	// on the first pass read only palettes and save asset candidates for second pass
 	var cand []string
 	for _, f := range files {
 		name := f.Name()
@@ -112,7 +112,7 @@ func (s *FileStore) LoadAll() error {
 			// save candidate for later
 			cand = append(cand, name)
 		} else if strings.HasSuffix(name, ".json") {
-			// parse as pallette
+			// parse as palette
 			_, err := s.LoadPal(name[:len(name)-5])
 			if err != nil {
 				log.Printf("error reading palette %s: %v", name, err)
@@ -121,7 +121,7 @@ func (s *FileStore) LoadAll() error {
 		}
 	}
 	for _, name := range cand {
-		// parse as asset with all pallettes available
+		// parse as asset with all palettes available
 		_, err := s.LoadAsset(name)
 		if err != nil {
 			if err != fs.ErrNotExist {
