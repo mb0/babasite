@@ -11,19 +11,20 @@ import {Pic} from './pic'
 import {AssetEditor} from './asset_editor'
 
 export function sequenceView(a:Asset, ani:Animator) {
-	const picSel = picSelect()
 	const seqPrev = sequencePreview(a, ani)
+	const picSel = picSelect(seqPrev.el)
 	const k = kinds.find(k => k.kind == a.kind)!
-	const cont = h('')
+	const cont = h('span')
 	const el = h('section.seq',
 		h('header', k.name +' '+ a.name +' Sequenzen: ',
+			cont,
 			h('span', {onclick() {
 				mount(sequenceForm({}, s => {
 					app.send("seq.new", {name:s.name})
 					unmount()
 				}))
 			}}, '[add]')
-		), cont, seqPrev.el, picSel.el,
+		), picSel.el,
 	)
 	return {el, update(ed:AssetEditor) {
 		const {seq} = ed.a
@@ -51,7 +52,7 @@ function sequenceForm(s:Partial<Sequence>, submit:(res:Partial<Sequence>)=>void)
 	)
 }
 
-function picSelect() {
+function picSelect(sub?:HTMLElement) {
 	const el = h('')
 	return {el, update(ed:AssetEditor) {
 		if (!ed.seq) return null
@@ -68,11 +69,9 @@ function picSelect() {
 					})
 					unmount()
 				}))
-			}}, '[add]'), ': ', ids.map((_, i:number) =>
-			h('span', {onclick() {
-				if (i != ed.idx) ed.goto(s, i)
-			}}, i+' ')
-		)))
+			}}, '[add]'), ': ',
+			h('', sub||null, picViews(ed, s)),
+		))
 	}}
 }
 interface PicFormRes {
@@ -95,6 +94,20 @@ function picForm(r:Partial<PicFormRes>, submit:(res:PicFormRes)=>void) {
 		)
 	)
 }
+function picViews(ed:AssetEditor, s:Sequence) {
+	const bg = ed.pal.color(0)
+	return s.ids.map((pid, idx) => {
+		const pic = ed.a.pics[pid]
+		const id = 'picView_'+ ed.a.name +'_'+ s.name +'_'+ idx
+		const c = newCanvas(id, ed.a.w, ed.a.h, bg)
+		c.clear()
+		c.el.onclick = () => {
+			if (idx != ed.idx) ed.goto(s, idx)
+		}
+		if (pic) paintPic(c, ed.a, pic)
+		return c.el
+	})
+}
 
 function sequencePreview(a:Asset, ator:Animator) {
 	const id = 'seqPreview_'+ a.name
@@ -112,7 +125,7 @@ function sequencePreview(a:Asset, ator:Animator) {
 	return {el:c.el, c, update(e:AssetEditor) {
 		ed = e
 		c.el.style.backgroundColor = palCssColor(ed.a.pal, 0)
-		if (ani.paused()) ani.toggle()
+		paint(0)
 	}}
 }
 
