@@ -6,7 +6,7 @@ import {chat} from 'app/chat'
 import {Pixel, Palette} from './pal'
 import {assetSelect} from './asset_sel'
 import {AssetEditor, assetEditor} from './asset_editor'
-import {Pic, growPic, copySel} from './pic'
+import {Pic, picInit, growPic, copySel} from './pic'
 
 let cssStyle = `
 #chared {
@@ -109,6 +109,7 @@ app.addView({name: "chared",
 				if (isErr(res, subj)) return
 				assets.details.style.display = 'none'
 				if (ed) ed.stop()
+				Object.values(res.pics).forEach(p => picInit(p as Pic))
 				ed = assetEditor(res, pals)
 				h.repl(cont, ed.el)
 			},
@@ -117,7 +118,10 @@ app.addView({name: "chared",
 			},
 			"seq.new": (res, subj) => {
 				if (isErr(res, subj)||!ed) return
-				if (res.pics) res.pics.forEach((p:Pic) => ed?.addPic(p))
+				if (res.pics) res.pics.forEach((p:Pic) => {
+					picInit(p)
+					ed?.addPic(p)
+				})
 				ed.addSeq(res)
 			},
 			"seq.del": (res, subj) => {
@@ -126,7 +130,10 @@ app.addView({name: "chared",
 			},
 			"seq.edit": (res, subj) => {
 				if (isErr(res, subj)||!ed) return
-				if (res.pics) res.pics.forEach((p:Pic) => ed?.addPic(p))
+				if (res.pics) res.pics.forEach((p:Pic) => {
+					picInit(p)
+					ed?.addPic(p)
+				})
 				let s = ed.a.seq.find(s => s.name == res.name)
 				if (!s) return
 				let args:any = [res.idx||0, res.del||0]

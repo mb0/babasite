@@ -7,6 +7,10 @@ export interface Sel extends Grid<Pixel> { }
 export type PicID = number
 export interface Pic extends Grid<Pixel> { id:PicID }
 
+export function picInit(p:Pic):Pic {
+	return Object.assign(p, gridTiles<Pixel>(p, p.raw))
+}
+
 export interface EditPic extends Sel {
 	pic:PicID
 	copy?:boolean

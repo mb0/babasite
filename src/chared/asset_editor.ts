@@ -2,10 +2,10 @@ import h from 'web/html'
 import {newAnimator} from 'web/animate'
 import {ZoomCanvas, newZoomCanvas} from 'web/canvas'
 import {Pos, posIn, boxIn, boxCrop, boxGrow} from 'game/geo'
-import {GridSel, gridSel, gridTiles, gridEach} from 'game/grid'
+import {GridSel, gridSel, gridEach} from 'game/grid'
 import app from 'app'
 import {Asset, Sequence} from './asset'
-import {Pixel, Palette} from './pal'
+import {Palette} from './pal'
 import {PalView, palView} from './pal_view'
 import {ToolView, TmpPic, toolView, tmpPic} from './tool'
 import {Pic, PicID} from './pic'
@@ -35,10 +35,6 @@ export interface AssetEditor {
 }
 
 export function assetEditor(a:Asset, pals:Palette[]):AssetEditor {
-	Object.keys(a.pics).forEach((k:any) => {
-		let p = a.pics[k]
-		a.pics[k] = {id:p.id, ...gridTiles<Pixel>(p, p.raw)}
-	})
 	const ani = newAnimator()
 	const c = newZoomCanvas("our-canvas", 800, 600)
 	let selPat:CanvasPattern|null
