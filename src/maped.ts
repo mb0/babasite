@@ -1,6 +1,7 @@
 import h from 'web/html'
-import {newZoomCanvas, cssColor, Canvas} from 'web/canvas'
+import {newZoomCanvas, Canvas} from 'web/canvas'
 import {Pos, Dim} from 'game/geo'
+import {cssColor} from 'game/color'
 import app from 'app'
 import {chat} from 'app/chat'
 

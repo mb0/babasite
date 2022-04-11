@@ -1,7 +1,7 @@
 import {h, hInput, datalistInput, pickColor} from 'web/html'
 import {mount, unmount} from 'web/modal'
 import app from 'app'
-import {Pallette, Feature, Pixel, cssColor, palColor} from './pal'
+import {Pallette, Feature, Pixel, palCssColor} from './pal'
 
 export interface PalView {
 	el:HTMLElement
@@ -16,17 +16,9 @@ export interface PalView {
 
 export function palView(pal:Pallette, pals:Pallette[]):PalView {
 	const el = h('section.pal.inline')
-	const cmap:Map<Pixel, string> = new Map()
 	const view:PalView = {el, pal, pals, fg:1, bg:0, color: (p:Pixel) => {
-		if (!view.pal) return ''
-		let res = cmap.get(p)
-		if (!res) {
-			res = cssColor(palColor(view.pal, p))
-			cmap.set(p, res)
-		}
-		return res
+		return view.pal ? palCssColor(view.pal, p) : ''
 	}, update: (pal:Pallette) => {
-		cmap.clear()
 		view.pal = pal
 		h.repl(el, h('header',
 				h('label', {onclick() {
@@ -48,17 +40,20 @@ export function palView(pal:Pallette, pals:Pallette[]):PalView {
 						const func = view.clickFeat
 						if (func) func(f)
 					}}, feat.name),
-					feat.colors.map((color, c) => h('span', {
-						style:"background-color:"+cssColor(color),
+					feat.colors.map((_, c) => {
+						const pix = f*100+c
+						const css = view.color(pix)
+						return h('span', {
+							style:"background-color:"+css,
 						onclick() {
-							view.fg = f*100+c
+							view.fg = pix
 						},
 						oncontextmenu(e) {
 							e.preventDefault()
-							view.bg = f*100+c
+							view.bg = pix
 						},
 						ondblclick() {
-							pickColor(cssColor(color), res => {
+							pickColor(css, res => {
 								app.send("pal.edit", {
 									name:pal.name,
 									feat:feat.name,
@@ -66,7 +61,7 @@ export function palView(pal:Pallette, pals:Pallette[]):PalView {
 								})
 							})
 						},
-					})),
+					})}),
 					h('span', {onclick() {
 						pickColor('#7f7575', res => {
 							app.send("pal.edit", {

@@ -130,8 +130,3 @@ export function newZoomCanvas(id:string, width:number, height:number, bg?:string
 		}
 	}
 }
-
-export function cssColor(c:number):string {
-	let s = c.toString(16)
-	return '#' + '000000'.slice(s.length) + s
-}

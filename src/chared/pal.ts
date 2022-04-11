@@ -1,3 +1,4 @@
+import {ColorCache, newColorCache, cssColor} from 'game/color'
 
 export type Color = number
 export type Pixel = number
@@ -10,6 +11,7 @@ export interface Feature {
 export interface Pallette {
 	name:string
 	feat:Feature[]
+	cache?:ColorCache<Pixel>
 }
 
 export function palColor(pal:Pallette, p:Pixel):Color {
@@ -25,7 +27,7 @@ export function palColor(pal:Pallette, p:Pixel):Color {
 	return 0
 }
 
-export function cssColor(c:Color):string {
-	let s = c.toString(16)
-	return '#' + '000000'.slice(s.length) + s
+export function palCssColor(pal:Pallette, p:Pixel):string {
+	if (!pal.cache)	pal.cache = newColorCache<Pixel>(p => cssColor(palColor(pal, p)))
+	return pal.cache.color(p)
 }
