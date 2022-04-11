@@ -2,6 +2,8 @@ import {h, hInput} from 'web/html'
 import {mount, unmount} from 'web/modal'
 import {Animator} from 'web/animate'
 import {Canvas, newCanvas} from 'web/canvas'
+import {dimBox} from 'game/geo'
+import {gridEach} from 'game/grid'
 import app from 'app'
 import {Asset, Sequence, kinds, assetColor} from './asset'
 import {AssetEditor} from './asset_editor'
@@ -96,7 +98,7 @@ function picForm(r:Partial<PicFormRes>, submit:(res:PicFormRes)=>void) {
 
 function sequencePreview(a:Asset, ator:Animator) {
 	const id = 'seqPreview_'+ a.name
-	const c = newCanvas(id, a.w, a.h, "white")
+	const c = newCanvas(id, a.w, a.h, cssColor(assetColor(a, 0)))
 	let ed:AssetEditor|null = null
 	const paint = (fn:number) => {
 		c.clear()
@@ -109,18 +111,14 @@ function sequencePreview(a:Asset, ator:Animator) {
 	c.el.onclick = () => ani.toggle()
 	return {el:c.el, c, update(e:AssetEditor) {
 		ed = e
+		c.el.style.backgroundColor = cssColor(assetColor(ed.a, 0))
 		if (ani.paused()) ani.toggle()
 	}}
 }
 
 function paintPic(c:Canvas, a:Asset, pic:Pic) {
-	const {raw: data} = pic
-	if (!data?.length) return
-	for (let i = 0; i < data.length; i++) {
-		let x = i%pic.w
-		let y = (i-x)/pic.w
-		x += pic.x
-		y += pic.y
-		c.paintPixel({x, y}, cssColor(assetColor(a, data[i])))
-	}
+	const d = dimBox(a)
+	gridEach(pic, (p, t) => {
+		c.paintPixel(p, cssColor(assetColor(a, t)))
+	}, d, 0)
 }

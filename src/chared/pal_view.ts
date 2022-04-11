@@ -26,7 +26,7 @@ export function palView(pal:Pallette, pals:Pallette[]):PalView {
 		}
 		return res
 	}, update: (pal:Pallette) => {
-		if (view.pal != pal) cmap.clear()
+		cmap.clear()
 		view.pal = pal
 		h.repl(el, h('header',
 				h('label', {onclick() {
