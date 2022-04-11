@@ -237,6 +237,23 @@ export function assetEditor(a:Asset, pals:Pallette[]):AssetEditor {
 			})
 		}
 	})
+	c.el.ondragover = (e:DragEvent) => {
+		e.preventDefault()
+		e.dataTransfer!.dropEffect = "copy"
+	}
+	c.el.ondrop = (e:DragEvent) => {
+		e.preventDefault()
+		if (!ed.pic) return
+		const [aname, pid] = e.dataTransfer!.getData("application/x-chared").split(':', 2)
+		if (aname != a.name) return
+		const pic = a.pics[parseInt(pid, 10)]
+		if (!pic) return
+		app.send("pic.edit", {
+			...pic,
+			pic:ed.pic.id,
+			copy:true,
+		})
+	}
 	ed.pal.clickFeat = idx => clickFeat(ed, idx)
 	ed.tool.repaint = () => ed.repaint
 	c.init(ed.repaint)

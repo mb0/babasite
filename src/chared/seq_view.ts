@@ -104,6 +104,12 @@ function picViews(ed:AssetEditor, s:Sequence) {
 		c.el.onclick = () => {
 			if (idx != ed.idx) ed.goto(s, idx)
 		}
+		c.el.draggable = true
+		c.el.ondragstart = (ev:DragEvent) => {
+			const dt = ev.dataTransfer!
+			dt.setDragImage(c.el, 0, 0)
+			dt.setData("application/x-chared", ed.a.name+":"+pid)
+		}
 		if (pic) paintPic(c, ed.a, pic)
 		return c.el
 	})
