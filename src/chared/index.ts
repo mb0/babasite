@@ -150,7 +150,7 @@ app.addView({name: "chared",
 				res = gridTiles<Pixel>(res, res.raw)
 				// update pic
 				if (!boxIn(pic, res)) growPic(pic, res)
-				copySel(pic, res)
+				copySel(pic, res, res.copy)
 				// repaint canvas if pic is active sequence
 				if (ed.seq?.ids?.includes(pic.id)) {
 					ed.updateSeq(ed.seq)
