@@ -159,11 +159,9 @@ export function assetEditor(a:Asset, pals:Pallette[]):AssetEditor {
 		if (e.button != 2 && e.button != 0) return
 		const {active, mirror} = ed.tool
 		if (active == 'pen' || active == 'brush') {
-			let t = ed.pal.fg||99, color = ed.pal.color(ed.pal.fg)
-			if (e.button == 2) {
-				t = 99
-				color = "#ffffff"
-			}
+			let t = e.button == 0 ? ed.pal.fg : ed.pal.bg
+			let color = ed.pal.color(t)
+			t = t||99
 			let draw:(p:Pos)=>void = active == "pen" ? p => {
 					ed.tmp.paint(p.x, p.y, t)
 					c.paintPixel(p, color)
