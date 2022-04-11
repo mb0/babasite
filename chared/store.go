@@ -39,14 +39,14 @@ type FileStore struct {
 	path   string
 	dirfs  fs.FS
 	assets map[string]*Asset
-	pals   map[string]*Pallette
+	pals   map[string]*Palette
 }
 
 func NewFileStore(path string) *FileStore {
 	return &FileStore{path: path,
 		dirfs:  os.DirFS(path),
 		assets: make(map[string]*Asset),
-		pals:   make(map[string]*Pallette),
+		pals:   make(map[string]*Palette),
 	}
 }
 
@@ -66,8 +66,8 @@ func (s *FileStore) AssetInfos() []AssetInfo {
 	return res
 }
 
-func (s *FileStore) PalInfos() []Pallette {
-	res := make([]Pallette, 0, len(s.pals))
+func (s *FileStore) PalInfos() []Palette {
+	res := make([]Palette, 0, len(s.pals))
 	for _, p := range s.pals {
 		res = append(res, *p)
 	}
@@ -77,7 +77,7 @@ func (s *FileStore) PalInfos() []Pallette {
 	return res
 }
 
-func (s *FileStore) Pal(name string) *Pallette {
+func (s *FileStore) Pal(name string) *Palette {
 	return s.pals[name]
 }
 
@@ -102,7 +102,7 @@ func (s *FileStore) LoadAll() error {
 	if err != nil {
 		return err
 	}
-	pal := DefaultPallette()
+	pal := DefaultPalette()
 	s.pals[pal.Name] = pal
 	// on the first pass read only pallettes and save asset candidates for second pass
 	var cand []string
@@ -122,21 +122,18 @@ func (s *FileStore) LoadAll() error {
 	}
 	for _, name := range cand {
 		// parse as asset with all pallettes available
-		a, err := s.LoadAsset(name)
+		_, err := s.LoadAsset(name)
 		if err != nil {
 			if err != fs.ErrNotExist {
 				log.Printf("error reading %s/%s: %v", s.path, name, err)
 			}
 			continue
 		}
-		if pal := a.AssetMeta.Pal; pal != "" {
-			a.Pal = s.pals[pal]
-		}
 	}
 	return nil
 }
 
-func (s *FileStore) LoadPal(name string) (*Pallette, error) {
+func (s *FileStore) LoadPal(name string) (*Palette, error) {
 	pal, err := readPal(s.dirfs, fmt.Sprintf("%s.json", name))
 	if err != nil {
 		return nil, err
@@ -151,14 +148,11 @@ func (s *FileStore) LoadAsset(name string) (*Asset, error) {
 	if err != nil {
 		return nil, err
 	}
-	if a.AssetMeta.Pal != "" {
-		a.Pal = s.pals[a.AssetMeta.Pal]
-	}
 	s.assets[name] = a
 	return a, nil
 }
 
-func (s *FileStore) SavePal(p *Pallette) error {
+func (s *FileStore) SavePal(p *Palette) error {
 	path := filepath.Join(s.path, fmt.Sprintf("%s.json", p.Name))
 	err := writePal(p, path)
 	if err != nil {
@@ -243,12 +237,12 @@ func (s *FileStore) DropPic(a *Asset, id int) error {
 	return os.Remove(path)
 }
 
-func readPal(dir fs.FS, pat string) (*Pallette, error) {
+func readPal(dir fs.FS, pat string) (*Palette, error) {
 	raw, err := fs.ReadFile(dir, pat)
 	if err != nil {
 		return nil, err
 	}
-	var p Pallette
+	var p Palette
 	err = json.Unmarshal(raw, &p)
 	return &p, err
 }
@@ -319,7 +313,7 @@ func readSel(dir fs.FS, path string) (sel Sel, err error) {
 	return sel, err
 }
 
-func writePal(p *Pallette, path string) error {
+func writePal(p *Palette, path string) error {
 	err := ensureDir(filepath.Dir(path))
 	if err != nil {
 		return err

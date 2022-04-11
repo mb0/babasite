@@ -1,5 +1,4 @@
 import {Dim} from 'game/geo'
-import {Pallette} from './pal'
 import {Pic, PicID} from './pic'
 
 export const kind:{[kind:string]:string} = {
@@ -21,6 +20,6 @@ export interface Sequence {
 
 export interface Asset extends AssetInfo, Dim {
 	seq:Sequence[]
-	pal:Pallette
+	pal:string
 	pics:{[id:PicID]:Pic}
 }

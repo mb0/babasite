@@ -8,13 +8,13 @@ export interface Feature {
 	colors:Color[]
 }
 
-export interface Pallette {
+export interface Palette {
 	name:string
 	feat:Feature[]
 	cache?:ColorCache<Pixel>
 }
 
-export function palColor(pal:Pallette, p:Pixel):Color {
+export function palColor(pal:Palette, p:Pixel):Color {
 	let c = p%100
 	let f = (p-c)/100
 	if (!f && c == 99) c = 0
@@ -27,7 +27,7 @@ export function palColor(pal:Pallette, p:Pixel):Color {
 	return 0
 }
 
-export function palCssColor(pal:Pallette, p:Pixel):string {
+export function palCssColor(pal:Palette, p:Pixel):string {
 	if (!pal.cache)	pal.cache = newColorCache<Pixel>(p => cssColor(palColor(pal, p)))
 	return pal.cache.color(p)
 }

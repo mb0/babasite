@@ -1,24 +1,24 @@
 import {h, hInput, datalistInput, pickColor} from 'web/html'
 import {mount, unmount} from 'web/modal'
 import app from 'app'
-import {Pallette, Feature, Pixel, palCssColor} from './pal'
+import {Palette, Feature, Pixel, palCssColor} from './pal'
 
 export interface PalView {
 	el:HTMLElement
-	pal:Pallette
-	pals:Pallette[]
+	pal:Palette
+	pals:Palette[]
 	fg:Pixel
 	bg:Pixel
-	update(pal:Pallette):void
+	update(pal:Palette):void
 	color(p:Pixel):string
 	clickFeat?:(idx:number)=>void
 }
 
-export function palView(pal:Pallette, pals:Pallette[]):PalView {
+export function palView(pal:Palette, pals:Palette[]):PalView {
 	const el = h('section.pal.inline')
 	const view:PalView = {el, pal, pals, fg:1, bg:0, color: (p:Pixel) => {
 		return view.pal ? palCssColor(view.pal, p) : ''
-	}, update: (pal:Pallette) => {
+	}, update: (pal:Palette) => {
 		view.pal = pal
 		h.repl(el, h('header',
 				h('label', {onclick() {
@@ -90,7 +90,7 @@ export function palView(pal:Pallette, pals:Pallette[]):PalView {
 	return view
 }
 
-function palSelect(pals:Pallette[], submit:(p:Pallette)=>void) {
+function palSelect(pals:Palette[], submit:(p:Palette)=>void) {
 	return h('section.form',
 		h('header', 'Pallette auswählen'),
 		h('ul', pals.map(p => h('li', {onclick() {
@@ -99,11 +99,11 @@ function palSelect(pals:Pallette[], submit:(p:Pallette)=>void) {
 	)
 }
 
-interface PalRes extends Partial<Pallette> {
+interface PalRes extends Partial<Palette> {
 	copy:string
 }
 
-export function palForm(pals:Pallette[], pal:Partial<Pallette>, submit:(res:PalRes)=>void) {
+export function palForm(pals:Palette[], pal:Partial<Palette>, submit:(res:PalRes)=>void) {
 	const name = hInput('', {value:pal.name||''})
 	const dl = datalistInput('dl-pals')
 	dl.update(["--"].concat(pals.map(p => p.name)))

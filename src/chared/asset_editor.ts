@@ -5,7 +5,7 @@ import {Pos, posIn, boxIn, boxCrop, boxGrow} from 'game/geo'
 import {GridSel, gridSel, gridTiles, gridEach} from 'game/grid'
 import app from 'app'
 import {Asset, Sequence} from './asset'
-import {Pixel, Pallette} from './pal'
+import {Pixel, Palette} from './pal'
 import {PalView, palView} from './pal_view'
 import {ToolView, TmpPic, toolView, tmpPic} from './tool'
 import {Pic, PicID} from './pic'
@@ -24,7 +24,7 @@ export interface AssetEditor {
 	sel:GridSel|null
 
 	repaint():void
-	updatePal(p:Pallette):void
+	updatePal(p:Palette):void
 	addSeq(s:Sequence):void
 	updateSeq(s:Sequence):void
 	delSeq(name:string):void
@@ -34,7 +34,7 @@ export interface AssetEditor {
 	stop():void
 }
 
-export function assetEditor(a:Asset, pals:Pallette[]):AssetEditor {
+export function assetEditor(a:Asset, pals:Palette[]):AssetEditor {
 	Object.keys(a.pics).forEach((k:any) => {
 		let p = a.pics[k]
 		a.pics[k] = {id:p.id, ...gridTiles<Pixel>(p, p.raw)}
@@ -42,10 +42,11 @@ export function assetEditor(a:Asset, pals:Pallette[]):AssetEditor {
 	const ani = newAnimator()
 	const c = newZoomCanvas("our-canvas", 800, 600)
 	let selPat:CanvasPattern|null
-	const seqView = sequenceView(a, ani)
+	let pal = pals.find(p => p.name == a.pal)!
+	const seqView = sequenceView(a, pal, ani)
 	let ed:AssetEditor = {a, c, el: h(''),
 		tmp: tmpPic(a.w, a.h),
-		pal: palView(a.pal, pals),
+		pal: palView(pal, pals),
 		tool: toolView(),
 		seq: a.seq && a.seq.length ? a.seq[0] : null,
 		idx:0, pic:null,
@@ -83,7 +84,7 @@ export function assetEditor(a:Asset, pals:Pallette[]):AssetEditor {
 			}
 		},
 		updatePal(p) {
-			ed.a.pal = p
+			ed.a.pal = p.name
 			ed.pal.update(p)
 			c.setStage({bg:ed.pal.color(0)})
 			if (ed.seq) {

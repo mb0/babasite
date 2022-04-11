@@ -2,16 +2,16 @@ import {h, hInput} from 'web/html'
 import {mount, unmount} from 'web/modal'
 import {Animator} from 'web/animate'
 import {Canvas, newCanvas} from 'web/canvas'
-import {dimBox} from 'game/geo'
+import {Dim, dimBox} from 'game/geo'
 import {gridEach} from 'game/grid'
 import app from 'app'
 import {Asset, Sequence, kinds} from './asset'
-import {palCssColor} from './pal'
+import {Palette, palCssColor} from './pal'
 import {Pic} from './pic'
 import {AssetEditor} from './asset_editor'
 
-export function sequenceView(a:Asset, ani:Animator) {
-	const seqPrev = sequencePreview(a, ani)
+export function sequenceView(a:Asset, pal:Palette, ani:Animator) {
+	const seqPrev = sequencePreview(a, pal, ani)
 	const picSel = picSelect(seqPrev.el)
 	const k = kinds.find(k => k.kind == a.kind)!
 	const cont = h('span')
@@ -110,34 +110,34 @@ function picViews(ed:AssetEditor, s:Sequence) {
 			dt.setDragImage(c.el, 0, 0)
 			dt.setData("application/x-chared", ed.a.name+":"+pid)
 		}
-		if (pic) paintPic(c, ed.a, pic)
+		if (pic) paintPic(c, ed.a, ed.pal.pal, pic)
 		return c.el
 	})
 }
 
-function sequencePreview(a:Asset, ator:Animator) {
+function sequencePreview(a:Asset, pal:Palette, ator:Animator) {
 	const id = 'seqPreview_'+ a.name
-	const c = newCanvas(id, a.w, a.h, palCssColor(a.pal, 0))
+	const c = newCanvas(id, a.w, a.h, palCssColor(pal, 0))
 	let ed:AssetEditor|null = null
 	const paint = (fn:number) => {
 		c.clear()
 		const ids = ed?.seq?.ids
 		if (!ids?.length) return
 		const pic = a.pics[ids[fn%ids.length]]
-		if (pic) paintPic(c, a, pic)
+		if (pic) paintPic(c, ed!.a, ed!.pal.pal, pic)
 	}
 	const ani = ator.animate(500, paint, 0, true)
 	c.el.onclick = () => ani.toggle()
 	return {el:c.el, c, update(e:AssetEditor) {
 		ed = e
-		c.el.style.backgroundColor = palCssColor(ed.a.pal, 0)
+		c.el.style.backgroundColor = palCssColor(ed.pal.pal, 0)
 		paint(0)
 	}}
 }
 
-function paintPic(c:Canvas, a:Asset, pic:Pic) {
+function paintPic(c:Canvas, a:Dim, pal:Palette, pic:Pic) {
 	const d = dimBox(a)
 	gridEach(pic, (p, t) => {
-		c.paintPixel(p, palCssColor(a.pal, t))
+		c.paintPixel(p, palCssColor(pal, t))
 	}, d, 0)
 }

@@ -51,7 +51,6 @@ type Asset struct {
 	AssetMeta
 	Pics map[int]*Pic `json:"pics"`
 	Last int          `json:"-"`
-	Pal  *Pallette    `json:"pal"`
 }
 
 func (a *Asset) GetPics(ids ...int) []*Pic {

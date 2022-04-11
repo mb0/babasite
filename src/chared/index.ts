@@ -3,7 +3,7 @@ import {boxIn} from 'game/geo'
 import {gridTiles} from 'game/grid'
 import app from 'app'
 import {chat} from 'app/chat'
-import {Pixel, Pallette} from './pal'
+import {Pixel, Palette} from './pal'
 import {assetSelect} from './asset_sel'
 import {AssetEditor, assetEditor} from './asset_editor'
 import {Pic, growPic, copySel} from './pic'
@@ -43,7 +43,7 @@ app.addView({name: "chared",
 		chat.start(app)
 		let assets = assetSelect([])
 		let cont = h('')
-		let pals:Pallette[] = []
+		let pals:Palette[] = []
 		h.add(app.cont, h('#chared',
 			h('style', cssStyle), assets.el, cont,
 		))
@@ -76,7 +76,7 @@ app.addView({name: "chared",
 				let p = pals.find(p => p.name == res.name)
 				if (!p) return
 				if (!p.feat) p.feat = []
-				// update feture
+				// update feature
 				let f = p.feat.find(f => f.name == res.feat)
 				if (f) {
 					if (f.colors) {
@@ -94,7 +94,7 @@ app.addView({name: "chared",
 				}
 				p.cache?.reset()
 				if (ed) {
-					if (ed.a.pal.name == p.name) {
+					if (ed.a.pal == p.name) {
 						ed.updatePal(p)
 					}
 				} else {

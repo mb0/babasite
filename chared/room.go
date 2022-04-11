@@ -78,7 +78,7 @@ func (r *Room) handle(m *hub.Msg) *hub.Msg {
 			Copy string `json:"copy"`
 		}
 		m.Unmarshal(&req)
-		p = &Pallette{Name: name}
+		p = &Palette{Name: name}
 		if req.Copy != "" {
 			ref := r.Store.Pal(req.Copy)
 			p.Feat = make([]*Feature, len(ref.Feat))
@@ -94,7 +94,6 @@ func (r *Room) handle(m *hub.Msg) *hub.Msg {
 		r.Bcast(site.RawMsg("pal.new", p))
 		if a := r.getSub(m.From); a != nil {
 			a.AssetMeta.Pal = p.Name
-			a.Pal = p
 			r.Store.SaveAssetMeta(a.Asset)
 			a.Bcast(site.RawMsg("pal.open", nameData{p.Name}), 0)
 			return nil
@@ -111,7 +110,6 @@ func (r *Room) handle(m *hub.Msg) *hub.Msg {
 		}
 		if a := r.getSub(m.From); a != nil {
 			a.AssetMeta.Pal = p.Name
-			a.Pal = p
 			r.Store.SaveAssetMeta(a.Asset)
 			a.Bcast(site.RawMsg("pal.open", nameData{p.Name}), 0)
 			return nil
@@ -207,10 +205,10 @@ func (r *Room) handle(m *hub.Msg) *hub.Msg {
 		req.Seq = []*SeqMeta{}
 		pal := r.Store.Pal(req.Pal)
 		if pal == nil && req.Pal == "default" {
-			pal = DefaultPallette()
+			pal = DefaultPalette()
 			r.Store.SavePal(pal)
 		}
-		a := &Asset{AssetMeta: req.AssetMeta, Pics: make(map[int]*Pic), Pal: pal}
+		a := &Asset{AssetMeta: req.AssetMeta, Pics: make(map[int]*Pic)}
 		err := r.Store.SaveAssetMeta(a)
 		if err != nil {
 			return m.ReplyErr(fmt.Errorf("saving asset: %v", err))
@@ -385,5 +383,5 @@ func nameMsg(m *hub.Msg) (string, error) {
 
 type Info struct {
 	Assets []AssetInfo `json:"assets,omitempty"`
-	Pals   []Pallette  `json:"pals,omitempty"`
+	Pals   []Palette   `json:"pals,omitempty"`
 }
