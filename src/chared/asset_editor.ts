@@ -255,7 +255,7 @@ export function assetEditor(a:Asset, pals:Palette[]):AssetEditor {
 		})
 	}
 	ed.pal.clickFeat = idx => clickFeat(ed, idx)
-	ed.tool.repaint = () => ed.repaint
+	ed.tool.repaint = () => ed.repaint()
 	c.init(ed.repaint)
 	ed.repaint()
 	seqView.update(ed)
