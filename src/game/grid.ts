@@ -17,7 +17,7 @@ export function gridTiles<T extends number>(b:Box, raw?:number[]):Grid<T> {
 
 export interface GridSel extends Grid<boolean> {}
 export function gridSel(b:Box, raw?:number[]):Grid<boolean> {
-	return {...b, raw: raw || Array(Math.ceil(b.w*b.h/8)).fill(0),
+	return {...b, raw: raw || Array(Math.ceil(b.w*b.h/16)).fill(0),
 		get(p) {
 			const idx = boxIdx(this, p)
 			const bit = 1<<(idx&0xf)
@@ -32,7 +32,7 @@ export function gridSel(b:Box, raw?:number[]):Grid<boolean> {
 	}
 }
 
-type EachFunc<T> = (p:Pos, t:T)=>boolean|void
+type EachFunc<T> = (p:Pos, t:T)=>void
 
 export function gridEach<T>(g:Grid<T>, f:EachFunc<T>, b?:Box, not?:T) {
 	b = b ? boxCrop(g, b) : g
@@ -42,8 +42,7 @@ export function gridEach<T>(g:Grid<T>, f:EachFunc<T>, b?:Box, not?:T) {
 		for (let x=b.x; x<d.w; x++) {
 			const p = {x, y}
 			const t = g.get(p)
-			if (t !== not && f(p, t) === false)
-				return
+			if (t !== not) f(p, t)
 		}
 	}
 }

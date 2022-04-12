@@ -17,7 +17,6 @@ export interface Palette {
 export function palColor(pal:Palette, p:Pixel):Color {
 	let c = p%100
 	let f = (p-c)/100
-	if (!f && c == 99) c = 0
 	if (pal.feat?.length) {
 		let feat = pal.feat[f]
 		if (c < feat?.colors?.length) {

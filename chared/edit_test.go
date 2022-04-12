@@ -3,6 +3,8 @@ package chared
 import (
 	"reflect"
 	"testing"
+
+	"github.com/mb0/babasite/game/grid"
 )
 
 func TestCopySel(t *testing.T) {
@@ -34,7 +36,7 @@ func TestCopySel(t *testing.T) {
 			}},
 	}
 	for _, test := range tests {
-		test.pic.Draw(test.sel, true)
+		grid.Each[Pixel](&test.sel.Tiles, test.pic.Set)
 		if !reflect.DeepEqual(test.pic.Raw, test.want) {
 			t.Errorf("failed test %s\n%v", test.name, test.pic.Raw)
 		}

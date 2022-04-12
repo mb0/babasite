@@ -41,6 +41,7 @@ export interface TmpPic {
 	paint(x:number, y:number, pixel:number):void
 	rect(x:number, y:number, w:number, h:number, pixel:number):void
 	getSel():Sel
+	getGridSel():GridSel
 }
 
 export function tmpPic(w:number, h:number):TmpPic {
@@ -77,6 +78,11 @@ export function tmpPic(w:number, h:number):TmpPic {
 		getSel():Sel {
 			let n = gridTiles<Pixel>(min)
 			gridEach(sel, p => n.set(p, img.get(p)), n, false)
+			return n
+		},
+		getGridSel():GridSel {
+			let n = gridSel(min)
+			gridEach(sel, p => n.set(p, true), n, false)
 			return n
 		},
 	}

@@ -4,7 +4,7 @@ import (
 	"github.com/mb0/babasite/game/geo"
 )
 
-type EachFunc[T any] func(geo.Pos, T) bool
+type EachFunc[T any] func(geo.Pos, T)
 
 type Grid[T any] interface {
 	B() geo.Box
@@ -51,10 +51,18 @@ func EachIn[T any](g Grid[T], b geo.Box, f EachFunc[T]) {
 	eachIn(g, b.Crop(g.B()), f)
 }
 func EachNot[T comparable](g Grid[T], f EachFunc[T], not T) {
-	eachIn(g, g.B(), func(p geo.Pos, t T) bool { return t == not || f(p, t) })
+	eachIn(g, g.B(), func(p geo.Pos, t T) {
+		if t != not {
+			f(p, t)
+		}
+	})
 }
 func EachInNot[T comparable](g Grid[T], b geo.Box, f EachFunc[T], not T) {
-	eachIn(g, b.Crop(g.B()), func(p geo.Pos, t T) bool { return t == not || f(p, t) })
+	eachIn(g, b.Crop(g.B()), func(p geo.Pos, t T) {
+		if t != not {
+			f(p, t)
+		}
+	})
 }
 func eachIn[T any](g Grid[T], b geo.Box, f EachFunc[T]) {
 	if b.Empty() {
@@ -63,10 +71,7 @@ func eachIn[T any](g Grid[T], b geo.Box, f EachFunc[T]) {
 	d := b.BoxDim()
 	for p := b.Pos; p.Y < d.H; p.Y++ {
 		for p.X = b.X; p.X < d.W; p.X++ {
-			t := g.Get(p)
-			if !f(p, t) {
-				return
-			}
+			f(p, g.Get(p))
 		}
 	}
 }

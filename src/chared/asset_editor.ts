@@ -162,7 +162,6 @@ export function assetEditor(a:Asset, pals:Palette[]):AssetEditor {
 		if (active == 'pen' || active == 'brush') {
 			let t = e.button == 0 ? ed.pal.fg : ed.pal.bg
 			let color = ed.pal.color(t)
-			t = t||99
 			let draw:(p:Pos)=>void = active == "pen" ? p => {
 					ed.tmp.paint(p.x, p.y, t)
 					c.paintPixel(p, color)
@@ -181,10 +180,11 @@ export function assetEditor(a:Asset, pals:Palette[]):AssetEditor {
 			}
 			c.startDrag(paint, e => {
 				paint(e)
-				let sel = ed.tmp.getSel()
-				if (!sel||!ed.pic) return
+				const sel = ed.tmp.getGridSel()
+				if (sel.w*sel.h<=0) return
 				app.send("pic.edit", {
-					pic:ed.pic.id,
+					pic:ed.pic!.id,
+					fill:t,
 					...sel,
 				})
 				ed.tmp.reset()

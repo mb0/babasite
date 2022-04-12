@@ -1,12 +1,12 @@
 import h from 'web/html'
 import {boxIn} from 'game/geo'
-import {gridTiles} from 'game/grid'
+import {Grid, gridTiles, gridSel, gridEach} from 'game/grid'
 import app from 'app'
 import {chat} from 'app/chat'
 import {Pixel, Palette} from './pal'
 import {assetSelect} from './asset_sel'
 import {AssetEditor, assetEditor} from './asset_editor'
-import {Pic, picInit, growPic, copySel} from './pic'
+import {Pic, picInit, growPic} from './pic'
 
 let cssStyle = `
 #chared {
@@ -147,10 +147,12 @@ app.addView({name: "chared",
 				// get pic
 				let pic = ed.a.pics[res.pic]
 				if (!pic) return
-				res = gridTiles<Pixel>(res, res.raw)
-				// update pic
 				if (!boxIn(pic, res)) growPic(pic, res)
-				copySel(pic, res, res.copy)
+				if (res.fill !== undefined) {
+					fillSel(pic, gridSel(res, res.raw), res.fill)
+				} else {
+					copySel(pic, gridTiles<Pixel>(res, res.raw), res.copy)
+				}
 				// repaint canvas if pic is active sequence
 				if (ed.seq?.ids?.includes(pic.id)) {
 					ed.updateSeq(ed.seq)
@@ -170,4 +172,11 @@ function isErr(res:any, subj:string) {
 		return true
 	}
 	return false
+}
+
+function copySel(pic:Grid<Pixel>, sel:Grid<Pixel>, copy?:boolean) {
+	gridEach(sel, (p, t) => pic.set(p, t), pic, !copy ? 0 : undefined)
+}
+function fillSel(pic:Grid<Pixel>, sel:Grid<boolean>, fill:Pixel) {
+	gridEach(sel, p => pic.set(p, fill), pic, false)
 }

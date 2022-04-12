@@ -23,9 +23,3 @@ export function growPic(p:Pic, o:Box) {
 	gridEach(p, (p, t) => tmp.set(p, t))
 	Object.assign(p, tmp)
 }
-
-export function copySel(pic:Sel, sel:Sel, copy?:boolean) {
-	gridEach(sel, (p, t) => {
-		pic.set(p, t == 99 ? 0 : t)
-	}, pic, !copy ? 0 : undefined)
-}
