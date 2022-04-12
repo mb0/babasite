@@ -22,14 +22,20 @@ export function toolView(part?:Partial<ToolView>):ToolView {
 	if (part) Object.assign(ctx, part)
 	h.add(el,
 		h('header', 'Tools'),
-		h('', tools.map(tool => h('span', {onclick() {
-			ctx.active = tool
-		}}, tool))),
-		h('', opts.map(opt => h('span', {onclick() {
-			const c:any = ctx
-			c[opt] = !c[opt]
-			if (opt == 'grid') ctx.repaint()
-		}}, opt)))
+		h('', tools.map(tool => h('label', h('input', {
+			type:'radio', name:'tool', value:tool,
+			checked: ctx.active == tool,
+			onchange: () => ctx.active = tool,
+		}), tool))),
+		h('', opts.map(opt => h('label', h('input', {
+			type:'checkbox', name:opt,
+			checked: (ctx as any)[opt],
+			onchange: () => {
+				const c = ctx as any
+				c[opt] = !c[opt]
+				if (opt == 'grid') ctx.repaint()
+			},
+		}), opt)))
 	)
 	return ctx
 }
