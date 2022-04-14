@@ -59,16 +59,12 @@ function picSelect(sub?:HTMLElement) {
 		let s = ed.seq
 		let ids:number[] = s.ids || (s.ids = [])
 		h.repl(el, h('span', s.name+ ' Pics', h('span', {onclick() {
-				mount(picForm({}, r => {
-					const id = r.idx < 0 || r.idx >= ids.length ? 0 : ids[r.idx]
-					app.send("seq.edit", {
-						name:s.name,
-						idx:ids.length,
-						ins:[id],
-						copy:!r.ref,
-					})
-					unmount()
-				}))
+				app.send("seq.edit", {
+					name:s.name,
+					idx:ids.length,
+					ins:[0],
+					copy:false,
+				})
 			}}, '[add]'), ': ',
 			h('', sub||null, picViews(ed, s)),
 		))
