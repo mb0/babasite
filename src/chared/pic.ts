@@ -16,7 +16,7 @@ export interface EditPic extends Sel {
 	copy?:boolean
 }
 
-export function growPic(p:Pic, o:Box) {
+export function growPic(p:Grid<Pixel>, o:Box) {
 	if (o.w*o.h<=0||boxIn(o, p)) return
 	const b = boxGrow(p, o)
 	let tmp = gridTiles<Pixel>(b)

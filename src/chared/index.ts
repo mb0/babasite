@@ -175,8 +175,10 @@ function isErr(res:any, subj:string) {
 }
 
 function copySel(pic:Grid<Pixel>, sel:Grid<Pixel>, copy?:boolean) {
+	growPic(pic, sel)
 	gridEach(sel, (p, t) => pic.set(p, t), pic, !copy ? 0 : undefined)
 }
 function fillSel(pic:Grid<Pixel>, sel:Grid<boolean>, fill:Pixel) {
+	growPic(pic, sel)
 	gridEach(sel, p => pic.set(p, fill), pic, false)
 }
