@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/mb0/babasite/chared"
 	"github.com/mb0/babasite/gol"
@@ -30,6 +31,30 @@ func main() {
 	}
 	// close the db when the main function ends
 	defer db.Close()
+	userStore := &site.BuntUserStore{DB: db}
+	switch subcmd := flag.Arg(0); subcmd {
+	case "register-user", "register-admin":
+		user := site.UserData{
+			Name:    flag.Arg(1),
+			Pass:    flag.Arg(2),
+			Admin:   subcmd == "register-admin",
+			Created: time.Now(),
+		}
+		if user.Name == "" || user.Pass == "" {
+			log.Fatalf("%s requires name and pass. use:\n\t$ babasite %s mb0 test",
+				subcmd, subcmd,
+			)
+		}
+		err := userStore.Save(user)
+		if err != nil {
+			log.Fatalf("%s failed: %v", subcmd, err)
+		}
+		log.Printf("%s %s successful!", subcmd, user.Name)
+		return
+	case "":
+	default:
+		log.Fatalf("unknown subcommand %s", subcmd)
+	}
 
 	// setup session manager to remember users
 	man, err := site.SetupSess(db, "babasite")
@@ -37,7 +62,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	auth := site.Auth{Man: man, Store: &site.BuntUserStore{DB: db}}
+	auth := site.Auth{Man: man, Store: userStore}
 
 	// create new site with multiple rooms
 	s := site.NewSite(

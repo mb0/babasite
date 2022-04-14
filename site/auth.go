@@ -2,6 +2,7 @@ package site
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"regexp"
 	"time"
@@ -33,6 +34,29 @@ func (s *BuntUserStore) Get(name string) (res UserData, err error) {
 	})
 	return res, err
 }
+func (s *BuntUserStore) Save(data UserData) error {
+	cost, err := bcrypt.Cost([]byte(data.Pass))
+	if err == nil && cost < bcrypt.MinCost {
+		return bcrypt.InvalidCostError(cost)
+	} else if err != nil {
+		if err != bcrypt.ErrHashTooShort {
+			return fmt.Errorf("unexpected bcrypt error: %v", err)
+		}
+		hash, err := bcrypt.GenerateFromPassword([]byte(data.Pass), bcrypt.DefaultCost)
+		if err != nil {
+			return err
+		}
+		data.Pass = string(hash)
+	}
+	raw, err := json.Marshal(data)
+	if err != nil {
+		return err
+	}
+	return s.Update(func(tx *buntdb.Tx) error {
+		_, _, err := tx.Set("user_"+data.Name, string(raw), nil)
+		return err
+	})
+}
 
 type Auth struct {
 	Man   *ses.Manager
@@ -55,7 +79,7 @@ func (a *Auth) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var name, errmsg string
-	var registered bool
+	var registered bool = true
 	switch r.Method {
 	case "POST":
 		name = r.FormValue("name")
@@ -71,7 +95,13 @@ func (a *Auth) Login(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			if err == buntdb.ErrNotFound {
 				// no user registered, save and redirect
-				a.loginSuccess(w, r, name, false)
+				if registered {
+					errmsg = "Benutzer nicht gefunden."
+					break
+				} else {
+
+					a.loginSuccess(w, r, name, false)
+				}
 			} else {
 				loginErrPage(w, `Leider ist Fehler mit der Datenbank aufgetreten.`)
 			}
@@ -95,9 +125,9 @@ func (a *Auth) Login(w http.ResponseWriter, r *http.Request) {
 	}
 	var desc, fields string
 	if registered {
-		desc = `<p>Registrierte Benutzer benötigen ein Passwort.</p>`
+		desc = `<p>Anmeldung benötigen ein Passwort.</p>`
 		fields = `
-		<input type="hidden" name="name" value="` + escapeHTML(name) + `">
+		<input type="text" name="name" value="` + escapeHTML(name) + `">
 		<input type="password" name="pass" placeholder="Passwort">
 		<div>` + errmsg + `</div>`
 	} else {
