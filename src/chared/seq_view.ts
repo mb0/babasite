@@ -10,13 +10,13 @@ import {Palette, palCssColor} from './pal'
 import {Pic} from './pic'
 import {AssetEditor} from './asset_editor'
 
-export function sequenceView(a:Asset, pal:Palette, ani:Animator) {
-	const seqPrev = sequencePreview(a, pal, ani)
+export function sequenceView(ed:AssetEditor, ani:Animator) {
+	const seqPrev = sequencePreview(ed.a, ed.pal, ani)
 	const picSel = picSelect(seqPrev.el)
-	const k = kinds.find(k => k.kind == a.kind)!
+	const k = kinds.find(k => k.kind == ed.a.kind)!
 	const cont = h('span')
 	const el = h('section.seq',
-		h('header', k.name +' '+ a.name +' Sequenzen: ',
+		h('header', k.name +' '+ ed.a.name +' Sequenzen: ',
 			cont,
 			h('span', {onclick() {
 				mount(sequenceForm({}, s => {
@@ -26,7 +26,7 @@ export function sequenceView(a:Asset, pal:Palette, ani:Animator) {
 			}}, '[add]')
 		), picSel.el,
 	)
-	return {el, update(ed:AssetEditor) {
+	const res = {el, update() {
 		const {seq} = ed.a
 		if (!seq) return "Keine Sequenzen"
 		h.repl(cont, seq.map(s => h('span', {onclick() {
@@ -35,6 +35,8 @@ export function sequenceView(a:Asset, pal:Palette, ani:Animator) {
 		picSel.update(ed)
 		seqPrev.update(ed)
 	}}
+	res.update()
+	return res
 }
 
 function sequenceForm(s:Partial<Sequence>, submit:(res:Partial<Sequence>)=>void) {
@@ -91,7 +93,7 @@ function picForm(r:Partial<PicFormRes>, submit:(res:PicFormRes)=>void) {
 	)
 }
 function picViews(ed:AssetEditor, s:Sequence) {
-	const bg = ed.pal.color(0)
+	const bg = ed.color(0)
 	return s.ids.map((pid, idx) => {
 		const pic = ed.a.pics[pid]
 		const id = 'picView_'+ ed.a.name +'_'+ s.name +'_'+ idx
@@ -106,7 +108,7 @@ function picViews(ed:AssetEditor, s:Sequence) {
 			dt.setDragImage(c.el, 0, 0)
 			dt.setData("application/x-chared", ed.a.name+":"+pid)
 		}
-		if (pic) paintPic(c, ed.a, ed.pal.pal, pic)
+		if (pic) paintPic(c, ed.a, ed.pal, pic)
 		return c.el
 	})
 }
@@ -120,13 +122,13 @@ function sequencePreview(a:Asset, pal:Palette, ator:Animator) {
 		const ids = ed?.seq?.ids
 		if (!ids?.length) return
 		const pic = a.pics[ids[fn%ids.length]]
-		if (pic) paintPic(c, ed!.a, ed!.pal.pal, pic)
+		if (pic) paintPic(c, ed!.a, ed!.pal, pic)
 	}
 	const ani = ator.animate(500, paint, 0, true)
 	c.el.onclick = () => ani.toggle()
 	return {el:c.el, c, update(e:AssetEditor) {
 		ed = e
-		c.el.style.backgroundColor = palCssColor(ed.pal.pal, 0)
+		c.el.style.backgroundColor = palCssColor(ed.pal, 0)
 		paint(0)
 	}}
 }

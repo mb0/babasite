@@ -1,25 +1,26 @@
 import {h, hInput, datalistInput, pickColor} from 'web/html'
 import {mount, unmount} from 'web/modal'
 import app from 'app'
-import {Palette, Feature, Pixel, palCssColor} from './pal'
+import {Palette, Feature, Pixel} from './pal'
+
+export interface PalViewCtx {
+	pal:Palette
+	tool:{fg:Pixel, bg:Pixel}
+	color(t:Pixel):string
+}
 
 export interface PalView {
 	el:HTMLElement
-	pal:Palette
+	ctx:PalViewCtx
 	pals:Palette[]
-	fg:Pixel
-	bg:Pixel
-	update(pal:Palette):void
-	color(p:Pixel):string
-	clickFeat?:(idx:number)=>void
+	clickFeat(idx:number):void
+	update():void
 }
 
-export function palView(pal:Palette, pals:Palette[]):PalView {
+export function palView(ctx:PalViewCtx, pals:Palette[], clickFeat:(idx:number)=>void):PalView {
 	const el = h('section.pal.inline')
-	const view:PalView = {el, pal, pals, fg:1, bg:0, color: (p:Pixel) => {
-		return view.pal ? palCssColor(view.pal, p) : ''
-	}, update: (pal:Palette) => {
-		view.pal = pal
+	const view:PalView = {el, ctx, pals, clickFeat, update:() => {
+		const pal = ctx.pal
 		h.repl(el, h('header',
 				h('label', {onclick() {
 					mount(palSelect(view.pals, res => {
@@ -42,15 +43,15 @@ export function palView(pal:Palette, pals:Palette[]):PalView {
 					}}, feat.name),
 					feat.colors.map((_, c) => {
 						const pix = f*100+c
-						const css = view.color(pix)
+						const css = ctx.color(pix)
 						return h('span', {
 							style:"background-color:"+css,
 						onclick() {
-							view.fg = pix
+							ctx.tool.fg = pix
 						},
 						oncontextmenu(e) {
 							e.preventDefault()
-							view.bg = pix
+							ctx.tool.bg = pix
 						},
 						ondblclick() {
 							pickColor(css, res => {
@@ -86,7 +87,7 @@ export function palView(pal:Palette, pals:Palette[]):PalView {
 			),
 		)
 	}}
-	view.update(pal)
+	view.update()
 	return view
 }
 

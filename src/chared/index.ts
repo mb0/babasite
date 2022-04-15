@@ -156,7 +156,7 @@ app.addView({name: "chared",
 				// repaint canvas if pic is active sequence
 				if (ed.seq?.ids?.includes(pic.id)) {
 					ed.updateSeq(ed.seq)
-					if (ed.pic?.id == pic.id) ed.repaint()
+					if (ed.img?.id == pic.id) ed.repaint()
 				}
 			},
 		}
