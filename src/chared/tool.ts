@@ -9,16 +9,20 @@ const opts = ['mirror', 'grid']
 
 export interface ToolViewCtx {
 	tool:ToolCtx<Pixel>
+	color(t:Pixel):string
 	repaint():void
 }
 
 export interface ToolView {
 	el:HTMLElement
 	ctx:ToolViewCtx
+	updateColor():void
 }
 
 export function toolView(ctx:ToolViewCtx):ToolView {
 	const el = h('section.tool.inline')
+	const fg = h('span')
+	const bg = h('span')
 	h.add(el,
 		h('header', 'Tools'),
 		h('', tools.map(tool => h('label', h('input', {
@@ -34,7 +38,13 @@ export function toolView(ctx:ToolViewCtx):ToolView {
 				c[opt] = !c[opt]
 				if (opt == 'grid') ctx.repaint()
 			},
-		}), opt)))
+		}), opt))),
+		h('.color', fg, bg),
 	)
-	return {el, ctx}
+	const updateColor = () => {
+		fg.style.backgroundColor = ctx.color(ctx.tool.fg)
+		bg.style.backgroundColor = ctx.color(ctx.tool.bg)
+	}
+	updateColor()
+	return {el, ctx, updateColor}
 }

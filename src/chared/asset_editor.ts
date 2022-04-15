@@ -19,6 +19,7 @@ export interface AssetEditor extends GridEditor<Pixel> {
 	idx:number
 
 	updatePal(p:Palette):void
+	updateColor():void
 	addSeq(s:Sequence):void
 	updateSeq(s:Sequence):void
 	delSeq(name:string):void
@@ -46,9 +47,13 @@ export function assetEditor(a:Asset, pals:Palette[]):AssetEditor {
 			palv.update()
 			ed.c.setStage({bg:ed.color(0)})
 			if (ed.seq) {
+				ed.updateColor()
 				ed.updateSeq(ed.seq)
 				ed.repaint()
 			}
+		},
+		updateColor() {
+			toolv.updateColor()
 		},
 		addSeq(s:Sequence) {
 			// add sequence to asset

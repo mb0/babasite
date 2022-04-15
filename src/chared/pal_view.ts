@@ -7,6 +7,7 @@ export interface PalViewCtx {
 	pal:Palette
 	tool:{fg:Pixel, bg:Pixel}
 	color(t:Pixel):string
+	updateColor():void
 }
 
 export interface PalView {
@@ -48,10 +49,12 @@ export function palView(ctx:PalViewCtx, pals:Palette[], clickFeat:(idx:number)=>
 							style:"background-color:"+css,
 						onclick() {
 							ctx.tool.fg = pix
+							ctx.updateColor()
 						},
 						oncontextmenu(e) {
 							e.preventDefault()
 							ctx.tool.bg = pix
+							ctx.updateColor()
 						},
 						ondblclick() {
 							pickColor(css, res => {

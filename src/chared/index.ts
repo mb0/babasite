@@ -35,6 +35,11 @@ let cssStyle = `
 .seq span+span {
 	padding-left: 4px;
 }
+.color span {
+	display: inline-block;
+	width:40px;
+	height:20px;
+}
 `
 let ed:AssetEditor|null = null
 app.addView({name: "chared",
