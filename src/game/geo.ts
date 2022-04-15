@@ -26,17 +26,16 @@ export interface Box extends Pos, Dim {}
 export function boxEq(a:Box, b:Box) { return posEq(a, b) && dimEq(a, b) }
 export function boxEnd(b:Box) { return {x:b.x+b.w-1, y:b.y+b.h-1} }
 export function boxDim(b:Box) { return {w:b.x+b.w, h:b.y+b.h} }
-export function boxIn(b:Box, o:Box) { return posIn(o, b) && posIn(boxEnd(o), b) }
+export function boxIn(b:Box, o:Box) { return posIn(b, o) && posIn(boxEnd(b), o) }
 export function boxIdx(b:Box, p:Pos) {
 	const {x, y} = posSub(p, b)
 	return y*b.w+x
 }
-
 export function boxCrop(b:Box, o:Box):Box {
 	if (b.w*b.h<=0||o.w*o.h<=0) return {x:0, y:0, w:0, h:0}
 	const {x, y} = posMax(o, b)
 	const e = posMin(boxEnd(o), boxEnd(b))
-	return {x, y, w:1+e.x-x, h:1+e.y-y}
+	return {x, y, w:Math.max(0, 1+e.x-x), h:Math.max(0, 1+e.y-y)}
 }
 
 export function boxGrow(b:Box, p:Pos|Box):Box {

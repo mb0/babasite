@@ -44,13 +44,13 @@ export function newCanvas(id:string, width:number, height:number, bg?:string):Ca
 	}
 }
 
-export type DragHandler = (e:MouseEvent)=>void
+export type DragHandler = (e:PointerEvent)=>void
 
 export interface ZoomCanvas extends Canvas {
 	grid(a:number, b:number):void
 	stagePos(e:MouseEvent):Pos|null
 	init(repaint:(c:Canvas)=>void):void
-	startDrag(move:DragHandler, done?:DragHandler):void
+	startDrag(pointer:number, move:DragHandler, done?:DragHandler):void
 
 }
 
@@ -105,10 +105,10 @@ export function newZoomCanvas(id:string, width:number, height:number, bg?:string
 				s.y = -y1*s.zoom+e.offsetY
 				repaint(this)
 			})
-			el.addEventListener("mousedown", e => {
+			el.addEventListener("pointerdown", e => {
 				if (e.button != 1) return
 				let start = {x:e.offsetX, y:e.offsetY}
-				this.startDrag(e => {
+				this.startDrag(e.pointerId, e => {
 					let p = {x:e.offsetX, y:e.offsetY}
 					s.x += p.x-start.x
 					s.y += p.y-start.y
@@ -117,16 +117,23 @@ export function newZoomCanvas(id:string, width:number, height:number, bg?:string
 				})
 			})
 		},
-		startDrag(move, done) {
-			let end = (e:MouseEvent) => {
-				el.removeEventListener("mousemove", move)
-				el.removeEventListener("mouseup", end)
-				el.removeEventListener("mouseleave", end)
+		startDrag(pointer, move, done) {
+			el.setPointerCapture(pointer)
+			let end = (e:PointerEvent) => {
+				el.ongotpointercapture = null
+				el.onlostpointercapture = null
+				el.onpointermove = null
+				el.onpointerup = null
+				el.onpointercancel = null
+				el.releasePointerCapture(pointer)
 				if (done) done(e)
 			}
-			el.addEventListener("mousemove", move)
-			el.addEventListener("mouseup", end)
-			el.addEventListener("mouseleave", end)
+			el.ongotpointercapture = () => {
+				el.onlostpointercapture = end
+				el.onpointermove = move
+				el.onpointerup = end
+				el.onpointercancel = end
+			}
 		}
 	}
 }

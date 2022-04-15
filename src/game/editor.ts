@@ -57,9 +57,9 @@ export function gridEditor<T extends number>(d:Dim, color:(t:T)=>string, onedit:
 		},
 	}
 	c.el.oncontextmenu = e => e.preventDefault()
-	c.el.addEventListener("mousedown", e => {
-		if (e.button != 2 && e.button != 0) return
+	c.el.addEventListener("pointerdown", e => {
 		if (!ed.img) return
+		if (e.button != 2 && e.button != 5 && e.button != 0) return
 		const tool = tools[ed.tool.active]
 		if (tool) tool(ed, e)
 	})
@@ -127,7 +127,7 @@ TODO dither tool: maybe reuse brush with different brush types?
 TODO transformation view for selection or the whole pic for move, rotate and mirror
  */
 
-export type Tool<T> = (ed:GridEditor<T>, e:MouseEvent)=>void
+export type Tool<T> = (ed:GridEditor<T>, e:PointerEvent)=>void
 
 export const tools:{[name:string]:Tool<any>} = {
 	pen: startDraw(drawPen),
@@ -135,39 +135,40 @@ export const tools:{[name:string]:Tool<any>} = {
 	select: startSel,
 }
 
-function drawPen<T>(ed:GridEditor<T>, p:Pos, t:T) {
+function drawPen<T>(ed:GridEditor<T>, _:PointerEvent, p:Pos, t:T) {
 	ed.tmp.paint(p, t)
 	ed.c.paintPixel(p, ed.color(t))
 }
-function drawBrush<T>(ed:GridEditor<T>, p:Pos, t:T) {
-	let r = {x:p.x-1, y:p.y-1, w:3, h:3}
+function drawBrush<T>(ed:GridEditor<T>, e:PointerEvent, p:Pos, t:T) {
+	const s = e.pressure == 0.5 ? 1 : Math.floor((e.pressure*e.pressure)*5)
+	const r = {x:p.x-s, y:p.y-s, w:1+2*s, h:1+2*s}
 	ed.tmp.rect(r, t)
 	ed.c.paintRect(r, ed.color(t))
 }
-function startDraw<T>(draw:(ed:GridEditor<T>, p:Pos, t:T)=>void):Tool<T> {
+function startDraw<T>(draw:(ed:GridEditor<T>, e:PointerEvent, p:Pos, t:T)=>void):Tool<T> {
 	return (ed, e) => {
 		const {mirror, fg, bg} = ed.tool
-		let t = e.button == 0 ? fg : bg
-		let paint = (e:MouseEvent) => {
-			let p = ed.c.stagePos(e)
+		const t = e.button != 0 ? bg : fg
+		const paint = (e:PointerEvent) => {
+			const p = ed.c.stagePos(e)
 			if (!p) return
-			draw(ed, p, t)
+			draw(ed, e, p, t)
 			if (mirror) {
 				p.x = ed.img!.w-p.x-1
-				draw(ed, p, t)
+				draw(ed, e, p, t)
 			}
 		}
-		ed.c.startDrag(paint, e => {
+		ed.c.startDrag(e.pointerId, paint, e => {
 			paint(e)
-			const sel = ed.tmp.getSel()
+			const sel = ed.tmp.getSel() as Edit<T>
 			if (sel.w*sel.h<=0) return
 			ed.onedit(Object.assign(sel, {fill:t}))
 		})
 	}
 }
 
-function startSel<T>(ed:GridEditor<T>, e:MouseEvent) {
-	if (e.button == 2) {
+function startSel<T>(ed:GridEditor<T>, e:PointerEvent) {
+	if (e.button != 0) {
 		ed.sel = null
 		ed.repaint()
 		return
@@ -177,7 +178,7 @@ function startSel<T>(ed:GridEditor<T>, e:MouseEvent) {
 	if (!fst) return
 	let b = {...fst, w:1, h:1}
 	let cur = b
-	c.startDrag(e => {
+	c.startDrag(e.pointerId, e => {
 		const p = c.stagePos(e)
 		if (!p) return
 		cur = boxGrow(b, p)

@@ -72,7 +72,7 @@ export const app:App = {...newHub(),
 			case '_msg':
 				break
 			default:
-				console.log("got message "+subj, data)
+				// console.log("got message "+subj, data)
 			}
 			app.trigger(subj, data)
 		})
