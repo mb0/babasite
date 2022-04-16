@@ -48,7 +48,12 @@ export function assetSelect(infos:AssetInfo[]) {
 
 export function assetForm(a:Partial<Asset>, submit:(res:Partial<Asset>)=>void) {
 	a = a || {}
-	let name = hInput('', {value:a.name||''})
+	let name = hInput('', {
+		value:a.name?a.name.toLowerCase():'',
+		required: true,
+		pattern: '[a-z0-9_]+'
+	})
+
 	let kind = h('select', kinds.map(k =>
 		h('option', {selected:k.kind==a.kind, value:k.kind}, k.name)
 	)) as HTMLInputElement
@@ -59,7 +64,9 @@ export function assetForm(a:Partial<Asset>, submit:(res:Partial<Asset>)=>void) {
 	return h('section.form',
 		h('header', 'Asset erstellen'),
 		h('form', {onsubmit},
-			h('', h('label', "Name"), name),
+			h('', h('label', "Name"), name,
+				h('span.help', 'Kann aus Kleinbuchstaben, Zahlen und Unterstrich bestehen')
+			),
 			h('', h('label', "Art"), kind),
 			h('button', 'Neu Anlegen')
 		)

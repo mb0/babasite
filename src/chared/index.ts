@@ -40,6 +40,9 @@ let cssStyle = `
 	width:40px;
 	height:20px;
 }
+form span.help {
+	margin-left: 16px;
+}
 `
 let ed:AssetEditor|null = null
 app.addView({name: "chared",
