@@ -1,21 +1,29 @@
 import {ZoomCanvas, newZoomCanvas} from 'web/canvas'
-import {Pos, Dim, Box, posIn, dimBox, boxIn, boxCrop, boxGrow} from 'game/geo'
+import {Pos, Dim, Box, posEq, posIn, posAdd, posSub, dimBox, boxIn, boxCrop, boxGrow} from 'game/geo'
 import {Grid, GridSel, GridData, gridTiles, gridSel, gridEach} from 'game/grid'
 
 interface Image<T> extends Grid<T> {
 	id:number
 }
 
+export interface Float<T> extends Grid<T> {
+	mode:'img'|'paste'
+}
+
 export interface GridEditor<T> {
 	c:ZoomCanvas
 	img:Image<T>|null
 	sel:GridSel|null
+	float:Float<T>|null
 	tmp:Tmp<T>
 	color(t:T):string
 	onedit(e:Edit<T>):void
 	tool:ToolCtx<T>
 	repaint():void
 	update(img:Image<T>|null):void
+	close():void
+	updateTool?:()=>void
+	anchorFloat():void
 }
 
 export interface ToolCtx<T> {
@@ -26,13 +34,17 @@ export interface ToolCtx<T> {
 	bg:T
 }
 
-export interface Edit<T> extends GridData { fill?:T }
+export interface Edit<T> extends GridData {
+	repl?:boolean
+	fill?:T
+}
 
 export function gridEditor<T extends number>(d:Dim, color:(t:T)=>string, onedit:(e:Edit<T>)=>void):GridEditor<T> {
 	const c = newZoomCanvas("our-canvas", 800, 600)
 	let selPat:CanvasPattern|null = null
 	selPattern(c).then(pat => selPat = pat)
-	const ed:GridEditor<T> = {c, img:null, sel:null,
+	const handleCb = (e:Event) => handleClipboard(ed, e as ClipboardEvent)
+	const ed:GridEditor<T> = {c, img:null, sel:null, float: null,
 		tmp:tmpGrid<T>(d.w, d.h), color, onedit,
 		tool:{active:'pen', mirror:false, grid:true, fg:1 as T, bg:0 as T},
 		repaint: () => {
@@ -41,7 +53,15 @@ export function gridEditor<T extends number>(d:Dim, color:(t:T)=>string, onedit:
 			if (ed.tool.grid) c.grid(8, 16)
 			for (let pos = {x:0, y:0}; pos.y < d.h; pos.y++) {
 				for (pos.x = 0; pos.x < d.w; pos.x++) {
-					let t = ed.tmp.img.get(pos)
+					let t:T|undefined
+					if (!ed.float) {
+						t = ed.tmp.img.get(pos)
+					} else {
+						if (posIn(pos, ed.float))
+							t = ed.float.get(pos)
+						if (!t && ed.float.mode == 'img')
+							continue
+					}
 					if (!t && posIn(pos, ed.img)) {
 						t = ed.img.get(pos)
 					}
@@ -51,9 +71,23 @@ export function gridEditor<T extends number>(d:Dim, color:(t:T)=>string, onedit:
 			if (ed.sel) paintSel(c, ed.sel, selPat)
 		},
 		update(img) {
+			ed.float = null
 			ed.img = img
 			ed.tmp.reset()
+			if (ed.updateTool) ed.updateTool()
 			ed.repaint()
+		},
+		close() {
+			cbEvents.forEach(typ => window.removeEventListener(typ, handleCb))
+		},
+		anchorFloat() {
+			if (!ed.float) return
+			// copy into tmp img
+			gridEach(ed.float!, (p, t) => ed.tmp.paint(p, t), ed.tmp.img)
+			ed.onedit({...ed.tmp.getGrid(), repl:ed.float.mode == 'img'})
+			ed.tmp.reset()
+			ed.float = null
+			if (ed.updateTool) ed.updateTool()
 		},
 	}
 	c.el.oncontextmenu = e => e.preventDefault()
@@ -64,7 +98,77 @@ export function gridEditor<T extends number>(d:Dim, color:(t:T)=>string, onedit:
 		if (tool) tool(ed, e)
 	})
 	c.init(ed.repaint)
+	cbEvents.forEach(typ => window.addEventListener(typ, handleCb))
 	return ed
+}
+
+const cbEvents = ["copy", "cut", "paste"]
+export function handleClipboard<T extends number>(ed:GridEditor<T>, e:ClipboardEvent) {
+	const t = e.target as HTMLElement
+	if (!ed.img || !e.clipboardData || t.isContentEditable ||
+		t.nodeName == "INPUT" || t.nodeName == "TEXTAREA") return
+	const img = ed.img!
+	if (e.type == "copy" || e.type == "cut") {
+		if (img.w*img.h <= 0) return
+		if (ed.sel) {
+			const copy = gridTiles(ed.sel)
+			gridEach(ed.sel, p => {
+				copy.set(p, img.get(p))
+				if (e.type == "cut") img.set(p, 0 as T)
+			}, img, false)
+			clips.setClip(copy)
+			if (e.type == "cut") ed.onedit({...ed.sel, fill:0 as T})
+			ed.sel = null
+		} else {
+			const copy = gridTiles(img)
+			gridEach(img, (p, t) => copy.set(p, t))
+			clips.setClip(copy)
+			if (e.type == "cut") {
+				ed.onedit({...img, fill:0 as T, raw:[]})
+			}
+		}
+		e.clipboardData.setData("application/x-babagrid", "clips:"+clips.last)
+	} else if (e.type == "paste") {
+		let data = e.clipboardData.getData("application/x-babagrid")
+		if (!data) {
+			// TODO think about other usefull data types to support
+			return
+		}
+		if (data.indexOf("clips:") == 0) {
+			const clip = parseInt(data.slice(6), 10)
+			if (clip != clips.clip?.id) {
+				console.error("expected paste clip to match last clip", clip, clips)
+				return
+			}
+			// paste clip as floating tmp img
+			const c = clips.clip!
+			const copy = gridTiles<T>(c) as Float<T>
+			gridEach(c, (p, t) => copy.set(p, t))
+			copy.mode = 'paste'
+			ed.float = copy
+			ed.tmp.reset()
+			ed.tool.active = "move"
+			if (ed.updateTool) ed.updateTool()
+		} else return
+	}
+	ed.repaint()
+	e.preventDefault()
+	e.stopPropagation()
+}
+
+interface Clips {
+	last:number
+	clip:Image<any>|null
+	setClip(g:Grid<any>):number
+}
+
+export const clips:Clips = {
+	last:0,
+	clip:null,
+	setClip: (g) => {
+		clips.clip = {...g, id:--clips.last}
+		return clips.last
+	},
 }
 
 export interface Tmp<T> {
@@ -133,6 +237,7 @@ export const tools:{[name:string]:Tool<any>} = {
 	pen: startDraw(drawPen),
 	brush: startDraw(drawBrush),
 	select: startSel,
+	move: startMove,
 }
 
 function drawPen<T>(ed:GridEditor<T>, _:PointerEvent, p:Pos, t:T) {
@@ -213,6 +318,45 @@ function startSel<T>(ed:GridEditor<T>, e:PointerEvent) {
 			ed.sel = sel
 		}
 		ed.repaint()
+	})
+}
+
+function startMove<T extends number>(ed:GridEditor<T>, e:PointerEvent) {
+	if (e.button != 0) {
+		ed.anchorFloat()
+		return
+	}
+	const c = ed.c
+	const fst = c.stagePos(e)
+	if (!fst) return
+	let lst = fst
+	const img = ed.img!
+	const move = (e:PointerEvent) => {
+		const p = c.stagePos(e)
+		if (!p || posEq(p, lst)) return
+		if (!ed.float) {
+			if (!ed.sel) {
+				// whole image
+				ed.float = {...img, mode:'img'}
+			} else {
+				// treat similar to cut
+				const copy = gridTiles<T>(ed.sel)
+				gridEach(ed.sel, p => {
+					copy.set(p, img.get(p))
+					img.set(p, 0 as T)
+				}, img, false)
+				ed.sel = null
+				ed.float = {...copy, mode:'paste'}
+			}
+			if (ed.updateTool) ed.updateTool()
+		}
+		const diff = posSub(p, lst)
+		Object.assign(ed.float, posAdd(ed.float!, diff))
+		lst = p
+		ed.repaint()
+	}
+	c.startDrag(e.pointerId, move, e => {
+		move(e)
 	})
 }
 

@@ -28,6 +28,7 @@ func MakeSel(x, y, w, h int, pix ...uint16) Sel {
 type EditPic struct {
 	Pic  int    `json:"pic"`
 	Copy bool   `json:"copy,omitempty"`
+	Repl bool   `json:"repl,omitempty"`
 	Fill *Pixel `json:"fill,omitempty"`
 	grid.Data
 }
@@ -44,7 +45,10 @@ func Apply(a *Asset, e EditPic) error {
 	if pic == nil {
 		return fmt.Errorf("no picture with id %d", e.Pic)
 	}
-	if !b.In(pic.Box) { // we need to grow
+	if e.Repl {
+		pic.Box = b
+		pic.Raw = make([]uint16, b.W*b.H)
+	} else if !b.In(pic.Box) { // we need to grow
 		var tmp grid.Tiles[Pixel]
 		tmp.Box = pic.Grow(b)
 		tmp.Raw = make([]uint16, tmp.W*tmp.H)
@@ -52,10 +56,16 @@ func Apply(a *Asset, e EditPic) error {
 		pic.Tiles = tmp
 	}
 	if e.Fill != nil { // treat as selection to fill
-		sel := &grid.Sel{Data: e.Data}
-		grid.EachInNot[bool](sel, b, func(p geo.Pos, _ bool) {
-			pic.Set(p, *e.Fill)
-		}, false)
+		if len(e.Raw) != 0 {
+			sel := &grid.Sel{Data: e.Data}
+			grid.EachInNot[bool](sel, b, func(p geo.Pos, _ bool) {
+				pic.Set(p, *e.Fill)
+			}, false)
+		} else {
+			grid.EachIn[Pixel](pic, e.Box, func(p geo.Pos, _ Pixel) {
+				pic.Set(p, *e.Fill)
+			})
+		}
 	} else { // treat the data as pixels
 		pix := &grid.Tiles[Pixel]{Data: e.Data}
 		grid.EachIn[Pixel](pix, b, func(p geo.Pos, v Pixel) {

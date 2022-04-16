@@ -1,28 +1,33 @@
 import h from 'web/html'
 import {ToolCtx} from 'game/editor'
+import {Grid} from 'game/grid'
 import {Pixel} from './pal'
 
 
-const tools = ['pen', 'brush', 'select']
+const tools = ['pen', 'brush', 'select', 'move']
 
 const opts = ['mirror', 'grid']
 
 export interface ToolViewCtx {
 	tool:ToolCtx<Pixel>
+	float:Grid<Pixel>|null
 	color(t:Pixel):string
 	repaint():void
+	anchorFloat():void
 }
 
 export interface ToolView {
 	el:HTMLElement
 	ctx:ToolViewCtx
 	updateColor():void
+	updateTool():void
 }
 
 export function toolView(ctx:ToolViewCtx):ToolView {
 	const el = h('section.tool.inline')
-	const fg = h('span')
-	const bg = h('span')
+	const fgs = h('span')
+	const bgs = h('span')
+	const fl = h('')
 	h.add(el,
 		h('header', 'Tools'),
 		h('', tools.map(tool => h('label', h('input', {
@@ -39,12 +44,23 @@ export function toolView(ctx:ToolViewCtx):ToolView {
 				if (opt == 'grid') ctx.repaint()
 			},
 		}), opt))),
-		h('.color', fg, bg),
+		h('.color', fgs, bgs),
+		fl,
 	)
 	const updateColor = () => {
-		fg.style.backgroundColor = ctx.color(ctx.tool.fg)
-		bg.style.backgroundColor = ctx.color(ctx.tool.bg)
+		const {fg, bg} = ctx.tool
+		fgs.style.backgroundColor = ctx.color(fg)
+		bgs.style.backgroundColor = ctx.color(bg)
 	}
-	updateColor()
-	return {el, ctx, updateColor}
+	const updateTool = () => {
+		if (ctx.float) {
+			h.repl(fl, h('button', {type:'button', onclick:()=>{
+				ctx.anchorFloat()
+			}}, 'Auswahl anwenden'))
+		} else {
+			h.repl(fl)
+		}
+	}
+	updateTool()
+	return {el, ctx, updateColor, updateTool}
 }

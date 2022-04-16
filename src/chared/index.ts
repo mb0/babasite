@@ -152,11 +152,21 @@ app.addView({name: "chared",
 				// get pic
 				let pic = ed.a.pics[res.pic]
 				if (!pic) return
-				if (!boxIn(pic, res)) growPic(pic, res)
+				if (res.repl) {
+					const {x, y, w, h} = res
+					Object.assign(pic, {x, y, w, h, raw:Array(w*h).fill(0)})
+				} else if (!boxIn(res, pic)) growPic(pic, res)
 				if (res.fill !== undefined) {
-					fillSel(pic, gridSel(res, res.raw), res.fill)
+					if (res.raw?.length) {
+						const sel = gridSel(res, res.raw)
+						gridEach(sel, p => pic.set(p, res.fill), pic, false)
+					} else {
+						gridEach(pic, p => pic.set(p, res.fill), res)
+					}
 				} else {
-					copySel(pic, gridTiles<Pixel>(res, res.raw), res.copy)
+					const img = gridTiles<Pixel>(res, res.raw)
+					gridEach(img, (p, t) => pic.set(p, t), pic,
+						!res.copy ? 0 : undefined)
 				}
 				// repaint canvas if pic is active sequence
 				if (ed.seq?.ids?.includes(pic.id)) {
@@ -177,13 +187,4 @@ function isErr(res:any, subj:string) {
 		return true
 	}
 	return false
-}
-
-function copySel(pic:Grid<Pixel>, sel:Grid<Pixel>, copy?:boolean) {
-	growPic(pic, sel)
-	gridEach(sel, (p, t) => pic.set(p, t), pic, !copy ? 0 : undefined)
-}
-function fillSel(pic:Grid<Pixel>, sel:Grid<boolean>, fill:Pixel) {
-	growPic(pic, sel)
-	gridEach(sel, p => pic.set(p, fill), pic, false)
 }

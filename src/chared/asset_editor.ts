@@ -111,8 +111,9 @@ export function assetEditor(a:Asset, pals:Palette[]):AssetEditor {
 			seqv.update()
 		},
 		stop() {
+			ed.close()
 			ani.close()
-		}
+		},
 	}) as AssetEditor
 	ed.c.setStage({x:8, y:8, w:a.w, h:a.h, zoom:12, bg: ed.color(0)})
 	if (a.seq && a.seq.length) {
@@ -141,6 +142,7 @@ export function assetEditor(a:Asset, pals:Palette[]):AssetEditor {
 	const seqv = sequenceView(ed, ani)
 	const palv = palView(ed, pals, idx => clickFeat(ed, idx))
 	const toolv = toolView(ed)
+	ed.updateTool = () => toolv.updateTool()
 	h.repl(ed.el, seqv.el, ed.c.el,
 		// tools and color palette
 		h('', toolv.el, palv.el),
