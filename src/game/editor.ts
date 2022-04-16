@@ -259,7 +259,7 @@ function startDraw<T>(draw:(ed:GridEditor<T>, e:PointerEvent, p:Pos, t:T)=>void)
 			if (!p) return
 			draw(ed, e, p, t)
 			if (mirror) {
-				p.x = ed.img!.w-p.x-1
+				p.x = ed.tmp.img.w-p.x-1
 				draw(ed, e, p, t)
 			}
 		}
