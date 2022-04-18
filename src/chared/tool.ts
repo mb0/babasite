@@ -1,6 +1,6 @@
 import h from 'web/html'
 import {ToolCtx} from 'game/editor'
-import {Grid} from 'game/grid'
+import {Grid, gridMirrorH, gridMirrorV, gridRot270, gridRot90} from 'game/grid'
 import {Pixel} from './pal'
 
 
@@ -54,9 +54,27 @@ export function toolView(ctx:ToolViewCtx):ToolView {
 	}
 	const updateTool = () => {
 		if (ctx.float) {
-			h.repl(fl, h('button', {type:'button', onclick:()=>{
-				ctx.anchorFloat()
-			}}, 'Auswahl anwenden'))
+			h.repl(fl,
+				h('button', {type:'button', onclick:()=>{
+					ctx.anchorFloat()
+				}}, 'Auswahl anwenden'),
+				h('button', {type:'button', onclick:()=>{
+					gridMirrorH(ctx.float!)
+					ctx.repaint()
+				}}, 'Horizontal spiegeln'),
+				h('button', {type:'button', onclick:()=>{
+					gridMirrorV(ctx.float!)
+					ctx.repaint()
+				}}, 'Vertikal spiegeln'),
+				h('button', {type:'button', onclick:()=>{
+					gridRot270(ctx.float!)
+					ctx.repaint()
+				}}, 'Links drehen'),
+				h('button', {type:'button', onclick:()=>{
+					gridRot90(ctx.float!)
+					ctx.repaint()
+				}}, 'Rechts drehen'),
+			)
 		} else {
 			h.repl(fl)
 		}
