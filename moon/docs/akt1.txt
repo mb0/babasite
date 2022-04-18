@@ -1,3 +1,26 @@
 Akt 1
------
+=====
 
+Gegenstände
+-----------
+Was kann man für Gegenstände kann man finden?
+
+ - Gießkanne
+
+Objekte
+-------
+Welche Objekte (Möbel, Türen, Terminals) sind im Raum.
+Haben die Objekte verschiedene Zuständen (geöffnet, geschlossen)
+
+ - Zimmerpflanze (trocken, feucht)
+
+Interaktionen
+-------------
+Was kann man mit Objekten machen? Und wie sieht das für den Spieler aus?
+Was sind die Bedingungen für eine Aktion, was passiert wenn die Bedingungen nicht erfüllt sind?
+
+ - Zimmerpflanze untersuchen
+   Es wir ein Text angezeigt ob die Pflanze gegossen wurde.
+
+ - Gießkann mit Zimmerpflanze benutzen
+   Die Zimmerpflanze wird feucht.
