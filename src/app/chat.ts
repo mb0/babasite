@@ -30,7 +30,7 @@ export const chat:View = {
 			),
 			output, form,
 		))
-		this.subs = {
+		app.on(this.subs = {
 			chat(data:ChatData) {
 				addOutput(data.user +": "+ data.msg)
 			},
@@ -40,9 +40,10 @@ export const chat:View = {
 				)
 				scrollEnd()
 			}
-		}
+		})
 	},
 	stop: function() {
+		app.off(this.subs!)
 		output.innerHTML = ""
 	}
 }
@@ -55,4 +56,3 @@ function addOutput(text:string) {
 function scrollEnd() {
 	output.scrollTop = output.scrollHeight - output.clientHeight
 }
-app.addOutput = addOutput

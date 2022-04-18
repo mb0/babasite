@@ -25,7 +25,7 @@ app.addView({name: "gol",
 			if (p) app.send("click", p)
 		})
 		c.init(paintMap)
-		this.subs = {
+		app.on(this.subs = {
 			click(p) {
 				if (!map) return
 				let color = "green"
@@ -44,10 +44,11 @@ app.addView({name: "gol",
 				c.setStage({w:m.w, h:m.h})
 				paintMap(c)
 			},
-		}
+		})
 	},
 	stop() {
 		chat.stop()
+		app.off(this.subs!)
 	}
 })
 

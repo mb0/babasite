@@ -55,7 +55,7 @@ app.addView({name: "chared",
 		h.add(app.cont, h('#chared',
 			h('style', cssStyle), assets.el, cont,
 		))
-		this.subs = {
+		app.on(this.subs = {
 			"init": res => {
 				assets.details.style.display = 'block'
 				assets.update(res.assets||[])
@@ -186,10 +186,11 @@ app.addView({name: "chared",
 					if (ed.img?.id == pic.id) ed.repaint()
 				}
 			},
-		}
+		})
 	},
 	stop() {
 		chat.stop()
+		app.off(this.subs!)
 		if (ed) ed.stop()
 	}
 })
