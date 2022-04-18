@@ -1,6 +1,6 @@
 import h from 'web/html'
 import {boxIn} from 'game/geo'
-import {Grid, gridTiles, gridSel, gridEach} from 'game/grid'
+import {gridTiles, gridSel, gridEach} from 'game/grid'
 import app from 'app'
 import {chat} from 'app/chat'
 import {Pixel, Palette} from './pal'
@@ -60,6 +60,14 @@ app.addView({name: "chared",
 				assets.details.style.display = 'block'
 				assets.update(res.assets||[])
 				pals = res.pals
+				const {hash} = location
+				if (hash?.length > 1) {
+					const idx = hash.indexOf('/')
+					if (idx > 0) {
+						const name = hash.slice(idx+1)
+						if (name) app.send("asset.open", {name})
+					}
+				}
 			},
 			"pal.new": (res, subj) => {
 				if (isErr(res, subj)) return
@@ -120,6 +128,7 @@ app.addView({name: "chared",
 				Object.values(res.pics).forEach(p => picInit(p as Pic))
 				ed = assetEditor(res, pals)
 				h.repl(cont, ed.el)
+				location.hash = '#chared/'+ res.name
 			},
 			"asset.del": () => {
 				// TODO

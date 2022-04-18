@@ -21,8 +21,12 @@ export default {
 		)
 		this.subs = {
 			_open: () => {
-				if (location.hash?.length > 0) {
-					app.send("enter", {room:location.hash.slice(1)})
+				const {hash} = location
+				if (hash?.length > 1) {
+					let room = hash.slice(1)
+					const idx = room.indexOf('/')
+					if (idx >= 0) room = room.slice(0, idx)
+					app.send("enter", {room})
 				} else {
 					h.repl(el,
 					    h('', 'babasite', h('sup', 'beta')),

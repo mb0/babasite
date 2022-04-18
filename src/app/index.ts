@@ -46,7 +46,11 @@ export const app:App = {...newHub(),
 		app.cur = v
 		v.start(this)
 		app.on(v.subs||{})
-		if (v.name != 'lobby') location.hash = '#'+ v.name
+		if (v.name != 'lobby') {
+			const hash = '#'+ v.name
+			if (location.hash.indexOf(hash) != 0)
+				location.hash = hash
+		}
 	},
 	start() {
 		app.on({_close:() => {
