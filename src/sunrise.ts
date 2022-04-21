@@ -1,33 +1,46 @@
 import h from 'web/html'
 import {Canvas, newCanvas} from 'web/canvas'
-import app from 'app'
-import {chat} from 'app/chat'
+import {app, chat, menu} from 'app'
 import {Pos, Dim} from 'game/geo'
+import {newLayout} from 'game/dock'
+
+const style = `
+#sunrise-canvas {
+	flex: 0 1 auto;
+	align-self:center;
+}
+#sunrise .dock-main {
+	justify-content:center;
+}`
 
 let stop = false
 app.addView({name: "simple",
 	label: "Sunrise Chat",
-	start: function(app) {
+	start(app) {
 		stop = false
-		chat.start(app)
-		let c = newCanvas('our-canvas', 800, 600, "white")
-		h.add(app.cont, h('#simple-view', c.el))
+		const c = newCanvas('sunrise-canvas', 800, 600, "white")
 		c.el.addEventListener("click", onClick)
-		window.addEventListener("keydown", onKey)
-		window.addEventListener("keyup", onKey)
+		addEventListener("keydown", onKey)
+		addEventListener("keyup", onKey)
 		function step(n:number) {
 			drawBackground(c, n)
 			if (!stop) requestAnimationFrame(step)
 		}
 		requestAnimationFrame(step)
+		const chatel = chat.start(app)
+		const dock = newLayout('#sunrise', menu(), c.el)
+		h.add(dock.el, h('style', style))
+		dock.add({label:'Chat', el:chatel})
+		return dock.el
 	},
-	stop: function() {
-		chat.stop()
+	stop(app) {
+		chat.stop(app)
 		stop = true
-		window.removeEventListener("keydown", onKey)
-		window.removeEventListener("keyup", onKey)
+		removeEventListener("keydown", onKey)
+		removeEventListener("keyup", onKey)
 	},
 })
+
 
 let car1 = {x:0, y:0}
 interface Ctrl {

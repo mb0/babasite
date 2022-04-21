@@ -1,13 +1,16 @@
+import {h} from 'web/html'
 import {Conn, connect, wsUrl} from 'web/socket'
 import {Hub, Subs, newHub} from 'app/hub'
 import lobby from 'app/lobby'
+export {chat} from 'app/chat'
+export {menu} from 'app/menu'
 
 export interface View {
 	name:string
 	label?:string
 	subs?:Subs
-	start(app:App):void
-	stop():void
+	start(app:App):HTMLElement
+	stop(app:App):void
 }
 export interface App extends Hub {
 	cur:View|null
@@ -33,13 +36,9 @@ export const app:App = {...newHub(),
 	show(name) {
 		const v = app.views.find(v => v.name == name)
 		if (!v) return
-		const c = app.cur
-		if (c) {
-			c.stop()
-		}
-		app.cont.innerHTML = ''
+		if (app.cur) app.cur.stop(app)
 		app.cur = v
-		v.start(this)
+		h.repl(app.cont, v.start(this))
 		if (v.name != 'lobby') {
 			const hash = '#'+ v.name
 			if (location.hash.indexOf(hash) != 0)

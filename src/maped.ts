@@ -2,8 +2,8 @@ import h from 'web/html'
 import {newZoomCanvas, Canvas} from 'web/canvas'
 import {Pos, Dim} from 'game/geo'
 import {cssColor} from 'game/color'
-import app from 'app'
-import {chat} from 'app/chat'
+import {newLayout} from 'game/dock'
+import {app, chat, menu} from 'app'
 
 interface ModTile extends Pos {
 	tile:number
@@ -24,14 +24,13 @@ export interface Map extends Dim {
 }
 let sel = 1
 let map:Map|null = null
+
 app.addView({name: "maped",
 	label: "Map Editor",
 	start(app) {
-		chat.start(app)
-		const c = newZoomCanvas("our-canvas", 800, 600)
+		const c = newZoomCanvas("maped-canvas", 800, 600)
 		c.setStage({x:20, y:30, zoom:8})
-		const tiles = h('')
-		h.add(app.cont, h('#maped-view', c.el, tiles))
+		const tiles = h('.tiles')
 		c.el.addEventListener("click", e => {
 			const p = c.stagePos(e)
 			if (!p||!map) return
@@ -39,7 +38,6 @@ app.addView({name: "maped",
 			if (map && sel != cur)
 				app.send("modtile", {x:p.x, y:p.y, tile:sel})
 		})
-		c.init(paintMap)
 		app.on(this.subs = {
 			modtile(p:ModTile) {
 				if (map) map.tiles[p.y*map.w+p.x] = p.tile
@@ -52,9 +50,15 @@ app.addView({name: "maped",
 				paintMap(c)
 			},
 		})
+		const chatel = chat.start(app)
+		const dock = newLayout('#maped', menu(), c.el)
+		dock.add({label:'Kacheln', el:tiles})
+		dock.add({label:'Chat', el:chatel})
+		c.init(paintMap)
+		return dock.el
 	},
-	stop() {
-		chat.stop()
+	stop(app) {
+		chat.stop(app)
 		app.off(this.subs!)
 	},
 })

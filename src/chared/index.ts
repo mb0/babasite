@@ -1,17 +1,14 @@
 import h from 'web/html'
 import {boxIn} from 'game/geo'
 import {gridTiles, gridSel, gridEach} from 'game/grid'
-import app from 'app'
-import {chat} from 'app/chat'
+import {newLayout} from 'game/dock'
+import {app, chat, menu} from 'app'
 import {Pixel, Palette} from './pal'
 import {assetSelect} from './asset_sel'
 import {AssetEditor, assetEditor} from './asset_editor'
 import {Pic, picInit, growPic} from './pic'
 
 let cssStyle = `
-#chared {
-	width: calc(98vw - 300px);
-}
 .pal span {
 	display: inline-block;
 	width:40px;
@@ -48,13 +45,9 @@ let ed:AssetEditor|null = null
 app.addView({name: "chared",
 	label: "Character Editor",
 	start(app) {
-		chat.start(app)
 		let assets = assetSelect([])
 		let cont = h('')
 		let pals:Palette[] = []
-		h.add(app.cont, h('#chared',
-			h('style', cssStyle), assets.el, cont,
-		))
 		app.on(this.subs = {
 			"init": res => {
 				assets.details.style.display = 'block'
@@ -187,9 +180,14 @@ app.addView({name: "chared",
 				}
 			},
 		})
+		const chatel = chat.start(app)
+		const dock = newLayout('#chared', h('', menu(), assets.el), cont)
+		h.add(dock.el, h('style', cssStyle))
+		dock.add({label:'Chat', el:chatel})
+		return dock.el
 	},
-	stop() {
-		chat.stop()
+	stop(app) {
+		chat.stop(app)
 		app.off(this.subs!)
 		if (ed) ed.stop()
 	}

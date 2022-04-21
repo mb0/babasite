@@ -96,6 +96,14 @@ export function newZoomCanvas(id:string, width:number, height:number, bg?:string
 			return x >= 0 && x < s.w && y >= 0 && y < s.h ? {x, y} : null
 		},
 		init(repaint) {
+			const resizeObs = new ResizeObserver(() => {
+				if (el.width != el.clientWidth || el.height != el.clientHeight) {
+					el.width = el.clientWidth
+					el.height = el.clientHeight
+					repaint(this)
+				}
+			})
+			resizeObs.observe(document.body, {box: 'content-box'})
 			el.addEventListener("wheel", e => {
 				const x1 = (e.offsetX-s.x)/s.zoom
 				const y1 = (e.offsetY-s.y)/s.zoom
