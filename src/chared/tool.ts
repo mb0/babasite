@@ -1,7 +1,7 @@
 import h from 'web/html'
 import {ToolCtx} from 'game/editor'
 import {Grid, gridMirrorH, gridMirrorV, gridRot270, gridRot90} from 'game/grid'
-import {Pixel} from './pal'
+import {Pixel} from './asset'
 
 
 const tools = ['pen', 'brush', 'select', 'move']

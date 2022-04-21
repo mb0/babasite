@@ -5,9 +5,8 @@ import {Canvas, newCanvas} from 'web/canvas'
 import {Dim, dimBox} from 'game/geo'
 import {gridEach} from 'game/grid'
 import app from 'app'
-import {Asset, Sequence, kinds} from './asset'
+import {Asset, Sequence, Pic, kinds} from './asset'
 import {Palette, palCssColor} from './pal'
-import {Pic} from './pic'
 import {AssetEditor} from './asset_editor'
 
 export function sequenceView(ed:AssetEditor, ani:Animator) {

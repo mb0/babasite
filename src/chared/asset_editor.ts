@@ -2,12 +2,12 @@ import h from 'web/html'
 import {newAnimator} from 'web/animate'
 import {posIn, boxGrow} from 'game/geo'
 import {gridSel, gridEach} from 'game/grid'
+import {Layout} from 'game/dock'
 import app from 'app'
-import {Asset, Sequence} from './asset'
-import {Pixel, Palette, palCssColor} from './pal'
+import {Asset, Sequence, Pic, PicID, Pixel} from './asset'
+import {Palette, palCssColor} from './pal'
 import {palView} from './pal_view'
 import {toolView} from './tool'
-import {Pic, PicID} from './pic'
 import {sequenceView} from './seq_view'
 import {GridEditor, gridEditor} from 'game/editor'
 
@@ -29,7 +29,7 @@ export interface AssetEditor extends GridEditor<Pixel> {
 	stop():void
 }
 
-export function assetEditor(a:Asset, pals:Palette[]):AssetEditor {
+export function assetEditor(a:Asset, pals:Palette[], dock:Layout):AssetEditor {
 	const ani = newAnimator()
 	const pal = pals.find(p => p.name == a.pal)!
 	const ed = Object.assign(gridEditor(a, t => palCssColor(ed.pal, t), edit => {
@@ -39,7 +39,7 @@ export function assetEditor(a:Asset, pals:Palette[]):AssetEditor {
 		})
 		ed.tmp.reset()
 	}), {
-		el: h(''), a, pal,
+		el: h('.asset-editor'), a, pal,
 		seq: null, idx:0,
 		updatePal(p:Palette) {
 			ed.a.pal = p.name
@@ -111,6 +111,9 @@ export function assetEditor(a:Asset, pals:Palette[]):AssetEditor {
 			seqv.update()
 		},
 		stop() {
+			dock.docks.filter(d =>
+				d.label == 'Tools' || d.label == 'Palette'
+			).forEach(d => dock.del(d))
 			ed.close()
 			ani.close()
 		},
@@ -143,10 +146,9 @@ export function assetEditor(a:Asset, pals:Palette[]):AssetEditor {
 	const palv = palView(ed, pals, idx => clickFeat(ed, idx))
 	const toolv = toolView(ed)
 	ed.updateTool = () => toolv.updateTool()
-	h.repl(ed.el, seqv.el, ed.c.el,
-		// tools and color palette
-		h('', toolv.el, palv.el),
-	)
+	dock.add({label:'Tools', el:toolv.el}, 0)
+	dock.add({label:'Palette', el:palv.el}, 1)
+	h.repl(ed.el, seqv.el, ed.c.el)
 	return ed
 }
 
