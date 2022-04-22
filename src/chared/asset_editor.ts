@@ -8,7 +8,7 @@ import {Asset, Sequence, Pic, PicID, Pixel} from './asset'
 import {Palette, palCssColor} from './pal'
 import {palView} from './pal_view'
 import {toolView} from './tool'
-import {sequenceView} from './seq_view'
+import {sequenceView, sequencePreview} from './seq_view'
 import {GridEditor, gridEditor} from 'game/editor'
 
 export interface AssetEditor extends GridEditor<Pixel> {
@@ -70,6 +70,7 @@ export function assetEditor(a:Asset, pals:Palette[], dock:Layout):AssetEditor {
 		},
 		updateSeq(s:Sequence) {
 			seqv.update()
+			seqpv.update()
 			if (ed.seq == s) {
 				if (!ed.img && s && ed.idx >= 0) {
 					ed.update(a.pics[s.ids[ed.idx]])
@@ -109,6 +110,7 @@ export function assetEditor(a:Asset, pals:Palette[], dock:Layout):AssetEditor {
 			ed.sel = null
 			ed.update(s?.ids ? a.pics[s.ids[idx]] : null)
 			seqv.update()
+			seqpv.update()
 		},
 		stop() {
 			dock.docks.filter(d =>
@@ -142,12 +144,14 @@ export function assetEditor(a:Asset, pals:Palette[], dock:Layout):AssetEditor {
 			copy:true,
 		})
 	}
-	const seqv = sequenceView(ed, ani)
+	const seqv = sequenceView(ed)
+	const seqpv = sequencePreview(ed, ani)
 	const palv = palView(ed, pals, idx => clickFeat(ed, idx))
 	const toolv = toolView(ed)
 	ed.updateTool = () => toolv.updateTool()
 	dock.add({label:'Tools', el:toolv.el}, 0)
 	dock.add({label:'Palette', el:palv.el}, 1)
+	dock.add({label:'Preview', el:seqpv.el}, 2)
 	h.repl(ed.el, seqv.el, ed.c.el)
 	return ed
 }

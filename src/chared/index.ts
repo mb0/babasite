@@ -229,4 +229,8 @@ form span.help {
 	display:block;
 	flex: 1 1 0;
 }
+#seq-preview {
+	flex: 0 0 auto;
+	align-self: center;
+}
 `

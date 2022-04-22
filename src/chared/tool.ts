@@ -54,6 +54,8 @@ export function toolView(ctx:ToolViewCtx):ToolView {
 	}
 	const updateTool = () => {
 		if (ctx.float) {
+			const act = el.querySelector("input[value='"+ctx.tool.active+"']")
+			if (act) (act as HTMLInputElement).checked = true
 			h.repl(fl, "Auswahl ",
 				h('button', {type:'button', onclick:()=>{
 					ctx.anchorFloat()
