@@ -54,31 +54,34 @@ export function toolView(ctx:ToolViewCtx):ToolView {
 	}
 	const updateTool = () => {
 		if (ctx.float) {
-			h.repl(fl,
+			h.repl(fl, "Auswahl ",
 				h('button', {type:'button', onclick:()=>{
 					ctx.anchorFloat()
-				}}, 'Auswahl anwenden'),
+				}}, 'Anwenden'),
+				h('br'), "Spiegeln ",
 				h('button', {type:'button', onclick:()=>{
 					gridMirrorH(ctx.float!)
 					ctx.repaint()
-				}}, 'Horizontal spiegeln'),
+				}}, 'Horizontal'),
 				h('button', {type:'button', onclick:()=>{
 					gridMirrorV(ctx.float!)
 					ctx.repaint()
-				}}, 'Vertikal spiegeln'),
+				}}, 'Vertikal'),
+				h('br'), "Drehen ",
 				h('button', {type:'button', onclick:()=>{
 					gridRot270(ctx.float!)
 					ctx.repaint()
-				}}, 'Links drehen'),
+				}}, 'Links'),
 				h('button', {type:'button', onclick:()=>{
 					gridRot90(ctx.float!)
 					ctx.repaint()
-				}}, 'Rechts drehen'),
+				}}, 'Rechts'),
 			)
 		} else {
 			h.repl(fl)
 		}
 	}
+	updateColor()
 	updateTool()
 	return {el, ctx, updateColor, updateTool}
 }
