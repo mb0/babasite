@@ -8,6 +8,7 @@ Jakob:
     * Arbeitet an einem Grafik Konzept
 
 Martin programmiert:
-    * Charakter Editor: Farbpaletten, History, Save
+    * über Farbpaletten pläne sprechen, Gruppen überlegen
+    * Charakter Editor: Binäre nachrichten versenden, History, Save
     * Map Editor
     * Moon Preview
