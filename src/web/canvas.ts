@@ -49,14 +49,16 @@ export type DragHandler = (e:PointerEvent)=>void
 export interface ZoomCanvas extends Canvas {
 	grid(a:number, b:number):void
 	stagePos(e:MouseEvent):Pos|null
-	init(repaint:(c:Canvas)=>void):void
 	startDrag(pointer:number, move:DragHandler, done?:DragHandler):void
+	init(repaint:(c:Canvas)=>void):void
+	stop():void
 
 }
 
 export function newZoomCanvas(id:string, width:number, height:number, bg?:string):ZoomCanvas {
 	const c = newCanvas(id, width, height, bg)
 	const {el, ctx, clear, stage:s} = c
+	let resizeObs:ResizeObserver|undefined
 	return {...c,
 		clear() {
 			clear()
@@ -96,14 +98,14 @@ export function newZoomCanvas(id:string, width:number, height:number, bg?:string
 			return x >= 0 && x < s.w && y >= 0 && y < s.h ? {x, y} : null
 		},
 		init(repaint) {
-			const resizeObs = new ResizeObserver(() => {
+			resizeObs = new ResizeObserver(() => {
 				if (el.width != el.clientWidth || el.height != el.clientHeight) {
 					el.width = el.clientWidth
 					el.height = el.clientHeight
 					repaint(this)
 				}
 			})
-			resizeObs.observe(document.body, {box: 'content-box'})
+			resizeObs.observe(el)
 			el.addEventListener("wheel", e => {
 				const x1 = (e.offsetX-s.x)/s.zoom
 				const y1 = (e.offsetY-s.y)/s.zoom
@@ -124,6 +126,9 @@ export function newZoomCanvas(id:string, width:number, height:number, bg?:string
 					repaint(this)
 				})
 			})
+		},
+		stop() {
+			if (resizeObs) resizeObs.disconnect()
 		},
 		startDrag(pointer, move, done) {
 			el.setPointerCapture(pointer)
