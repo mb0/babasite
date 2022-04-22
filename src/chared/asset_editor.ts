@@ -114,7 +114,7 @@ export function assetEditor(a:Asset, pals:Palette[], dock:Layout):AssetEditor {
 		},
 		stop() {
 			dock.docks.filter(d =>
-				d.label == 'Tools' || d.label == 'Palette'
+				d.label == 'Tools' || d.label == 'Palette' || d.label == 'Preview'
 			).forEach(d => dock.del(d))
 			ed.close()
 			ani.close()
