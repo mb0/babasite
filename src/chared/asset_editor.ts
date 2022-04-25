@@ -7,9 +7,9 @@ import app from 'app'
 import {Asset, Sequence, Pic, PicID, Pixel} from './asset'
 import {Palette, palCssColor} from './pal'
 import {palView} from './pal_view'
-import {toolView} from './tool'
 import {sequenceView, sequencePreview} from './seq_view'
 import {GridEditor, gridEditor} from 'game/editor'
+import {toolView} from 'game/tool'
 
 export interface AssetEditor extends GridEditor<Pixel> {
 	el:HTMLElement

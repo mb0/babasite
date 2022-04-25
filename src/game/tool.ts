@@ -1,29 +1,28 @@
 import h from 'web/html'
 import {ToolCtx} from 'game/editor'
 import {Grid, gridMirrorH, gridMirrorV, gridRot270, gridRot90} from 'game/grid'
-import {Pixel} from './asset'
 
 
 const tools = ['pen', 'brush', 'select', 'move']
 
 const opts = ['mirror', 'grid']
 
-export interface ToolViewCtx {
-	tool:ToolCtx<Pixel>
-	float:Grid<Pixel>|null
-	color(t:Pixel):string
+export interface ToolViewCtx<T> {
+	tool:ToolCtx<T>
+	float:Grid<T>|null
+	color(t:T):string
 	repaint():void
 	anchorFloat():void
 }
 
-export interface ToolView {
+export interface ToolView<T> {
 	el:HTMLElement
-	ctx:ToolViewCtx
+	ctx:ToolViewCtx<T>
 	updateColor():void
 	updateTool():void
 }
 
-export function toolView(ctx:ToolViewCtx):ToolView {
+export function toolView<T>(ctx:ToolViewCtx<T>):ToolView<T> {
 	const el = h('section.tool.inline')
 	const fgs = h('span')
 	const bgs = h('span')
