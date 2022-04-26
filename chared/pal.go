@@ -15,6 +15,12 @@ default grid tile to uint8. however we should consider the map editor and later 
 if we can accept to use no more than max 32 features with max 8 colors per combined asset we can
 keep using the feature color groups.
 
+after revisiting the map requirements, i come to the conclusion that we don't want to limit grids
+generally to 256 states, because we might have more tile states on the map (id + rotation + extra).
+
+so we have plenty of space to encode extra information like pois (points of interest) like
+mount points for head, limbs or items and cloths. or an optional decal layers that can be blended
+in.
 */
 
 const (

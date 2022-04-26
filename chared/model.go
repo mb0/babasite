@@ -11,6 +11,7 @@ var NameCheck = regexp.MustCompile(`^[a-z0-9_]+$`)
 type SeqMeta struct {
 	Name string `json:"name"`
 	IDs  []int  `json:"ids"`
+	// TODO we may want to have individual pic frame durations for animation
 }
 
 type AssetMeta struct {
@@ -77,9 +78,7 @@ func DefaultSize(kind string) (d geo.Dim) {
 	d.W, d.H = 16, 16
 	switch kind {
 	case "char":
-		d.W, d.H = 48, 48
-	case "item":
-		d.W, d.H = 64, 64
+		d.W, d.H = 32, 40
 	}
 	return d
 }
