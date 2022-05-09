@@ -1,29 +1,28 @@
 import h from 'web/html'
 import {ToolCtx} from 'game/editor'
 import {Grid, gridMirrorH, gridMirrorV, gridRot270, gridRot90} from 'game/grid'
-import {Pixel} from './pal'
 
 
 const tools = ['pen', 'brush', 'select', 'move']
 
 const opts = ['mirror', 'grid']
 
-export interface ToolViewCtx {
-	tool:ToolCtx<Pixel>
-	float:Grid<Pixel>|null
-	color(t:Pixel):string
+export interface ToolViewCtx<T> {
+	tool:ToolCtx<T>
+	float:Grid<T>|null
+	color(t:T):string
 	repaint():void
 	anchorFloat():void
 }
 
-export interface ToolView {
+export interface ToolView<T> {
 	el:HTMLElement
-	ctx:ToolViewCtx
+	ctx:ToolViewCtx<T>
 	updateColor():void
 	updateTool():void
 }
 
-export function toolView(ctx:ToolViewCtx):ToolView {
+export function toolView<T>(ctx:ToolViewCtx<T>):ToolView<T> {
 	const el = h('section.tool.inline')
 	const fgs = h('span')
 	const bgs = h('span')
@@ -54,31 +53,36 @@ export function toolView(ctx:ToolViewCtx):ToolView {
 	}
 	const updateTool = () => {
 		if (ctx.float) {
-			h.repl(fl,
+			const act = el.querySelector("input[value='"+ctx.tool.active+"']")
+			if (act) (act as HTMLInputElement).checked = true
+			h.repl(fl, "Auswahl ",
 				h('button', {type:'button', onclick:()=>{
 					ctx.anchorFloat()
-				}}, 'Auswahl anwenden'),
+				}}, 'Anwenden'),
+				h('br'), "Spiegeln ",
 				h('button', {type:'button', onclick:()=>{
 					gridMirrorH(ctx.float!)
 					ctx.repaint()
-				}}, 'Horizontal spiegeln'),
+				}}, 'Horizontal'),
 				h('button', {type:'button', onclick:()=>{
 					gridMirrorV(ctx.float!)
 					ctx.repaint()
-				}}, 'Vertikal spiegeln'),
+				}}, 'Vertikal'),
+				h('br'), "Drehen ",
 				h('button', {type:'button', onclick:()=>{
 					gridRot270(ctx.float!)
 					ctx.repaint()
-				}}, 'Links drehen'),
+				}}, 'Links'),
 				h('button', {type:'button', onclick:()=>{
 					gridRot90(ctx.float!)
 					ctx.repaint()
-				}}, 'Rechts drehen'),
+				}}, 'Rechts'),
 			)
 		} else {
 			h.repl(fl)
 		}
 	}
+	updateColor()
 	updateTool()
 	return {el, ctx, updateColor, updateTool}
 }

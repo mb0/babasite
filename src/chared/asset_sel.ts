@@ -3,34 +3,16 @@ import {mount, unmount} from 'web/modal'
 import app from 'app'
 import {Asset, AssetInfo, kinds} from './asset'
 
-export function assetSelect(infos:AssetInfo[]) {
+export interface AssetSelect {
+	el:HTMLElement
+	update(infos:AssetInfo[]):void
+}
+
+export function assetSelect():AssetSelect {
 	const dl = datalistInput('dl-asset-infos', name => {
 		if (name) app.send("asset.open", {name})
 	})
-	let form = h('form', {style:'display:inline'}, dl.el)
-	let details = h('')
-	let el = h('section',
-		'Asset auswählen oder erstellen: ',
-		form,
-		details,
-	)
-	let res = {el, details, infos,
-		update(infos:AssetInfo[]) {
-			res.infos = infos
-			dl.update(infos.map(info => info.name))
-			h.repl(details, h('ul', infos.map(info => h('li', {onclick: () =>
-				app.send("asset.open", {name:info.name})
-			}, info.name +' '+ info.kind))))
-		},
-		addInfo(info:AssetInfo) {
-			let all = res.infos
-			all.push(info)
-			all.sort((a, b) =>
-				a.name < b.name ? -1 : (a.name > b.name ? 1 : 0)
-			)
-			res.update(all)
-		}
-	}
+	const form = h('form', {style:'display:inline'}, dl.el)
 	form.onsubmit = e => {
 		e.preventDefault()
 		if (!dl.check()) {
@@ -42,8 +24,17 @@ export function assetSelect(infos:AssetInfo[]) {
 			}))
 		}
 	}
-	res.update(infos)
-	return res
+	return {
+		el: h('section', 'Asset auswählen oder erstellen: ', form),
+		update: infos => dl.update(infos.map(info => info.name)),
+	}
+}
+
+
+export function assetOverview(infos:AssetInfo[]):HTMLElement {
+	return h('', h('ul', infos.map(info => h('li', {onclick: () =>
+		app.send("asset.open", {name:info.name})
+	}, info.name +' '+ info.kind))))
 }
 
 export function assetForm(a:Partial<Asset>, submit:(res:Partial<Asset>)=>void) {

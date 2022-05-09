@@ -1,8 +1,8 @@
 import h from 'web/html'
 import {Canvas, newZoomCanvas} from 'web/canvas'
 import {Dim} from 'game/geo'
-import app from 'app'
-import {chat} from 'app/chat'
+import {newLayout} from 'game/dock'
+import {app, chat, menu} from 'app'
 
 export interface Map extends Dim {
 	tiles:number[]
@@ -12,20 +12,13 @@ let map:Map|null = null
 app.addView({name: "gol",
 	label: "Game Of Life",
 	start(app) {
-		chat.start(app)
-		const c = newZoomCanvas("our-canvas", 800, 600)
+		const c = newZoomCanvas("gol-canvas", 800, 600)
 		c.setStage({zoom:10})
-		app.cont.appendChild(h('#game-view', c.el, h('',
-			h('button',{type:'button', onclick:() => app.send("step")}, 'Step'),
-			h('button',{type:'button', onclick:() => app.send("reset")}, 'Reset'),
-			h('button',{type:'button', onclick:() => app.send("play")}, 'Play/Stop'),
-		)))
 		c.el.addEventListener("click", e => {
 			const p = c.stagePos(e)
 			if (p) app.send("click", p)
 		})
-		c.init(paintMap)
-		this.subs = {
+		app.on(this.subs = {
 			click(p) {
 				if (!map) return
 				let color = "green"
@@ -44,12 +37,28 @@ app.addView({name: "gol",
 				c.setStage({w:m.w, h:m.h})
 				paintMap(c)
 			},
-		}
+		})
+		const tools = h('.tools',
+			appAction("Step", "step"),
+			appAction("Reset", "reset"),
+			appAction("Play/Stop", "play"),
+		)
+		const chatel = chat.start(app)
+		const dock = newLayout('#gol', menu(), c.el)
+		dock.add({label:'Kacheln', el:tools})
+		dock.add({label:'Chat', el:chatel})
+		c.init(paintMap)
+		return dock.el
 	},
-	stop() {
-		chat.stop()
+	stop(app) {
+		chat.stop(app)
+		app.off(this.subs!)
 	}
 })
+
+function appAction(label:string, msg:string):HTMLElement {
+	return h('button', {type:'button', onclick:() => app.send(msg)}, label)
+}
 
 function paintMap(c:Canvas) {
 	c.clear()

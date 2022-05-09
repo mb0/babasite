@@ -32,7 +32,7 @@ type Room struct {
 	Subs  map[int64]Sub
 }
 
-func NewRoom(name string, datapath string) *Room {
+func NewRoom(name, datapath string) *Room {
 	store := NewFileStore(filepath.Join(datapath, "chared"))
 	// load all assets into store
 	err := store.LoadAll()

@@ -5,14 +5,12 @@ import {Canvas, newCanvas} from 'web/canvas'
 import {Dim, dimBox} from 'game/geo'
 import {gridEach} from 'game/grid'
 import app from 'app'
-import {Asset, Sequence, kinds} from './asset'
+import {Sequence, Pic, kinds} from './asset'
 import {Palette, palCssColor} from './pal'
-import {Pic} from './pic'
 import {AssetEditor} from './asset_editor'
 
-export function sequenceView(ed:AssetEditor, ani:Animator) {
-	const seqPrev = sequencePreview(ed.a, ed.pal, ani)
-	const picSel = picSelect(seqPrev.el)
+export function sequenceView(ed:AssetEditor) {
+	const picSel = picSelect()
 	const k = kinds.find(k => k.kind == ed.a.kind)!
 	const cont = h('span')
 	const el = h('section.seq',
@@ -33,7 +31,6 @@ export function sequenceView(ed:AssetEditor, ani:Animator) {
 			ed.goto(s, 0)
 		}}, s.name)))
 		picSel.update(ed)
-		seqPrev.update(ed)
 	}}
 	res.update()
 	return res
@@ -72,26 +69,6 @@ function picSelect(sub?:HTMLElement) {
 		))
 	}}
 }
-interface PicFormRes {
-	idx:number
-	ref:boolean
-}
-function picForm(r:Partial<PicFormRes>, submit:(res:PicFormRes)=>void) {
-	let idx = hInput('', {value:''+(r.idx||0)})
-	let ref = hInput('', {type:'checkbox', checked:r.ref||false})
-	let onsubmit = (e:Event) => {
-		e.preventDefault()
-		submit({idx: parseInt(idx.value, 10), ref:ref.checked})
-	}
-	return h('section.form',
-		h('header', 'Pic hinzufügen'),
-		h('form', {onsubmit},
-			h('', h('label', "Starte mit Seq Pic"), idx),
-			h('', h('label', "Als Referenz"), ref),
-			h('button', 'Neu Anlegen')
-		)
-	)
-}
 function picViews(ed:AssetEditor, s:Sequence) {
 	const bg = ed.color(0)
 	return s.ids.map((pid, idx) => {
@@ -113,24 +90,23 @@ function picViews(ed:AssetEditor, s:Sequence) {
 	})
 }
 
-function sequencePreview(a:Asset, pal:Palette, ator:Animator) {
-	const id = 'seqPreview_'+ a.name
-	const c = newCanvas(id, a.w, a.h, palCssColor(pal, 0))
-	let ed:AssetEditor|null = null
+export function sequencePreview(ed:AssetEditor, ator:Animator) {
+	const c = newCanvas("seq-preview", ed.a.w, ed.a.h, palCssColor(ed.pal, 0))
 	const paint = (fn:number) => {
 		c.clear()
 		const ids = ed?.seq?.ids
 		if (!ids?.length) return
-		const pic = a.pics[ids[fn%ids.length]]
+		const pic = ed.a.pics[ids[fn%ids.length]]
 		if (pic) paintPic(c, ed!.a, ed!.pal, pic)
 	}
 	const ani = ator.animate(500, paint, 0, true)
-	c.el.onclick = () => ani.toggle()
-	return {el:c.el, c, update(e:AssetEditor) {
-		ed = e
+	const update = () => {
 		c.el.style.backgroundColor = palCssColor(ed.pal, 0)
 		paint(0)
-	}}
+	}
+	c.el.onclick = () => ani.toggle()
+	update()
+	return {el:c.el, c, update}
 }
 
 function paintPic(c:Canvas, a:Dim, pal:Palette, pic:Pic) {

@@ -8,10 +8,12 @@
 <div id="app"></div>
 <script src="/dist/main.bundle.js"></script>
 <style>
-body {
+html, body {
 	margin:0;
 	padding:0;
 	background-color: gray;
+	width:100vw;
+	height:100vh;
 }
 form {
 	padding-bottom: 8px;
@@ -19,34 +21,6 @@ form {
 form label {
 	display: inline-block;
 	min-width: 100px;
-}
-#app {
-	display: flex;
-	height: 100vh;
-}
-#lobby-view, #simple-view, #game-view {
-	order:1;
-	align-self: center;
-}
-#chat-view {
-	order:2;
-	align-self: stretch;
-	min-width: 300px;
-	display: flex;
-	flex-direction: column;
-}
-#output {
-	flex-grow: 100;
-	overflow-y:auto;
-}
-#chat-view form {
-	display: flex;
-}
-#chat-view input[type=text] {
-	flex: 100 100 auto;
-}
-#chat-view input[type=submit] {
-	flex: 0 0 auto;
 }
 @media (prefers-color-scheme: dark) {
 	body {

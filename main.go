@@ -68,7 +68,7 @@ func main() {
 	s := site.NewSite(
 		site.NewChat("simple"),
 		gol.NewRoom("gol"),
-		maped.NewRoom("maped"),
+		maped.NewRoom("maped", *datapath),
 		chared.NewRoom("chared", *datapath),
 	)
 

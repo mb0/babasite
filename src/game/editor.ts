@@ -40,7 +40,7 @@ export interface Edit<T> extends GridData {
 }
 
 export function gridEditor<T extends number>(d:Dim, color:(t:T)=>string, onedit:(e:Edit<T>)=>void):GridEditor<T> {
-	const c = newZoomCanvas("our-canvas", 800, 600)
+	const c = newZoomCanvas("editor-canvas", 800, 600)
 	let selPat:CanvasPattern|null = null
 	selPattern(c).then(pat => selPat = pat)
 	const handleCb = (e:Event) => handleClipboard(ed, e as ClipboardEvent)

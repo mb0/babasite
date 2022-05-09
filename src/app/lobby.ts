@@ -19,7 +19,7 @@ export default {
 				app.connect()
 			}}, 'Erneut versuchen')),
 		)
-		this.subs = {
+		app.on(this.subs = {
 			_open: () => {
 				const {hash} = location
 				if (hash?.length > 1) {
@@ -40,9 +40,11 @@ export default {
 					)
 				}
 			}
-		}
+		})
 		if (this.retry < 7) app.connect()
-		h.add(app.cont, el)
+		return el
 	},
-	stop() { },
+	stop(app) {
+		app.off(this.subs!)
+	},
 } as Lobby

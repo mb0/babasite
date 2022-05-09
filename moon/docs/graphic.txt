@@ -1,0 +1,18 @@
+Grafik Stil
+===========
+
+Wir haben uns verschiede Überlegungen zur Grafik gemacht.
+Wir wollen eine Pixel-Stil benutzen, da wir Spiele in diesem Stil gut finden, und hoffen, dass
+es weniger aufwendig ist Grafiken in diesem Stil zu erstellen.
+
+Wir wollen die Karte aus einzelnen Kacheln zusammensetzen und haben uns auf ein Basis-Maß von
+16x16 Pixeln geeinigt. Bei den Charakteren wollen wir einen großen Kopf, um mit wenigen Pixeln
+eine ausdrucksstarke Figur darstellen können. Ählich wie bei dem folgendem Link:
+https://opengameart.org/content/a-platformer-in-the-forest
+
+Die Karte soll als perspektivenlose Seitenansicht dargestellt werden. Wobei dann vielleicht
+nur die Rückwände dargestellt werden.
+
+Damit das Spiel auch auf modernen Monitoren pixelig aussieht zeichnen wir natürlich die Pixel
+der Grafiken vergrößert. Die Vergrößerung sollte mindestens 4-fach sein, aber muss noch festgelegt
+werden.

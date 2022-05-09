@@ -1,9 +1,13 @@
 Aufgaben
 ========
 
-Simon, Jakob:
-    * Urlaub genießen
+Simon:
+    * Studiert und beschreibt ein Rätsel vom ersten Akt
 
-Martin
-    * Charakter editor animation vorschau
-    * JavaScript zu TypeScript ändern
+Jakob:
+    * Arbeitet an einem Grafik Konzept
+
+Martin programmiert:
+    * Charakter Editor: Binäre nachrichten versenden, History, Save
+    * Map Editor
+    * Moon Preview

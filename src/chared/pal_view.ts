@@ -1,7 +1,8 @@
 import {h, hInput, datalistInput, pickColor} from 'web/html'
 import {mount, unmount} from 'web/modal'
 import app from 'app'
-import {Palette, Feature, Pixel} from './pal'
+import {Pixel} from './asset'
+import {Palette, Feature} from './pal'
 
 export interface PalViewCtx {
 	pal:Palette

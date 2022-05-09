@@ -1,36 +1,42 @@
-import h from 'web/html'
-import {app, App, View} from 'app'
+import {h, hInput} from 'web/html'
+import {View} from 'app'
 
 export interface ChatData {
 	user:string
 	msg:string
 }
 
+const style = `
+#chat-view {
+	display: flex;
+	flex-direction: column;
+}
+#output {
+	flex: 1 1 0;
+	overflow-y:auto;
+}
+#chat-view form {
+	display: flex;
+}
+#chat-view input[type=text] {
+	flex: 1 1 auto;
+}
+#chat-view input[type=submit] {
+	flex: 0 0 auto;
+}
+`
+
 export const chat:View = {
 	name: "chat",
-	start: function(app:App) {
-		const input = h('input', {name:'chat', type:'text', placeholder:'Chat', autocomplete:'off'}) as HTMLInputElement
+	start(app) {
+		const input = hInput('', {name:'chat', placeholder:'Chat', autocomplete:'off'})
 		const form = h('form#chat', input, h('button', 'Send'))
 		form.onsubmit = function(e) {
 			e.preventDefault()
 			app.send('chat', {msg:input.value})
 			input.value = ""
 		}
-		h.add(app.cont, h('#chat-view',
-			h('header',
-				h('', 'babasite', h('sup', 'beta'), ' ', h('a', {href:'/logout'}, "Logout")),
-				h('.menu', app.views.filter(v =>
-					v != app.cur && v.name != 'lobby'
-				).map(v =>
-					h('', {onclick:() => {
-						app.send("enter", {room:v.name})
-					}}, v.label||v.name)
-				)),
-				h('h2', app.cur?.label),
-			),
-			output, form,
-		))
-		this.subs = {
+		app.on(this.subs = {
 			chat(data:ChatData) {
 				addOutput(data.user +": "+ data.msg)
 			},
@@ -40,9 +46,14 @@ export const chat:View = {
 				)
 				scrollEnd()
 			}
-		}
+		})
+		return h('#chat-view', h('style', style),
+			h('h4', "Chat"),
+			output, form,
+		)
 	},
-	stop: function() {
+	stop(app) {
+		app.off(this.subs!)
 		output.innerHTML = ""
 	}
 }
@@ -55,4 +66,3 @@ function addOutput(text:string) {
 function scrollEnd() {
 	output.scrollTop = output.scrollHeight - output.clientHeight
 }
-app.addOutput = addOutput

@@ -1,17 +1,17 @@
 import {ColorCache, newColorCache, cssColor} from 'game/color'
+import {Pixel} from './asset'
 
 export type Color = number
-export type Pixel = number
-
-export interface Feature {
-	name:string
-	colors:Color[]
-}
 
 export interface Palette {
 	name:string
 	feat:Feature[]
 	cache?:ColorCache<Pixel>
+}
+
+export interface Feature {
+	name:string
+	colors:Color[]
 }
 
 export function palColor(pal:Palette, p:Pixel):Color {
