@@ -13,29 +13,42 @@ https://us.degicashop.com/products/futuristic-tiles
 Link zu Wandschrank Idee:
 https://dithart.itch.io/ditharts-sci-fi-items-objects
 
-Liste von Gegenständen im Raum:
--(Kapsel die an der Wand hängt wo die Raumanzüge drinne sind)
--Schlafkappseln
--Arbeits Tische Mit Zetteln drauf und auf einem anderem mit einem Tagebuch(/mit einer Karte drauf/ mit Werkzeug drauf)
--Kisten
-(-Forschungs Tisch mit Glasbehältnissen drauf mit Pflanzen(/Steinen/Lebensformen) drinne)
--Sauerstoffflaschen (hinten im Raum)
+
+
 
 Wandbesonderheiten:
--Luft Schacht wo eine Ranke raus kommmt(anspielung auf die lange zeit die sich niemand gekümmert hat und auf den Pflanzen Raum)
-(-Kaputte wand wo kabel raus gucken)
++Wand
+-Luft Schacht wo eine Ranke raus kommmt(Anspielung)
+-Kaputte wand wo kabel raus gucken(Anspielung)
 -Licht
-(-Fenster)
--rostige Wand
+-Fenster
+-rostige Wand(Anspielung)
+
+Liste von Gegenständen im Raum:
++Schlafkappseln
++Tür
++Terminal(Schleuse)
++Kisten(Platzhalter für Dekoration)
+-verwelkte Pflanze(Dekoration, Anspielung)
+-Hocker, Stuhl(Dekoration)
+-(Kapsel die an der Wand hängt wo die Raumanzüge drinne sind)
 
 Bodentiles:
++Boden
 -absperr Muster(z.b. Schwarz Gelb)
 -Pfeile zu Räumen mit Abkürzungen oder englischen Namen von den Räumen
 -verrostete Platten
 
+Sachen die einen Dialog brauchen:
++Terminal in der Schleuse = eine Karte benötigt/ falsche Karte/ zugriff gestattet/ mehrere Karten wurden Identifiziert/ mehrere Lebensformen endeckt
+-rostige Wand = es sieht so aus als sei hier lange niemand mehr gewesen
+-Luft Schacht wo eine Ranke raus kommmt = woher diese Pflanze wohl kommt?
 
 
-breit
+2. Raum Ideen
+Gegenstände:
+-Laufband
+
 
 
 
