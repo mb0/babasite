@@ -12,12 +12,12 @@ import (
 	"xelf.org/daql/ses"
 )
 
-func SetupSess(db *buntdb.DB, cookieName string) (*ses.Manager, error) {
+func SetupSess(db *buntdb.DB, cookieName string, secure bool) (*ses.Manager, error) {
 	codec, err := getCodec(db, cookieName)
 	if err != nil {
 		return nil, err
 	}
-	cookie := ses.DefaultCookie(cookieName, true)
+	cookie := ses.DefaultCookie(cookieName, secure)
 	store := &BuntSessStore{DB: db}
 	return ses.NewManager(store, ses.Config{
 		TokenReader: cookie,

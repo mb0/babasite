@@ -19,6 +19,7 @@ import (
 var addr = flag.String("addr", "localhost:8080", "http server address")
 var datapath = flag.String("data", "data/", "data path")
 var dbpath = flag.String("db", "data/data.db", "buntdb file path or :memory:")
+var dev = flag.Bool("dev", false, "development flag to allow http cookies")
 
 func main() {
 	// parse the above command line args e.g. "babasite -db=./mydata.db"
@@ -57,7 +58,7 @@ func main() {
 	}
 
 	// setup session manager to remember users
-	man, err := site.SetupSess(db, "babasite")
+	man, err := site.SetupSess(db, "babasite", !*dev)
 	if err != nil {
 		log.Fatal(err)
 	}
