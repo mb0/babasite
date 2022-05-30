@@ -27,19 +27,20 @@ type MapInfo struct {
 
 type TileMap struct {
 	MapInfo
-	Levels map[int]*Level `json:"levels"`
+	Tileset *Tileset       `json:"tileset"`
+	Levels  map[int]*Level `json:"levels"`
 	// we want a map to all generic object states on the map
 	// we can use the object states to document and configure initial map states and
 	// also to later save game states.
 	// here go more details like level connections and scripting stuff.
 }
 
-func NewTileMap(name string, d geo.Dim, set string) *TileMap {
-	var l Level
+func NewTileMap(name string, d geo.Dim, set *Tileset) *TileMap {
+	l := Level{ID: 1}
 	l.Dim = d
 	l.Raw = make([]uint16, d.W*d.H)
-	info := MapInfo{Name: name, Tileset: set, Dim: d}
-	return &TileMap{MapInfo: info, Levels: map[int]*Level{0: &l}}
+	info := MapInfo{Name: name, Tileset: set.Name, Dim: d}
+	return &TileMap{MapInfo: info, Levels: map[int]*Level{1: &l}, Tileset: set}
 }
 
 func (tm *TileMap) NewLevel() (l *Level) {
@@ -60,7 +61,9 @@ type TileInfo struct {
 	Tile  Tile   `json:"tile"`
 	Name  string `json:"name"`
 	Color uint32 `json:"color"`
-	Block bool   `json:"block"`
+	Block bool   `json:"block,omitempty"`
+	Group string `json:"group,omitempty"`
+	Asset string `json:"asset,omitempty"`
 }
 
 type Tileset struct {
@@ -69,19 +72,8 @@ type Tileset struct {
 }
 
 var DefaultTileset = Tileset{Name: "default", Infos: []TileInfo{
-	{Tile: 0, Name: "void", Color: 0xffffff, Block: true},
-	{Tile: 1, Name: "water", Color: 0x0000ff, Block: true},
-	{Tile: 2, Name: "lava", Color: 0xff0000, Block: true},
-	{Tile: 3, Name: "wall", Color: 0x888888, Block: true},
-	{Tile: 10, Name: "dirt", Color: 0x92865f},
-	{Tile: 11, Name: "grass", Color: 0x718144},
-	{Tile: 12, Name: "path", Color: 0xb4ac88},
-	{Tile: 13, Name: "street", Color: 0x505158},
-	{Tile: 100, Name: "door", Block: true},
-	{Tile: 200, Name: "window", Block: true},
-	{Tile: 300, Name: "crate", Block: true},
-	{Tile: 400, Name: "chest", Block: true},
-	{Tile: 500, Name: "locker", Block: true},
+	{Tile: 0, Name: "void", Color: 0xffffff, Block: true, Group: "basic"},
+	{Tile: 1, Name: "wall", Color: 0x888888, Block: true, Group: "basic"},
 }}
 
 type EditLevel struct {

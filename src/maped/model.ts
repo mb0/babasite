@@ -12,34 +12,35 @@ export interface Level extends Grid<Tile> {
 export interface MapInfo extends Dim {
 	name:string
 	tileset:string
-	tset?:Tileset
 }
 
-export interface TileMap extends MapInfo {
+export interface TileMap extends Dim {
+	name:string
 	levels:Level[]
+	tileset:Tileset
 }
 
 export interface TileInfo {
 	tile:Tile
 	name:string
 	color:number
-	cssColor?:string
+	block?:boolean
+	group?:string
+	asset?:string
 }
 
 export interface Tileset {
 	name:string
 	infos:TileInfo[]
-	lookup?:{[key:number]:TileInfo}
+	lookup?:{[key:number]:string}
 }
 
 export function tileColor(s:Tileset, tile:number) {
 	if (!s.lookup) {
 		s.lookup = {}
-		s.infos.forEach(info => s.lookup![info.tile] = info)
+		s.infos.forEach(info =>
+			s.lookup![info.tile] = !info?.color ? "pink" : cssColor(info.color)
+		)
 	}
-	const info = s.lookup[tile]
-	if (!info) return "yellow"
-	if (!info.color) return "pink"
-	if (!info.cssColor) info.cssColor = cssColor(info.color)
-	return info.cssColor!
+	return s.lookup[tile]
 }

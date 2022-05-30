@@ -47,14 +47,12 @@ func (s *FileStore) MapInfos() []MapInfo {
 	return res
 }
 
-func (s *FileStore) Tilesets() []Tileset {
-	res := make([]Tileset, 0, len(s.sets))
+func (s *FileStore) Tilesets() []string {
+	res := make([]string, 0, len(s.sets))
 	for _, ts := range s.sets {
-		res = append(res, *ts)
+		res = append(res, ts.Name)
 	}
-	sort.Slice(res, func(i, j int) bool {
-		return res[i].Name < res[j].Name
-	})
+	sort.Strings(res)
 	return res
 }
 
@@ -69,6 +67,21 @@ func (s *FileStore) LoadAll() error {
 	}
 	for _, f := range files {
 		name := f.Name()
+		if !f.IsDir() && strings.HasSuffix(name, ".json") {
+			// parse as palette
+			_, err := s.LoadTileset(name[:len(name)-5])
+			if err != nil {
+				log.Printf("error reading tileset %s: %v", name, err)
+				continue
+			}
+		}
+	}
+	if ts := s.sets["default"]; ts == nil {
+		def := DefaultTileset
+		s.sets[def.Name] = &def
+	}
+	for _, f := range files {
+		name := f.Name()
 		if f.IsDir() {
 			// parse as map
 			_, err := s.LoadTileMap(name)
@@ -78,18 +91,7 @@ func (s *FileStore) LoadAll() error {
 				}
 				continue
 			}
-		} else if strings.HasSuffix(name, ".json") {
-			// parse as palette
-			_, err := s.LoadTileset(name[:len(name)-5])
-			if err != nil {
-				log.Printf("error reading palette %s: %v", name, err)
-				continue
-			}
 		}
-	}
-	if ts := s.sets["default"]; ts == nil {
-		def := DefaultTileset
-		s.sets[def.Name] = &def
 	}
 	return nil
 }
@@ -109,6 +111,7 @@ func (s *FileStore) LoadTileMap(name string) (*TileMap, error) {
 	if err != nil {
 		return nil, err
 	}
+	tm.Tileset = s.Tileset(tm.MapInfo.Tileset)
 	s.maps[name] = tm
 	return tm, nil
 }
@@ -186,32 +189,32 @@ func readTileset(dir fs.FS, pat string) (*Tileset, error) {
 	return &ts, err
 }
 
-func readTileMap(dir fs.FS, pat string) (m *TileMap, err error) {
+func readMapInfo(dir fs.FS, pat string) (m MapInfo, err error) {
 	raw, err := fs.ReadFile(dir, path.Join(pat, "tilemap.json"))
 	if err != nil {
 		return m, err
 	}
-	m = &TileMap{}
-	err = json.Unmarshal(raw, m)
+	err = json.Unmarshal(raw, &m)
 	if err != nil {
 		return m, err
 	}
 	if m.W <= 0 || m.H <= 0 {
-		return m, fmt.Errorf("unknown asset kind")
+		return m, fmt.Errorf("unknown map size")
 	}
+	m.Name = path.Base(pat)
 	return m, nil
 }
 
 func readTileMapFull(dir fs.FS, pat string) (*TileMap, error) {
-	m, err := readTileMap(dir, pat)
+	info, err := readMapInfo(dir, pat)
 	if err != nil {
 		return nil, err
 	}
+	m := &TileMap{MapInfo: info}
 	lvls, _, err := readLevels(dir, pat)
 	if err != nil {
 		return nil, err
 	}
-	m.Name = path.Base(pat)
 	m.Levels = lvls
 	return m, nil
 }
@@ -272,7 +275,7 @@ func writeTileMap(tm *TileMap, path string) error {
 	if err != nil {
 		return err
 	}
-	raw, err := json.Marshal(tm)
+	raw, err := json.Marshal(tm.MapInfo)
 	if err != nil {
 		return err
 	}

@@ -10,7 +10,7 @@ import {MapSelect, mapSelect} from './map_sel'
 
 export interface MapedView extends View {
 	infos:MapInfo[]
-	sets:Tileset[]
+	sets:string[]
 	sel:MapSelect
 	ed?:MapEditor|null
 }
@@ -23,7 +23,6 @@ const v:MapedView = {name: "maped", label: "Map Editor",
 			"init": res => {
 				v.sets = res.tilesets||[]
 				v.infos = res.infos||[]
-				v.sets.forEach(s => s.infos = s.infos || [])
 				v.sel.update(v.infos)
 				// TODO h.repl(dock.main, mapOverview(this.infos))
 				const {hash} = location
@@ -35,14 +34,22 @@ const v:MapedView = {name: "maped", label: "Map Editor",
 					}
 				}
 			},
-			"tileset.new": res => {
-				// TODO add tileset to list
-			},
 			"tileset.open": res => {
 				// TODO update map tileset and repaint
 			},
-			"tileset.edit": res => {
-				// TODO edit tileset and update editor
+			"tile.edit": (res, subj) => {
+				if (isErr(res, subj)) return
+				if (!v.ed) return
+				const ts = v.ed.map.tileset
+				if (!ts || ts.name != res.tileset) return
+				if (res.tile < 0) {
+					res.tile = 1+ts.infos.reduce((a,info)=> Math.max(a, info.tile), 0)
+					ts.infos.push(res)
+				} else {
+					const tile = ts.infos.find(info => info.tile == res.tile)
+					Object.assign(tile, res)
+				}
+				v.ed.updateTiles()
 			},
 			"map.new": (res, subj) => {
 				if (isErr(res, subj)) return
@@ -54,7 +61,6 @@ const v:MapedView = {name: "maped", label: "Map Editor",
 				if (isErr(res, subj)) return
 				if (v.ed) v.ed.stop()
 				// init tileset and levels
-				res.tset = v.sets.find(s => s.name == res.tileset)
 				Object.values(res.levels).forEach((lvl:Level) => {
 					Object.assign(lvl, gridTiles<Tile>(lvl, lvl.raw))
 				})
@@ -130,6 +136,10 @@ form span.help {
 	display: inline-block;
 	width:40px;
 	height:20px;
+}
+.color div {
+	display: inline-block;
+	margin-left: 4px;
 }
 .map-editor {
 	max-height: 100%;
