@@ -39,6 +39,11 @@ Web APIs
 Pixel Art
 ---------
 
+Color palettes and palette cycling
+
+	https://www.youtube.com/watch?v=txkHN6izK2Y
+	http://www.effectgames.com/demos/worlds/
+
 Item Icons
 
 	https://platinumgod.co.uk/
