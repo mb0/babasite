@@ -18,15 +18,7 @@ import (
 
 type MapSubs struct {
 	*TileMap
-	Subs []hub.Conn
-}
-
-func (ms *MapSubs) Bcast(m *hub.Msg, except int64) {
-	for _, c := range ms.Subs {
-		if c.ID() != except {
-			hub.Send(c, m)
-		}
-	}
+	site.Conns
 }
 
 type Room struct {
@@ -193,7 +185,7 @@ func (r *Room) handle(m *hub.Msg) *hub.Msg {
 			return m.Reply(tm)
 		} else {
 			if ms != nil {
-				for _, s := range ms.Subs {
+				for _, s := range ms.Conns {
 					delete(r.Subs, s.ID())
 				}
 				delete(r.MSubs, ms.Name)
@@ -279,7 +271,7 @@ func (r *Room) handle(m *hub.Msg) *hub.Msg {
 	return nil
 }
 func (r *Room) sub(c hub.Conn, ms *MapSubs) {
-	ms.Subs = append(ms.Subs, c)
+	ms.Conns = append(ms.Conns, c)
 	r.Subs[c.ID()] = ms
 }
 func (r *Room) unsub(id int64) {
@@ -287,9 +279,9 @@ func (r *Room) unsub(id int64) {
 	if ok {
 		delete(r.Subs, id)
 		if sub != nil {
-			for i, s := range sub.Subs {
+			for i, s := range sub.Conns {
 				if s.ID() == id {
-					sub.Subs = append(sub.Subs[:i], sub.Subs[i+1:]...)
+					sub.Conns = append(sub.Conns[:i], sub.Conns[i+1:]...)
 					break
 				}
 			}

@@ -7,6 +7,16 @@ import (
 	"xelf.org/daql/hub"
 )
 
+type Conns []hub.Conn
+
+func (subs Conns) Bcast(m *hub.Msg, except int64) {
+	for _, c := range subs {
+		if c.ID() != except {
+			hub.Send(c, m)
+		}
+	}
+}
+
 type ChatData struct {
 	Room  string     `json:"room"`
 	Msgs  []ChatMsg  `json:"msgs"`
@@ -28,7 +38,7 @@ type UserInfo struct {
 type ChatRoom struct {
 	ChatData
 	Users map[int64]*User
-	Conns []hub.Conn
+	Conns
 }
 
 func NewChat(name string) *ChatRoom {
@@ -38,12 +48,6 @@ func NewChat(name string) *ChatRoom {
 	}
 }
 func (c *ChatRoom) Name() string { return c.Room }
-func (c *ChatRoom) Bcast(m *hub.Msg) {
-	for _, conn := range c.Conns {
-		hub.Send(conn, m)
-	}
-}
-
 func (c *ChatRoom) Route(m *hub.Msg) {
 	switch m.Subj {
 	case "enter":
@@ -65,7 +69,7 @@ func (c *ChatRoom) Route(m *hub.Msg) {
 			data.User = "Server"
 		}
 		c.Msgs = append(c.Msgs, data)
-		c.Bcast(RawMsg("chat", data))
+		c.Bcast(RawMsg("chat", data), 0)
 	}
 }
 
@@ -74,7 +78,7 @@ func (c *ChatRoom) addUser(u *User) {
 	info := UserInfo{ID: u.ID(), Name: u.Name, Admin: u.Admin}
 	c.Infos = append(c.Infos, info)
 	sort.Sort(sortInfos(c.Infos))
-	c.Bcast(RawMsg("join", info))
+	c.Bcast(RawMsg("join", info), 0)
 	hub.Send(u, RawMsg("hist", c.ChatData))
 	c.Conns = append(c.Conns, u.Conn)
 }
@@ -93,7 +97,7 @@ func (c *ChatRoom) delUser(id int64) {
 			break
 		}
 	}
-	c.Bcast(RawMsg("left", c.ChatData))
+	c.Bcast(RawMsg("left", c.ChatData), 0)
 }
 
 func FromID(m *hub.Msg) int64 {

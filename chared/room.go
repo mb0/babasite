@@ -11,18 +11,10 @@ import (
 
 type AssetSubs struct {
 	*Asset
-	Subs []hub.Conn
+	site.Conns
 }
 type Sub struct {
 	Asset *AssetSubs
-}
-
-func (a *AssetSubs) Bcast(m *hub.Msg, except int64) {
-	for _, c := range a.Subs {
-		if c.ID() != except {
-			hub.Send(c, m)
-		}
-	}
 }
 
 type Room struct {
@@ -177,7 +169,7 @@ func (r *Room) handle(m *hub.Msg) *hub.Msg {
 			return m.Reply(a)
 		} else {
 			if as != nil {
-				for _, s := range as.Subs {
+				for _, s := range as.Conns {
 					delete(r.Subs, s.ID())
 				}
 				delete(r.ASubs, a.Name)
@@ -348,7 +340,7 @@ func (r *Room) getSub(c hub.Conn) *AssetSubs {
 	return r.Subs[c.ID()].Asset
 }
 func (r *Room) sub(c hub.Conn, a *AssetSubs) {
-	a.Subs = append(a.Subs, c)
+	a.Conns = append(a.Conns, c)
 	r.Subs[c.ID()] = Sub{Asset: a}
 }
 func (r *Room) unsub(id int64) {
@@ -356,14 +348,14 @@ func (r *Room) unsub(id int64) {
 	if ok {
 		delete(r.Subs, id)
 		if sub.Asset != nil {
-			subs := sub.Asset.Subs
+			subs := sub.Asset.Conns
 			for i, s := range subs {
 				if s.ID() == id {
 					subs = append(subs[:i], subs[i+1:]...)
 					break
 				}
 			}
-			sub.Asset.Subs = subs
+			sub.Asset.Conns = subs
 		}
 	}
 }
