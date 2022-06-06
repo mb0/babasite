@@ -51,26 +51,35 @@ func (c *ChatRoom) Name() string { return c.Room }
 func (c *ChatRoom) Route(m *hub.Msg) {
 	switch m.Subj {
 	case "enter":
-		enter, _ := m.Data.(*EnterMsg)
-		if enter != nil && enter.User.Conn != nil {
-			c.addUser(&enter.User)
-		}
+		c.Enter(m)
 	case "exit":
-		if id := FromID(m); id != 0 {
-			c.delUser(id)
-		}
+		c.Exit(m)
 	case "chat":
-		var data ChatMsg
-		m.Unmarshal(&data)
-		data.Time = time.Now()
-		if m.From != nil {
-			data.User = m.From.User()
-		} else if data.User == "" {
-			data.User = "Server"
-		}
-		c.Msgs = append(c.Msgs, data)
-		c.Bcast(RawMsg("chat", data), 0)
+		c.Chat(m)
 	}
+}
+func (c *ChatRoom) Enter(m *hub.Msg) {
+	enter, _ := m.Data.(*EnterMsg)
+	if enter != nil && enter.User.Conn != nil {
+		c.addUser(&enter.User)
+	}
+}
+func (c *ChatRoom) Exit(m *hub.Msg) {
+	if id := FromID(m); id != 0 {
+		c.delUser(id)
+	}
+}
+func (c *ChatRoom) Chat(m *hub.Msg) {
+	var data ChatMsg
+	m.Unmarshal(&data)
+	data.Time = time.Now()
+	if m.From != nil {
+		data.User = m.From.User()
+	} else if data.User == "" {
+		data.User = "Server"
+	}
+	c.Msgs = append(c.Msgs, data)
+	c.Bcast(RawMsg("chat", data), 0)
 }
 
 func (c *ChatRoom) addUser(u *User) {

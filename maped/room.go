@@ -51,17 +51,17 @@ func (r *Room) Route(m *hub.Msg) {
 func (r *Room) handle(m *hub.Msg) *hub.Msg {
 	switch m.Subj {
 	case "enter":
-		r.ChatRoom.Route(m)
+		r.Enter(m)
 		// init info message with map infos and tilesets
 		return site.RawMsg("init", Info{
 			Infos:    r.Store.MapInfos(),
 			Tilesets: r.Store.Tilesets(),
 		})
 	case "chat":
-		r.ChatRoom.Route(m)
+		r.Chat(m)
 	case "exit":
 		r.unsub(m.From.ID())
-		r.ChatRoom.Route(m)
+		r.Exit(m)
 	case "tileset.new":
 		var req struct {
 			Name string

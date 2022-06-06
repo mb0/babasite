@@ -42,10 +42,12 @@ func (g *Room) Route(m *hub.Msg) {
 func (g *Room) handle(m *hub.Msg) {
 	switch m.Subj {
 	case "enter":
-		g.ChatRoom.Route(m)
+		g.Enter(m)
 		hub.Send(m.From, site.RawMsg("map", g.Map))
-	case "exit", "chat":
-		g.ChatRoom.Route(m)
+	case "exit":
+		g.Exit(m)
+	case "chat":
+		g.Chat(m)
 	case "click":
 		var req clickMsg
 		err := m.Unmarshal(&req)

@@ -47,16 +47,16 @@ func (r *Room) Route(m *hub.Msg) {
 func (r *Room) handle(m *hub.Msg) *hub.Msg {
 	switch m.Subj {
 	case "enter":
-		r.ChatRoom.Route(m)
+		r.Enter(m)
 		return site.RawMsg("init", Info{
 			Assets: r.Store.AssetInfos(),
 			Pals:   r.Store.PalInfos(),
 		})
 	case "chat":
-		r.ChatRoom.Route(m)
+		r.Chat(m)
 	case "exit":
 		r.unsub(m.From.ID())
-		r.ChatRoom.Route(m)
+		r.Exit(m)
 	case "pal.new":
 		name, err := nameMsg(m)
 		if err != nil {
