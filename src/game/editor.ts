@@ -1,6 +1,7 @@
 import {ZoomCanvas, newZoomCanvas} from 'web/canvas'
 import {Pos, Dim, Box, posEq, posIn, posAdd, posSub, dimBox, boxIn, boxCrop, boxGrow} from 'game/geo'
 import {Grid, GridSel, GridData, gridTiles, gridSel, gridEach} from 'game/grid'
+import {spanFill} from './fill'
 
 interface Image<T> extends Grid<T> {
 	id:number
@@ -226,7 +227,6 @@ export function tmpGrid<T extends number>(w:number, h:number):Tmp<T> {
 }
 
 /*
-TODO fill, and magic selection tool
 TODO dither tool: maybe reuse brush with different brush types?
 TODO transformation view for selection or the whole pic for move, rotate and mirror
  */
@@ -238,6 +238,8 @@ export const tools:{[name:string]:Tool<any>} = {
 	brush: startDraw(drawBrush),
 	select: startSel,
 	move: startMove,
+	fill: doFill,
+	wand: doWand,
 }
 
 function drawPen<T>(ed:GridEditor<T>, _:PointerEvent, p:Pos, t:T) {
@@ -358,6 +360,47 @@ function startMove<T extends number>(ed:GridEditor<T>, e:PointerEvent) {
 	c.startDrag(e.pointerId, move, e => {
 		move(e)
 	})
+}
+
+function doFill<T>(ed:GridEditor<T>, e:PointerEvent) {
+	// do a wand selection if we have nothing selected
+	const selEmpty = !ed.sel || !ed.sel.raw.find(n => n > 0)
+	if (selEmpty) wandSel(ed, e)
+	// select fg or bg tile based on mouse button
+	const {fg, bg} = ed.tool
+	const t = e.button != 0 ? bg : fg
+	// fill the selection
+	ed.onedit(Object.assign({}, ed.sel, {fill:t}))
+	// reset if we originally had an empty selection
+	if (selEmpty) ed.sel = null
+}
+
+
+function doWand<T>(ed:GridEditor<T>, e:PointerEvent) {
+	if (e.button != 0) {
+		// other button clicks clear the selection
+		ed.sel = null
+		ed.repaint()
+		return
+	}
+	wandSel(ed, e)
+}
+function wandSel<T>(ed:GridEditor<T>, e:PointerEvent) {
+	if (!ed.img) return
+	// copy ed.sel over to tmp.sel
+	const pos = ed.c.stagePos(e)
+	// if no pos or pos is in tmp.sel exit
+	if (!pos || ed.tmp.sel.get(pos)) return
+	// get tile at pos
+	const t = ed.img.get(pos)
+	// using tmp.sel as visited map check neighbors
+	// for the same tile and add to selection
+	spanFill(ed, pos, t) // <- can be changed to floodFill here
+	// extract as selection
+	ed.sel = ed.tmp.getSel()
+	// reset tmp and repaint
+	ed.tmp.reset()
+	ed.repaint()
 }
 
 function paintSel(c:ZoomCanvas, sel:GridSel, pat:CanvasPattern|null) {

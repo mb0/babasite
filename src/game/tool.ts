@@ -1,9 +1,7 @@
 import h from 'web/html'
-import {ToolCtx} from 'game/editor'
+import {ToolCtx, tools} from 'game/editor'
 import {Grid, gridMirrorH, gridMirrorV, gridRot270, gridRot90} from 'game/grid'
 
-
-const tools = ['pen', 'brush', 'select', 'move']
 
 const opts = ['mirror', 'grid']
 
@@ -29,7 +27,7 @@ export function toolView<T>(ctx:ToolViewCtx<T>):ToolView<T> {
 	const fl = h('')
 	h.add(el,
 		h('header', 'Tools'),
-		h('', tools.map(tool => h('label', h('input', {
+		h('', Object.keys(tools).map(tool => h('label', h('input', {
 			type:'radio', name:'tool', value:tool,
 			checked: ctx.tool.active == tool,
 			onchange: () => ctx.tool.active = tool,
