@@ -79,7 +79,7 @@ func (r *Room) handle(m *hub.Msg) *hub.Msg {
 		tmp := DefaultTileset
 		tmp.Name = req.Name
 		r.Store.SaveTileset(&tmp)
-		r.Bcast(site.RawMsg(m.Subj, req))
+		r.Bcast(site.RawMsg(m.Subj, req), 0)
 		return site.RawMsg("tileset.open", tmp)
 	case "tile.edit":
 		// edit a specific tile
@@ -121,7 +121,7 @@ func (r *Room) handle(m *hub.Msg) *hub.Msg {
 			}
 		}
 		r.Store.SaveTileset(ts)
-		r.Bcast(site.RawMsg(m.Subj, req))
+		r.Bcast(site.RawMsg(m.Subj, req), 0)
 	case "map.new":
 		var req struct {
 			Name string
@@ -160,7 +160,7 @@ func (r *Room) handle(m *hub.Msg) *hub.Msg {
 		ms := &MapSubs{TileMap: tm}
 		r.MSubs[tm.Name] = ms
 		r.sub(m.From, ms)
-		r.Bcast(site.RawMsg("map.new", tm.MapInfo))
+		r.Bcast(site.RawMsg("map.new", tm.MapInfo), 0)
 		return site.RawMsg("map.open", tm)
 	case "map.open", "map.del":
 		var req struct {
@@ -191,7 +191,7 @@ func (r *Room) handle(m *hub.Msg) *hub.Msg {
 				delete(r.MSubs, ms.Name)
 			}
 			r.Store.DropTileMap(tm.Name)
-			r.Bcast(site.RawMsg(m.Subj, req))
+			r.Bcast(site.RawMsg(m.Subj, req), 0)
 		}
 	case "level.new":
 		ms := r.Subs[m.From.ID()]
@@ -209,7 +209,7 @@ func (r *Room) handle(m *hub.Msg) *hub.Msg {
 		if err != nil {
 			return m.ReplyErr(err)
 		}
-		r.Bcast(site.RawMsg(m.Subj, lvl))
+		r.Bcast(site.RawMsg(m.Subj, lvl), 0)
 	case "level.del":
 		ms := r.Subs[m.From.ID()]
 		if ms == nil {

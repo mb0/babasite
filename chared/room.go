@@ -83,7 +83,7 @@ func (r *Room) handle(m *hub.Msg) *hub.Msg {
 		if err != nil {
 			return m.ReplyErr(err)
 		}
-		r.Bcast(site.RawMsg("pal.new", p))
+		r.Bcast(site.RawMsg("pal.new", p), 0)
 		if a := r.getSub(m.From); a != nil {
 			a.AssetMeta.Pal = p.Name
 			r.Store.SaveAssetMeta(a.Asset)
@@ -116,7 +116,7 @@ func (r *Room) handle(m *hub.Msg) *hub.Msg {
 		if err != nil {
 			return m.ReplyErr(err)
 		}
-		r.Bcast(site.RawMsg(m.Subj, nameData{Name: name}))
+		r.Bcast(site.RawMsg(m.Subj, nameData{Name: name}), 0)
 		return nil
 	case "pal.edit":
 		var req struct {
@@ -148,7 +148,7 @@ func (r *Room) handle(m *hub.Msg) *hub.Msg {
 		if err != nil {
 			return m.ReplyErr(err)
 		}
-		r.Bcast(site.RawMsg("pal.edit", req))
+		r.Bcast(site.RawMsg("pal.edit", req), 0)
 	case "asset.open", "asset.del":
 		name, err := nameMsg(m)
 		if err != nil {
@@ -175,7 +175,7 @@ func (r *Room) handle(m *hub.Msg) *hub.Msg {
 				delete(r.ASubs, a.Name)
 			}
 			r.Store.DropAsset(a.Name)
-			r.Bcast(site.RawMsg(m.Subj, nameData{Name: name}))
+			r.Bcast(site.RawMsg(m.Subj, nameData{Name: name}), 0)
 			return nil
 		}
 	case "asset.new":
@@ -209,7 +209,7 @@ func (r *Room) handle(m *hub.Msg) *hub.Msg {
 		as := &AssetSubs{Asset: a}
 		r.ASubs[a.Name] = as
 		r.sub(m.From, as)
-		r.Bcast(site.RawMsg("asset.new", AssetInfo{Name: a.Name, Kind: a.Kind}))
+		r.Bcast(site.RawMsg("asset.new", AssetInfo{Name: a.Name, Kind: a.Kind}), 0)
 		return site.RawMsg("asset.open", a)
 	case "seq.new", "seq.del", "seq.edit", "pic.edit":
 		a := r.getSub(m.From)

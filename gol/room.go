@@ -60,19 +60,19 @@ func (g *Room) handle(m *hub.Msg) {
 			name = user.Name
 		}
 		g.Map.Click(req.X, req.Y)
-		g.Bcast(site.RawMsg("click", clickMsg{name, req.X, req.Y}))
+		g.Bcast(site.RawMsg("click", clickMsg{name, req.X, req.Y}), 0)
 	case "step":
 		g.Map.Step()
-		g.Bcast(site.RawMsg("map", g.Map))
+		g.Bcast(site.RawMsg("map", g.Map), 0)
 	case "reset":
 		g.Map = NewMap(80, 60)
-		g.Bcast(site.RawMsg("map", g.Map))
+		g.Bcast(site.RawMsg("map", g.Map), 0)
 	case "play":
 		g.play = !g.play
 	case "_tick":
 		if g.play {
 			g.Map.Step()
-			g.Bcast(site.RawMsg("map", g.Map))
+			g.Bcast(site.RawMsg("map", g.Map), 0)
 		}
 	}
 }
