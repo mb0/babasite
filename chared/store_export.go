@@ -7,6 +7,7 @@ import (
 	"path"
 	"strconv"
 	"strings"
+	"time"
 )
 
 func Export(dirfs fs.FS, zw *zip.Writer) error {
@@ -15,8 +16,12 @@ func Export(dirfs fs.FS, zw *zip.Writer) error {
 	if err != nil {
 		return err
 	}
-	copyReader := func(rel string, src io.Reader) error {
-		dst, err := zw.Create(rel)
+	copyReader := func(rel string, src io.Reader, mod time.Time) error {
+		dst, err := zw.CreateHeader(&zip.FileHeader{
+			Name:     rel,
+			Method:   zip.Deflate,
+			Modified: mod,
+		})
 		if err != nil {
 			return err
 		}
@@ -29,7 +34,11 @@ func Export(dirfs fs.FS, zw *zip.Writer) error {
 			return err
 		}
 		defer src.Close()
-		return copyReader(rel, src)
+		stat, err := src.Stat()
+		if err != nil {
+			return err
+		}
+		return copyReader(rel, src, stat.ModTime())
 	}
 	exportAsset := func(name string) error {
 		drel := path.Join(root, name)
@@ -39,7 +48,11 @@ func Export(dirfs fs.FS, zw *zip.Writer) error {
 			return err
 		}
 		defer src.Close()
-		err = copyReader(arel, src)
+		stat, err := src.Stat()
+		if err != nil {
+			return err
+		}
+		err = copyReader(arel, src, stat.ModTime())
 		if err != nil {
 			return err
 		}
