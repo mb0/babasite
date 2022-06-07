@@ -1,10 +1,13 @@
 package main
 
 import (
+	"archive/zip"
 	"flag"
 	"fmt"
+	"io/fs"
 	"log"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/mb0/babasite/chared"
@@ -14,6 +17,7 @@ import (
 	"github.com/tidwall/buntdb"
 	"xelf.org/daql/hub/wshub"
 	"xelf.org/daql/ses"
+	"xelf.org/xelf/bfr"
 )
 
 var addr = flag.String("addr", "localhost:8080", "http server address")
@@ -72,6 +76,9 @@ func main() {
 		maped.NewRoom("maped", *datapath),
 		chared.NewRoom("chared", *datapath),
 	)
+	exporter := &Exporter{FS: os.DirFS(*datapath), List: []ExportFunc{
+		chared.Export, maped.Export,
+	}}
 
 	// create a mux or also known as router where we provide session cookies
 	sesmux := http.NewServeMux()
@@ -83,6 +90,7 @@ func main() {
 		}
 		return "", fmt.Errorf("not authorized")
 	}
+	sesmux.Handle("/baba_export.zip", site.Authenticate(exporter))
 	sesmux.Handle("/hub", site.Authenticate(hubsrv))
 	sesmux.HandleFunc("/login", auth.Login)
 	sesmux.HandleFunc("/logout", auth.Logout)
@@ -107,5 +115,44 @@ func main() {
 	err = http.ListenAndServe(*addr, srvmux)
 	if err != nil {
 		fmt.Println(err)
+	}
+}
+
+type ExportFunc func(fs.FS, *zip.Writer) error
+type Exporter struct {
+	FS   fs.FS
+	List []ExportFunc
+}
+
+func (e *Exporter) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	b := bfr.Get()
+	defer bfr.Put(b)
+	zw := zip.NewWriter(b)
+	for _, ex := range e.List {
+		err := ex(e.FS, zw)
+		if err != nil {
+			msg := fmt.Sprintf("export failed: %v", err)
+			http.Error(w, msg, http.StatusInternalServerError)
+			return
+		}
+	}
+	err := zw.Close()
+	if err != nil {
+		msg := fmt.Sprintf("export failed: %v", err)
+		http.Error(w, msg, http.StatusInternalServerError)
+		return
+	}
+	h := w.Header()
+	h.Set("Content-Disposition", `inline; filename="baba_export.zip"`)
+	h.Set("Content-Type", `application/zip`)
+	h.Set("Content-Length", fmt.Sprint(b.Len()))
+	_, err = b.WriteTo(w)
+	if err != nil {
+		log.Printf("export failed: %v", err)
+		return
 	}
 }
