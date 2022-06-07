@@ -15,6 +15,13 @@ var map1 = `
 1000000001000000001
 1111111111111111111`
 
+var map2 = `
+1111111111111111111
+1000000000000000001
+1001001101010111101
+1000000001000000001
+1111111111111111111`
+
 func TestDStar(t *testing.T) {
 	tests := []struct {
 		graph string
@@ -26,13 +33,15 @@ func TestDStar(t *testing.T) {
 			want: "2,2 3,2 4,2 5,2 6,2 7,2 8,2"},
 		{graph: map1, start: geo.Pos{X: 2, Y: 2}, goal: geo.Pos{X: 16, Y: 1},
 			want: "2,2 3,2 4,2 5,2 6,2 7,2 8,2 9,1 10,2 11,3 12,2 13,1 14,1 15,1 16,1"},
+		{graph: map2, start: geo.Pos{X: 2, Y: 2}, goal: geo.Pos{X: 17, Y: 2},
+			want: "2,2 3,1 4,1 5,1 6,1 7,1 8,1 9,1 10,1 11,1 12,1 13,1 14,1 15,1 16,1 17,2"},
 	}
 	for i, test := range tests {
 		graph := strGraph(test.graph)
 		ds := &DStar{Graph: graph, Heur: HeurManhattan(10)}
 		p, _ := ds.FindPath(test.start, test.goal)
 		if got := pathStr(p); test.want != got {
-			t.Errorf("test %d want path %s got %s", i, test.want, got)
+			t.Errorf("test %d want path %s\n got %s", i, test.want, got)
 		}
 	}
 }

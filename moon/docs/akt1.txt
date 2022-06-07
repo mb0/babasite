@@ -39,16 +39,33 @@ Bodentiles:
 -Pfeile zu Räumen mit Abkürzungen oder englischen Namen von den Räumen
 -verrostete Platten
 
-Sachen die einen Dialog brauchen:
+ Dialoge:
 +Terminal in der Schleuse = eine Karte benötigt/ falsche Karte/ zugriff gestattet/ mehrere Karten wurden Identifiziert/ mehrere Lebensformen endeckt
 -rostige Wand = es sieht so aus als sei hier lange niemand mehr gewesen
 -Luft Schacht wo eine Ranke raus kommmt = woher diese Pflanze wohl kommt?
 
+Idee-Dialoge:
+dialoge sind Grau und wie bei vielen Spielen werden die wörter erst geschrieben und man muss wen alles geschrieben wurde auch wen es nur 
+eine gibt, eine Antwort anklicken. 
+
+
 
 2. Raum Ideen
-Gegenstände:
--Laufband
+Wen man in den 2. Raum rein kommt und mit der rechten Tür zu erst interagiert dann erscheint ein Dialog wo steht:
+"Fitnisstest benötigt" / "Fitnisstest erfolgreich, Zugriff gestattet" . Wen man zuerst mit dem Terminal interagiert erscheint ein Dialog 
+wo z.b. steht: "Fitnisstest: nicht durchgeführt" / "Fitnisstest: erfolgreich 70% Muskelmasse bestehend".
+Wen man ein den linken Abteil geht kann man nicht viel machen aber wen man auf das Laufband geht erscheint eine Anzeige wo eine Prozentanzeige
+ist die sich kontinuierlich vergrößert. Diese Anzeige könnte man in form von einem Dialog oder am Rand des Bildschirms einbringen.
+man könnte bei dem Terminal wo man sehen kann wie gut man bestanden hat einbringen dass es stärkere und schwächere Charaktere gibt oder nur
+einen starken Charakter.
 
+ 
+
+
+Gegenstände:
+-Sofa/Sitzkissen
++Laufband
++Terminal
 
 
 
