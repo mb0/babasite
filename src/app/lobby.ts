@@ -29,14 +29,16 @@ export default {
 					app.send("enter", {room})
 				} else {
 					h.repl(el,
-					    h('', 'babasite', h('sup', 'beta')),
-					    h('.menu', app.views.filter(v =>
-						v != app.cur && v.name != 'lobby'
-					    ).map(v =>
-						h('', {onclick:() => {
-						    app.send("enter", {room:v.name})
-						}}, v.label||v.name)
-					    )),
+						h('', 'babasite', h('sup', 'beta')),
+						h('.menu', app.views.filter(v =>
+							v != app.cur && v.name != 'lobby'
+						).map(v =>
+							h('', {onclick:() => {
+								app.send("enter", {room:v.name})
+							}}, v.label||v.name)
+						)),
+						h('hr'),
+						h('a', {href:'/baba_export.zip'}, "Export Data"),
 					)
 				}
 			}
