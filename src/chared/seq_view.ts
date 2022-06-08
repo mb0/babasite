@@ -91,7 +91,9 @@ function picViews(ed:AssetEditor, s:Sequence) {
 }
 
 export function sequencePreview(ed:AssetEditor, ator:Animator) {
-	const c = newCanvas("seq-preview", ed.a.w, ed.a.h, palCssColor(ed.pal, 0))
+	const zoom = 3
+	const c = newCanvas("seq-preview", ed.a.w*zoom, ed.a.h*zoom, palCssColor(ed.pal, 0))
+	c.setStage({zoom})
 	const paint = (fn:number) => {
 		c.clear()
 		const ids = ed?.seq?.ids
