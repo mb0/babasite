@@ -28,7 +28,7 @@ type Item struct {
 	ID   ItemID `json:"id"`
 	Prod ProdID `json:"prod"`
 	Inv  InvID  `json:"inv"`
-	geo.Pos
+	geo.Box
 	Sub InvID `json:"sub,omitempty"`
 }
 

@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/mb0/babasite/game/geo"
+	"github.com/mb0/babasite/game/grid"
 )
 
 // Sys is the inventory system where the ids map into corresponding lists offset by one.
@@ -41,9 +42,9 @@ func (s *Sys) NewProd(name string) *Prod {
 	return res
 }
 
-func (s *Sys) NewItem(prod ProdID) *Item {
+func (s *Sys) NewItem(prod *Prod) *Item {
 	id := ItemID(len(s.Items) + 1)
-	res := &Item{ID: id, Prod: prod}
+	res := &Item{ID: id, Prod: prod.ID, Box: geo.Box{Dim: prod.Dim}}
 	s.Items = append(s.Items, res)
 	return res
 }
@@ -111,10 +112,9 @@ func (s *Sys) Move(id ItemID, to InvID, pos *geo.Pos) error {
 	if nxt == nil {
 		return fmt.Errorf("inv not found")
 	}
-	// TODO check position
-	p, err := s.checkPos(it, nxt, pos)
-	if err != nil {
-		return err
+	p, ok := s.checkPos(it, nxt, pos)
+	if !ok {
+		return fmt.Errorf("item does not fit")
 	}
 	if cur != nxt { // if we move the item to another inventory
 		if !s.canNestInto(it, nxt) {
@@ -165,7 +165,41 @@ func (s *Sys) canNestInto(it *Item, inv *Inv) bool {
 	}
 	return true
 }
-func (s *Sys) checkPos(it *Item, inv *Inv, pos *geo.Pos) (p geo.Pos, _ error) {
-	// TODO check if it fits into inv at pos
-	return p, fmt.Errorf("not implemented")
+
+// checkPos checks whether an item fits into inventory, if pos is given we check if the item fits,
+// if nil we find the top-left most pos that fits.
+func (s *Sys) checkPos(it *Item, inv *Inv, pos *geo.Pos) (res geo.Pos, ok bool) {
+	// check the inventory layout we just paint a grid selection with all other items
+	var sel grid.Sel
+	sel.Dim = inv.Dim
+	sel.Raw = make([]uint16, (inv.W*inv.H+15)/16)
+	for _, ot := range inv.Items {
+		if ot.ID == it.ID { // skip item to move, for moving inside an inventory
+			continue
+		}
+		if ot.W > 1 || ot.H > 1 {
+			geo.Each(ot.Box, func(p geo.Pos) { sel.Set(p, true) })
+		} else { // small items use only one place
+			sel.Set(ot.Pos, true)
+		}
+	}
+	if pos == nil { // no position try to fit anywhere
+		// find a place that is not painted
+		_, ok = grid.Find[bool](&sel, func(p geo.Pos, t bool) bool {
+			if t { // ignore painted
+				return false
+			}
+			// ignore if a large item is blocked
+			if (it.W > 1 || it.H > 1) && geo.Find(geo.Box{Pos: p, Dim: it.Dim}, sel.Get) {
+				return false
+			} // else we already know that a small item fits
+			res = p
+			return true
+		})
+	} else { // we got a position so check if it fits
+		res = *pos
+		ok = !geo.Find(geo.Box{Pos: res, Dim: it.Dim}, sel.Get)
+
+	}
+	return res, ok
 }
