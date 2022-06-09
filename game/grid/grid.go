@@ -5,6 +5,7 @@ import (
 )
 
 type EachFunc[T any] func(geo.Pos, T)
+type FindFunc[T any] func(geo.Pos, T) bool
 
 type Grid[T any] interface {
 	B() geo.Box
@@ -74,4 +75,24 @@ func eachIn[T any](g Grid[T], b geo.Box, f EachFunc[T]) {
 			f(p, g.Get(p))
 		}
 	}
+}
+func Find[T any](g Grid[T], f FindFunc[T]) (T, bool) {
+	return findIn(g, g.B(), f)
+}
+func FindIn[T any](g Grid[T], b geo.Box, f FindFunc[T]) (T, bool) {
+	return findIn(g, b.Crop(g.B()), f)
+}
+func findIn[T any](g Grid[T], b geo.Box, f FindFunc[T]) (res T, ok bool) {
+	if b.Empty() {
+		return res, false
+	}
+	d := b.BoxDim()
+	for p := b.Pos; p.Y < d.H; p.Y++ {
+		for p.X = b.X; p.X < d.W; p.X++ {
+			if t := g.Get(p); f(p, t) {
+				return t, true
+			}
+		}
+	}
+	return res, false
 }
