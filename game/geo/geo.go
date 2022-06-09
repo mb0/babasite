@@ -79,3 +79,23 @@ func (b Box) Grow(o Box) Box {
 	e := o.End().Max(b.End())
 	return Box{Pos: p, Dim: Dim{W: 1 + e.X - p.X, H: 1 + e.Y - p.Y}}
 }
+
+func Each(b Box, f func(Pos)) {
+	d := b.BoxDim()
+	for p := b.Pos; p.Y < d.H; p.Y++ {
+		for p.X = b.X; p.X < d.W; p.X++ {
+			f(p)
+		}
+	}
+}
+func Find(b Box, f func(Pos) bool) bool {
+	d := b.BoxDim()
+	for p := b.Pos; p.Y < d.H; p.Y++ {
+		for p.X = b.X; p.X < d.W; p.X++ {
+			if f(p) {
+				return true
+			}
+		}
+	}
+	return false
+}
