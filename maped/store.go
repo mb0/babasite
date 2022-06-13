@@ -11,35 +11,37 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+
+	"github.com/mb0/babasite/game/lvl"
 )
 
 type FileStore struct {
 	path  string
 	dirfs fs.FS
-	maps  map[string]*TileMap
-	sets  map[string]*Tileset
+	maps  map[string]*lvl.World
+	sets  map[string]*lvl.Tileset
 }
 
 func NewFileStore(path string) *FileStore {
 	return &FileStore{path: path,
 		dirfs: os.DirFS(path),
-		maps:  make(map[string]*TileMap),
-		sets:  make(map[string]*Tileset),
+		maps:  make(map[string]*lvl.World),
+		sets:  make(map[string]*lvl.Tileset),
 	}
 }
 
-func (s *FileStore) Tileset(name string) *Tileset {
+func (s *FileStore) Tileset(name string) *lvl.Tileset {
 	return s.sets[name]
 }
 
-func (s *FileStore) TileMap(name string) *TileMap {
+func (s *FileStore) World(name string) *lvl.World {
 	return s.maps[name]
 }
 
-func (s *FileStore) MapInfos() []MapInfo {
-	res := make([]MapInfo, 0, len(s.maps))
+func (s *FileStore) WorldInfos() []lvl.WorldInfo {
+	res := make([]lvl.WorldInfo, 0, len(s.maps))
 	for _, m := range s.maps {
-		res = append(res, m.MapInfo)
+		res = append(res, m.WorldInfo)
 	}
 	sort.Slice(res, func(i, j int) bool {
 		return res[i].Name < res[j].Name
@@ -83,8 +85,8 @@ func (s *FileStore) LoadAll() error {
 	for _, f := range files {
 		name := f.Name()
 		if f.IsDir() {
-			// parse as map
-			_, err := s.LoadTileMap(name)
+			// parse as world
+			_, err := s.LoadWorld(name)
 			if err != nil {
 				if err != fs.ErrNotExist {
 					log.Printf("error reading %s/%s: %v", s.path, name, err)
@@ -96,7 +98,7 @@ func (s *FileStore) LoadAll() error {
 	return nil
 }
 
-func (s *FileStore) LoadTileset(name string) (*Tileset, error) {
+func (s *FileStore) LoadTileset(name string) (*lvl.Tileset, error) {
 	ts, err := readTileset(s.dirfs, fmt.Sprintf("%s.json", name))
 	if err != nil {
 		return nil, err
@@ -106,17 +108,17 @@ func (s *FileStore) LoadTileset(name string) (*Tileset, error) {
 	return ts, nil
 }
 
-func (s *FileStore) LoadTileMap(name string) (*TileMap, error) {
-	tm, err := readTileMapFull(s.dirfs, name)
+func (s *FileStore) LoadWorld(name string) (*lvl.World, error) {
+	w, err := readTileMapFull(s.dirfs, name)
 	if err != nil {
 		return nil, err
 	}
-	tm.Tileset = s.Tileset(tm.MapInfo.Tileset)
-	s.maps[name] = tm
-	return tm, nil
+	w.Tileset = s.Tileset(w.WorldInfo.Tileset)
+	s.maps[name] = w
+	return w, nil
 }
 
-func (s *FileStore) SaveTileset(ts *Tileset) error {
+func (s *FileStore) SaveTileset(ts *lvl.Tileset) error {
 	path := filepath.Join(s.path, fmt.Sprintf("%s.json", ts.Name))
 	err := writeTileset(ts, path)
 	if err != nil {
@@ -134,17 +136,17 @@ func (s *FileStore) DropTileset(name string) error {
 	return fmt.Errorf("not found")
 }
 
-func (s *FileStore) SaveTileMap(tm *TileMap) error {
-	dir := filepath.Join(s.path, tm.Name)
-	err := writeTileMap(tm, dir)
+func (s *FileStore) SaveWorld(w *lvl.World) error {
+	dir := filepath.Join(s.path, w.Name)
+	err := writeTileMap(w, dir)
 	if err != nil {
 		return err
 	}
-	s.maps[tm.Name] = tm
+	s.maps[w.Name] = w
 	return nil
 }
 
-func (s *FileStore) DropTileMap(name string) error {
+func (s *FileStore) DropWorld(name string) error {
 	a := s.maps[name]
 	if a != nil {
 		delete(s.maps, name)
@@ -153,43 +155,44 @@ func (s *FileStore) DropTileMap(name string) error {
 	return nil
 }
 
-func (s *FileStore) SaveLevel(tm *TileMap, id int) (lvl *Level, err error) {
-	if tm == nil || tm.Name == "" {
-		return nil, fmt.Errorf("invalid level %v", tm)
+func (s *FileStore) SaveLevel(w *lvl.World, id lvl.LevelID) (l *lvl.Level, err error) {
+	if w == nil || w.Name == "" {
+		return nil, fmt.Errorf("invalid level %v", w)
 	}
 	if id <= 0 {
-		lvl = tm.NewLevel()
+		l = w.NewLevel()
 	} else {
-		lvl = tm.Levels[id]
-		if lvl == nil {
-			lvl = &Level{ID: id}
-			tm.Levels[id] = lvl
+		l = w.Levels[id]
+		if l == nil {
+			l = &lvl.Level{}
+			l.ID = id
+			w.Levels[id] = l
 		}
 	}
-	path := filepath.Join(s.path, tm.Name, fmt.Sprintf("%03d", id))
-	return lvl, writeLevel(lvl, path)
+	path := filepath.Join(s.path, w.Name, fmt.Sprintf("%03d", id))
+	return l, writeLevel(l, path)
 }
 
-func (s *FileStore) DropLevel(tm *TileMap, id int) error {
-	if tm == nil || id <= 0 {
+func (s *FileStore) DropLevel(w *lvl.World, id lvl.LevelID) error {
+	if w == nil || id <= 0 {
 		return fmt.Errorf("invalid level id %d", id)
 	}
-	delete(tm.Levels, id)
-	path := filepath.Join(s.path, tm.Name, fmt.Sprintf("%03d", id))
+	delete(w.Levels, id)
+	path := filepath.Join(s.path, w.Name, fmt.Sprintf("%03d", id))
 	return os.Remove(path)
 }
 
-func readTileset(dir fs.FS, pat string) (*Tileset, error) {
+func readTileset(dir fs.FS, pat string) (*lvl.Tileset, error) {
 	raw, err := fs.ReadFile(dir, pat)
 	if err != nil {
 		return nil, err
 	}
-	var ts Tileset
+	var ts lvl.Tileset
 	err = json.Unmarshal(raw, &ts)
 	return &ts, err
 }
 
-func readMapInfo(dir fs.FS, pat string) (m MapInfo, err error) {
+func readWorldInfo(dir fs.FS, pat string) (m lvl.WorldInfo, err error) {
 	raw, err := fs.ReadFile(dir, path.Join(pat, "tilemap.json"))
 	if err != nil {
 		return m, err
@@ -205,12 +208,12 @@ func readMapInfo(dir fs.FS, pat string) (m MapInfo, err error) {
 	return m, nil
 }
 
-func readTileMapFull(dir fs.FS, pat string) (*TileMap, error) {
-	info, err := readMapInfo(dir, pat)
+func readTileMapFull(dir fs.FS, pat string) (*lvl.World, error) {
+	info, err := readWorldInfo(dir, pat)
 	if err != nil {
 		return nil, err
 	}
-	m := &TileMap{MapInfo: info}
+	m := &lvl.World{WorldInfo: info}
 	lvls, _, err := readLevels(dir, pat)
 	if err != nil {
 		return nil, err
@@ -219,13 +222,13 @@ func readTileMapFull(dir fs.FS, pat string) (*TileMap, error) {
 	return m, nil
 }
 
-func readLevels(dir fs.FS, apath string) (map[int]*Level, int, error) {
+func readLevels(dir fs.FS, apath string) (map[lvl.LevelID]*lvl.Level, lvl.LevelID, error) {
 	files, err := fs.ReadDir(dir, apath)
 	if err != nil {
 		return nil, 0, err
 	}
-	m := make(map[int]*Level)
-	var max int
+	m := make(map[lvl.LevelID]*lvl.Level)
+	var max lvl.LevelID
 	for _, f := range files {
 		if f.IsDir() {
 			continue
@@ -235,31 +238,31 @@ func readLevels(dir fs.FS, apath string) (map[int]*Level, int, error) {
 		if err != nil {
 			continue
 		}
-		lvl, err := readLevel(dir, path.Join(apath, name))
+		lv, err := readLevel(dir, path.Join(apath, name))
 		if err != nil {
 			return nil, 0, err
 		}
-		id := int(uid)
+		id := lvl.LevelID(uid)
 		if id > max {
 			max = id
 		}
-		lvl.ID = id
-		m[id] = lvl
+		lv.ID = id
+		m[id] = lv
 	}
 	return m, max, nil
 }
 
-func readLevel(dir fs.FS, path string) (lvl *Level, err error) {
+func readLevel(dir fs.FS, path string) (l *lvl.Level, err error) {
 	raw, err := fs.ReadFile(dir, path)
 	if err != nil {
 		return nil, err
 	}
-	lvl = &Level{}
-	err = lvl.UnmarshalBinary(raw)
-	return lvl, err
+	l = &lvl.Level{}
+	err = l.UnmarshalBinary(raw)
+	return l, err
 }
 
-func writeTileset(ts *Tileset, path string) error {
+func writeTileset(ts *lvl.Tileset, path string) error {
 	err := ensureDir(filepath.Dir(path))
 	if err != nil {
 		return err
@@ -270,19 +273,19 @@ func writeTileset(ts *Tileset, path string) error {
 	}
 	return os.WriteFile(path, raw, 0644)
 }
-func writeTileMap(tm *TileMap, path string) error {
+func writeTileMap(tm *lvl.World, path string) error {
 	err := ensureDir(path)
 	if err != nil {
 		return err
 	}
-	raw, err := json.Marshal(tm.MapInfo)
+	raw, err := json.Marshal(tm.WorldInfo)
 	if err != nil {
 		return err
 	}
 	return os.WriteFile(filepath.Join(path, "tilemap.json"), raw, 0644)
 }
 
-func writeLevel(lvl *Level, path string) error {
+func writeLevel(lvl *lvl.Level, path string) error {
 	b, _ := lvl.MarshalBinary()
 	return os.WriteFile(path, b, 0644)
 }

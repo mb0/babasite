@@ -12,20 +12,21 @@ import (
 	"path/filepath"
 
 	"github.com/mb0/babasite/game/geo"
+	"github.com/mb0/babasite/game/lvl"
 	"github.com/mb0/babasite/site"
 	"xelf.org/daql/hub"
 )
 
-type MapSubs struct {
-	*TileMap
+type WorldSubs struct {
+	*lvl.World
 	site.Conns
 }
 
 type Room struct {
 	site.ChatRoom
 	Store *FileStore
-	MSubs map[string]*MapSubs
-	Subs  map[int64]*MapSubs
+	WSubs map[string]*WorldSubs
+	Subs  map[int64]*WorldSubs
 }
 
 func NewRoom(name, datapath string) *Room {
@@ -38,8 +39,8 @@ func NewRoom(name, datapath string) *Room {
 	return &Room{
 		ChatRoom: *site.NewChat(name),
 		Store:    store,
-		MSubs:    make(map[string]*MapSubs),
-		Subs:     make(map[int64]*MapSubs),
+		WSubs:    make(map[string]*WorldSubs),
+		Subs:     make(map[int64]*WorldSubs),
 	}
 }
 func (r *Room) Route(m *hub.Msg) {
@@ -54,7 +55,7 @@ func (r *Room) handle(m *hub.Msg) *hub.Msg {
 		r.Enter(m)
 		// init info message with map infos and tilesets
 		return site.RawMsg("init", Info{
-			Infos:    r.Store.MapInfos(),
+			Infos:    r.Store.WorldInfos(),
 			Tilesets: r.Store.Tilesets(),
 		})
 	case "chat":
@@ -86,7 +87,7 @@ func (r *Room) handle(m *hub.Msg) *hub.Msg {
 		var req struct {
 			Tileset string `json:"tileset"`
 			Tile    int    `json:"tile"`
-			TileInfo
+			lvl.TileInfo
 		}
 		m.Unmarshal(&req)
 		if !NameCheck.MatchString(req.Tileset) {
@@ -97,7 +98,7 @@ func (r *Room) handle(m *hub.Msg) *hub.Msg {
 			return m.ReplyErr(fmt.Errorf("tileset %s does not exist", req.Tileset))
 		}
 		if req.Tile < 0 {
-			var max Tile
+			var max lvl.Tile
 			for _, nfo := range ts.Infos {
 				if nfo.Tile > max {
 					max = nfo.Tile
@@ -107,7 +108,7 @@ func (r *Room) handle(m *hub.Msg) *hub.Msg {
 			ts.Infos = append(ts.Infos, req.TileInfo)
 		} else {
 			idx := -1
-			req.TileInfo.Tile = Tile(req.Tile)
+			req.TileInfo.Tile = lvl.Tile(req.Tile)
 			for i, nfo := range ts.Infos {
 				if req.TileInfo.Tile == nfo.Tile {
 					idx = i
@@ -132,7 +133,7 @@ func (r *Room) handle(m *hub.Msg) *hub.Msg {
 		if !NameCheck.MatchString(req.Name) {
 			return m.ReplyErr(fmt.Errorf("invalid map name %s", req.Name))
 		}
-		tm := r.Store.TileMap(req.Name)
+		tm := r.Store.World(req.Name)
 		if tm != nil {
 			return m.ReplyErr(fmt.Errorf("map name %s already exists", req.Name))
 		}
@@ -147,20 +148,20 @@ func (r *Room) handle(m *hub.Msg) *hub.Msg {
 		}
 		ts := r.Store.Tileset(req.Tileset)
 		if ts == nil {
-			ts = &Tileset{Name: req.Tileset, Infos: []TileInfo{
+			ts = &lvl.Tileset{Name: req.Tileset, Infos: []lvl.TileInfo{
 				{Tile: 0, Name: "void", Color: 0xffffff, Block: true, Group: "basic"},
 			}}
 		}
-		tm = NewTileMap(req.Name, req.Dim, ts)
-		err := r.Store.SaveTileMap(tm)
+		tm = lvl.NewWorld(req.Name, req.Dim, ts)
+		err := r.Store.SaveWorld(tm)
 		if err != nil {
 			return m.ReplyErr(err)
 		}
 		r.unsub(m.From.ID())
-		ms := &MapSubs{TileMap: tm}
-		r.MSubs[tm.Name] = ms
+		ms := &WorldSubs{World: tm}
+		r.WSubs[tm.Name] = ms
 		r.sub(m.From, ms)
-		r.Bcast(site.RawMsg("map.new", tm.MapInfo), 0)
+		r.Bcast(site.RawMsg("map.new", tm.WorldInfo), 0)
 		return site.RawMsg("map.open", tm)
 	case "map.open", "map.del":
 		var req struct {
@@ -170,15 +171,15 @@ func (r *Room) handle(m *hub.Msg) *hub.Msg {
 		if !NameCheck.MatchString(req.Name) {
 			return m.ReplyErr(fmt.Errorf("invalid map name %s", req.Name))
 		}
-		tm := r.Store.TileMap(req.Name)
+		tm := r.Store.World(req.Name)
 		if tm == nil {
 			return m.ReplyErr(fmt.Errorf("no map with name %s", req.Name))
 		}
-		ms := r.MSubs[tm.Name]
+		ms := r.WSubs[tm.Name]
 		if m.Subj == "map.open" {
 			if ms == nil {
-				ms = &MapSubs{TileMap: tm}
-				r.MSubs[tm.Name] = ms
+				ms = &WorldSubs{World: tm}
+				r.WSubs[tm.Name] = ms
 			}
 			r.unsub(m.From.ID())
 			r.sub(m.From, ms)
@@ -188,9 +189,9 @@ func (r *Room) handle(m *hub.Msg) *hub.Msg {
 				for _, s := range ms.Conns {
 					delete(r.Subs, s.ID())
 				}
-				delete(r.MSubs, ms.Name)
+				delete(r.WSubs, ms.Name)
 			}
-			r.Store.DropTileMap(tm.Name)
+			r.Store.DropWorld(tm.Name)
 			r.Bcast(site.RawMsg(m.Subj, req), 0)
 		}
 	case "level.new":
@@ -205,7 +206,7 @@ func (r *Room) handle(m *hub.Msg) *hub.Msg {
 		lvl := ms.NewLevel()
 		lvl.Name = req.Name
 		// TODO save level meta with name and later more details
-		_, err := r.Store.SaveLevel(ms.TileMap, lvl.ID)
+		_, err := r.Store.SaveLevel(ms.World, lvl.ID)
 		if err != nil {
 			return m.ReplyErr(err)
 		}
@@ -216,7 +217,7 @@ func (r *Room) handle(m *hub.Msg) *hub.Msg {
 			return m.ReplyErr(fmt.Errorf("not subscribed"))
 		}
 		var req struct {
-			ID int `json:"id"`
+			ID lvl.LevelID `json:"id"`
 		}
 		m.Unmarshal(&req)
 		lvl := ms.Levels[req.ID]
@@ -225,7 +226,7 @@ func (r *Room) handle(m *hub.Msg) *hub.Msg {
 		}
 		// TODO think about cleaning up reference or aborting the deletion
 		delete(ms.Levels, req.ID)
-		r.Store.DropLevel(ms.TileMap, req.ID)
+		r.Store.DropLevel(ms.World, req.ID)
 		ms.Bcast(site.RawMsg(m.Subj, req), 0)
 	case "level.rename":
 		ms := r.Subs[m.From.ID()]
@@ -233,8 +234,8 @@ func (r *Room) handle(m *hub.Msg) *hub.Msg {
 			return m.ReplyErr(fmt.Errorf("not subscribed"))
 		}
 		var req struct {
-			ID   int    `json:"id"`
-			Name string `json:"name"`
+			ID   lvl.LevelID `json:"id"`
+			Name string      `json:"name"`
 		}
 		m.Unmarshal(&req)
 		lvl := ms.Levels[req.ID]
@@ -242,7 +243,7 @@ func (r *Room) handle(m *hub.Msg) *hub.Msg {
 			return m.ReplyErr(fmt.Errorf("level id %d not found", req.ID))
 		}
 		lvl.Name = req.Name
-		_, err := r.Store.SaveLevel(ms.TileMap, req.ID)
+		_, err := r.Store.SaveLevel(ms.World, req.ID)
 		if err != nil {
 			return m.ReplyErr(err)
 		}
@@ -255,12 +256,12 @@ func (r *Room) handle(m *hub.Msg) *hub.Msg {
 		var req EditLevel
 		m.Unmarshal(&req)
 		// apply edit
-		err := Apply(ms.TileMap, req)
+		err := Apply(ms.World, req)
 		if err != nil {
 			return m.ReplyErr(err)
 		}
 		// TODO do not save the level to disk on every edit
-		p, err := r.Store.SaveLevel(ms.TileMap, req.ID)
+		p, err := r.Store.SaveLevel(ms.World, req.ID)
 		if err != nil {
 			return m.ReplyErr(err)
 		}
@@ -270,7 +271,7 @@ func (r *Room) handle(m *hub.Msg) *hub.Msg {
 	}
 	return nil
 }
-func (r *Room) sub(c hub.Conn, ms *MapSubs) {
+func (r *Room) sub(c hub.Conn, ms *WorldSubs) {
 	ms.Conns = append(ms.Conns, c)
 	r.Subs[c.ID()] = ms
 }
@@ -290,6 +291,6 @@ func (r *Room) unsub(id int64) {
 }
 
 type Info struct {
-	Tilesets []string  `json:"tilesets,omitempty"`
-	Infos    []MapInfo `json:"infos,omitempty"`
+	Tilesets []string        `json:"tilesets,omitempty"`
+	Infos    []lvl.WorldInfo `json:"infos,omitempty"`
 }
