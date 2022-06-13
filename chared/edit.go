@@ -5,36 +5,19 @@ import (
 
 	"github.com/mb0/babasite/game/geo"
 	"github.com/mb0/babasite/game/grid"
+	"github.com/mb0/babasite/game/pix"
 )
 
-type Pixel uint16
-
-type Sel struct {
-	grid.Tiles[Pixel]
-}
-
-func MakeSel(x, y, w, h int, pix ...uint16) Sel {
-	if n := w * h; len(pix) < n {
-		old := pix
-		pix = make([]uint16, n)
-		copy(pix, old)
-	}
-	return Sel{Tiles: grid.Tiles[Pixel]{Data: grid.Data{
-		Box: geo.MakeBox(x, y, w, h),
-		Raw: pix,
-	}}}
-}
-
 type EditPic struct {
-	Pic  int    `json:"pic"`
-	Copy bool   `json:"copy,omitempty"`
-	Repl bool   `json:"repl,omitempty"`
-	Fill *Pixel `json:"fill,omitempty"`
+	Pic  pix.PicID  `json:"pic"`
+	Copy bool       `json:"copy,omitempty"`
+	Repl bool       `json:"repl,omitempty"`
+	Fill *pix.Pixel `json:"fill,omitempty"`
 	grid.Data
 }
 
 // Apply changes asset a with the given edit or returns an error.
-func Apply(a *Asset, e EditPic) error {
+func Apply(a *pix.Asset, e EditPic) error {
 	d := geo.Box{Dim: a.Dim}
 	b := d.Crop(e.Box)
 	if b.Empty() {
@@ -49,11 +32,11 @@ func Apply(a *Asset, e EditPic) error {
 		pic.Box = b
 		pic.Raw = make([]uint16, b.W*b.H)
 	} else if !b.In(pic.Box) { // we need to grow
-		var tmp grid.Tiles[Pixel]
+		var tmp pix.Pix
 		tmp.Box = pic.Grow(b)
 		tmp.Raw = make([]uint16, tmp.W*tmp.H)
-		grid.Each[Pixel](&pic.Tiles, tmp.Set)
-		pic.Tiles = tmp
+		grid.Each[pix.Pixel](&pic.Pix, tmp.Set)
+		pic.Pix = tmp
 	}
 	if e.Fill != nil { // treat as selection to fill
 		if len(e.Raw) != 0 {
@@ -62,13 +45,13 @@ func Apply(a *Asset, e EditPic) error {
 				pic.Set(p, *e.Fill)
 			}, false)
 		} else {
-			grid.EachIn[Pixel](pic, e.Box, func(p geo.Pos, _ Pixel) {
+			grid.EachIn[pix.Pixel](pic, e.Box, func(p geo.Pos, _ pix.Pixel) {
 				pic.Set(p, *e.Fill)
 			})
 		}
 	} else { // treat the data as pixels
-		pix := &grid.Tiles[Pixel]{Data: e.Data}
-		grid.EachIn[Pixel](pix, b, func(p geo.Pos, v Pixel) {
+		px := &pix.Pix{Data: e.Data}
+		grid.EachIn[pix.Pixel](px, b, func(p geo.Pos, v pix.Pixel) {
 			if e.Copy || v != 0 {
 				pic.Set(p, v)
 			}

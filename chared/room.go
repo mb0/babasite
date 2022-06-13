@@ -4,13 +4,16 @@ import (
 	"fmt"
 	"log"
 	"path/filepath"
+	"regexp"
 
+	"github.com/mb0/babasite/game/geo"
+	"github.com/mb0/babasite/game/pix"
 	"github.com/mb0/babasite/site"
 	"xelf.org/daql/hub"
 )
 
 type AssetSubs struct {
-	*Asset
+	*pix.Asset
 	site.Conns
 }
 type Sub struct {
@@ -70,13 +73,13 @@ func (r *Room) handle(m *hub.Msg) *hub.Msg {
 			Copy string `json:"copy"`
 		}
 		m.Unmarshal(&req)
-		p = &Palette{Name: name}
+		p = &pix.Palette{Name: name}
 		if req.Copy != "" {
 			ref := r.Store.Pal(req.Copy)
-			p.Feat = make([]*Feature, len(ref.Feat))
+			p.Feat = make([]*pix.Feature, len(ref.Feat))
 			for i, f := range ref.Feat {
-				colors := append([]Color(nil), f.Colors...)
-				p.Feat[i] = &Feature{Name: f.Name, Colors: colors}
+				colors := append([]pix.Color(nil), f.Colors...)
+				p.Feat[i] = &pix.Feature{Name: f.Name, Colors: colors}
 			}
 		}
 		err = r.Store.SavePal(p)
@@ -85,8 +88,8 @@ func (r *Room) handle(m *hub.Msg) *hub.Msg {
 		}
 		r.Bcast(site.RawMsg("pal.new", p), 0)
 		if a := r.getSub(m.From); a != nil {
-			a.AssetMeta.Pal = p.Name
-			r.Store.SaveAssetMeta(a.Asset)
+			a.AssetInfo.Pal = p.Name
+			r.Store.SaveAssetInfo(a.Asset)
 			a.Bcast(site.RawMsg("pal.open", nameData{p.Name}), 0)
 			return nil
 		}
@@ -101,8 +104,8 @@ func (r *Room) handle(m *hub.Msg) *hub.Msg {
 			return m.ReplyErr(fmt.Errorf("no pal %s", name))
 		}
 		if a := r.getSub(m.From); a != nil {
-			a.AssetMeta.Pal = p.Name
-			r.Store.SaveAssetMeta(a.Asset)
+			a.AssetInfo.Pal = p.Name
+			r.Store.SaveAssetInfo(a.Asset)
 			a.Bcast(site.RawMsg("pal.open", nameData{p.Name}), 0)
 			return nil
 		}
@@ -120,11 +123,11 @@ func (r *Room) handle(m *hub.Msg) *hub.Msg {
 		return nil
 	case "pal.edit":
 		var req struct {
-			Name string  `json:"name"`
-			Feat string  `json:"feat"`
-			Idx  int     `json:"idx"`
-			Del  int     `json:"del"`
-			Ins  []Color `json:"ins"`
+			Name string      `json:"name"`
+			Feat string      `json:"feat"`
+			Idx  int         `json:"idx"`
+			Del  int         `json:"del"`
+			Ins  []pix.Color `json:"ins"`
 		}
 		m.Unmarshal(&req)
 		p := r.Store.Pal(req.Name)
@@ -133,13 +136,13 @@ func (r *Room) handle(m *hub.Msg) *hub.Msg {
 		}
 		f := p.GetFeature(req.Feat)
 		if f != nil {
-			tmp := make([]Color, 0, len(f.Colors)-req.Del+len(req.Ins))
+			tmp := make([]pix.Color, 0, len(f.Colors)-req.Del+len(req.Ins))
 			tmp = append(tmp, f.Colors[:req.Idx]...)
 			tmp = append(tmp, req.Ins...)
 			tmp = append(tmp, f.Colors[req.Idx+req.Del:]...)
 			f.Colors = tmp
 		} else if req.Idx == 0 && req.Del == 0 {
-			f = &Feature{Name: req.Feat, Colors: req.Ins}
+			f = &pix.Feature{Name: req.Feat, Colors: req.Ins}
 			p.Feat = append(p.Feat, f)
 		} else {
 			return m.ReplyErr(fmt.Errorf("feature not found %s %s", req.Name, req.Feat))
@@ -180,7 +183,7 @@ func (r *Room) handle(m *hub.Msg) *hub.Msg {
 		}
 	case "asset.new":
 		var req struct {
-			AssetMeta
+			pix.AssetInfo
 			Copy string
 		}
 		m.Unmarshal(&req)
@@ -194,14 +197,14 @@ func (r *Room) handle(m *hub.Msg) *hub.Msg {
 		if req.Pal == "" {
 			req.Pal = "default"
 		}
-		req.Seq = []*SeqMeta{}
+		req.Seq = []*pix.Seq{}
 		pal := r.Store.Pal(req.Pal)
 		if pal == nil && req.Pal == "default" {
 			pal = DefaultPalette()
 			r.Store.SavePal(pal)
 		}
-		a := &Asset{AssetMeta: req.AssetMeta, Pics: make(map[int]*Pic)}
-		err := r.Store.SaveAssetMeta(a)
+		a := pix.NewAsset(req.AssetInfo)
+		err := r.Store.SaveAssetInfo(a)
 		if err != nil {
 			return m.ReplyErr(fmt.Errorf("saving asset: %v", err))
 		}
@@ -224,8 +227,8 @@ func (r *Room) handle(m *hub.Msg) *hub.Msg {
 }
 
 type SeqData struct {
-	*SeqMeta
-	Pics []*Pic `json:"pics,omitempty"`
+	*pix.Seq
+	Pics []*pix.Pic `json:"pics,omitempty"`
 }
 
 func (r *Room) handleSub(m *hub.Msg, a *AssetSubs) *hub.Msg {
@@ -248,7 +251,7 @@ func (r *Room) handleSub(m *hub.Msg, a *AssetSubs) *hub.Msg {
 				}
 			}
 			// TODO find all orphans
-			err = r.Store.SaveAssetMeta(a.Asset)
+			err = r.Store.SaveAssetInfo(a.Asset)
 			if err != nil {
 				return m.ReplyErr(err)
 			}
@@ -258,22 +261,22 @@ func (r *Room) handleSub(m *hub.Msg, a *AssetSubs) *hub.Msg {
 		if s == nil {
 			p := a.NewPic()
 			s = a.AddSeq(name)
-			s.IDs = []int{p.ID}
-			err = r.Store.SaveAssetMeta(a.Asset)
+			s.IDs = []pix.PicID{p.ID}
+			err = r.Store.SaveAssetInfo(a.Asset)
 			if err != nil {
 				return m.ReplyErr(err)
 			}
-			a.Bcast(site.RawMsg("seq.new", SeqData{s, []*Pic{p}}), 0)
+			a.Bcast(site.RawMsg("seq.new", SeqData{s, []*pix.Pic{p}}), 0)
 		}
 		return site.RawMsg("seq.open", SeqData{s, a.GetPics(s.IDs...)})
 	case "seq.edit":
 		var req struct {
-			Name string `json:"name"`
-			Idx  int    `json:"idx"`
-			Del  int    `json:"del"`
-			Ins  []int  `json:"ins"`
-			Pics []*Pic `json:"pics"`
-			Copy bool   `json:"copy,omitempty"`
+			Name string      `json:"name"`
+			Idx  int         `json:"idx"`
+			Del  int         `json:"del"`
+			Ins  []pix.PicID `json:"ins"`
+			Pics []*pix.Pic  `json:"pics"`
+			Copy bool        `json:"copy,omitempty"`
 		}
 		err := m.Unmarshal(&req)
 		s := a.GetSeq(req.Name)
@@ -281,7 +284,7 @@ func (r *Room) handleSub(m *hub.Msg, a *AssetSubs) *hub.Msg {
 			return m.ReplyErr(fmt.Errorf("sequence not found"))
 		}
 		for i, id := range req.Ins {
-			var p *Pic
+			var p *pix.Pic
 			var save bool
 			if id <= 0 {
 				p = a.NewPic()
@@ -308,12 +311,12 @@ func (r *Room) handleSub(m *hub.Msg, a *AssetSubs) *hub.Msg {
 				}
 			}
 		}
-		tmp := make([]int, 0, len(s.IDs)-req.Del+len(req.Ins))
+		tmp := make([]pix.PicID, 0, len(s.IDs)-req.Del+len(req.Ins))
 		tmp = append(tmp, s.IDs[:req.Idx]...)
 		tmp = append(tmp, req.Ins...)
 		tmp = append(tmp, s.IDs[req.Idx+req.Del:]...)
 		s.IDs = tmp
-		err = r.Store.SaveAssetMeta(a.Asset)
+		err = r.Store.SaveAssetInfo(a.Asset)
 		if err != nil {
 			return m.ReplyErr(err)
 		}
@@ -373,7 +376,30 @@ func nameMsg(m *hub.Msg) (string, error) {
 	return n.Name, nil
 }
 
+var NameCheck = regexp.MustCompile(`^[a-z0-9_]+$`)
+
 type Info struct {
-	Assets []AssetInfo `json:"assets,omitempty"`
-	Pals   []Palette   `json:"pals,omitempty"`
+	Assets []AssetInfo   `json:"assets,omitempty"`
+	Pals   []pix.Palette `json:"pals,omitempty"`
+}
+
+func DefaultPalette() *pix.Palette {
+	return &pix.Palette{Name: "default", Feat: []*pix.Feature{
+		{Name: "basic", Colors: []pix.Color{0xffffff, 0x000000}},
+		{Name: "skin", Colors: []pix.Color{0xffcbb8, 0xfca99a, 0xc58e81, 0x190605}},
+		{Name: "eyes", Colors: []pix.Color{0xfffff0, 0x1a5779, 0x110100}},
+		{Name: "hair", Colors: []pix.Color{0xf1ba60, 0xc47e31, 0x604523, 0x090100}},
+		{Name: "shirt", Colors: []pix.Color{0xa9cc86, 0x6e8e52, 0x51683b, 0x040000}},
+		{Name: "pants", Colors: []pix.Color{0x484a49, 0x303030, 0x282224, 0x170406}},
+		{Name: "shoes", Colors: []pix.Color{0xb16f4b, 0x82503e, 0x3f1f15, 0x030000}},
+	}}
+}
+
+func DefaultSize(kind string) (d geo.Dim) {
+	d.W, d.H = 16, 16
+	switch kind {
+	case "char":
+		d.W, d.H = 32, 40
+	}
+	return d
 }
