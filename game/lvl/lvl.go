@@ -3,15 +3,14 @@ package lvl
 import (
 	"github.com/mb0/babasite/game/geo"
 	"github.com/mb0/babasite/game/grid"
+	"github.com/mb0/babasite/game/ids"
 )
 
 type Tile uint16
 
-type LevelID uint
-
 type LevelInfo struct {
-	ID   LevelID `json:"id"`
-	Name string  `json:"name"`
+	ID   ids.Level `json:"id"`
+	Name string    `json:"name"`
 }
 
 type Level struct {
@@ -29,8 +28,8 @@ type WorldInfo struct {
 
 type World struct {
 	WorldInfo
-	Tileset *Tileset           `json:"tileset"`
-	Levels  map[LevelID]*Level `json:"levels"`
+	Tileset *Tileset             `json:"tileset"`
+	Levels  map[ids.Level]*Level `json:"levels"`
 	// we want a map to all generic object states on the map
 	// we can use the object states to document and configure initial map states and
 	// also to later save game states.
@@ -43,11 +42,11 @@ func NewWorld(name string, d geo.Dim, set *Tileset) *World {
 	l.Dim = d
 	l.Raw = make([]uint16, d.W*d.H)
 	info := WorldInfo{Name: name, Tileset: set.Name, Dim: d}
-	return &World{WorldInfo: info, Levels: map[LevelID]*Level{1: &l}, Tileset: set}
+	return &World{WorldInfo: info, Levels: map[ids.Level]*Level{1: &l}, Tileset: set}
 }
 
 func (w *World) NewLevel() (l *Level) {
-	id := LevelID(len(w.Levels))
+	id := ids.Level(len(w.Levels))
 	for {
 		if _, ok := w.Levels[id]; ok {
 			id++

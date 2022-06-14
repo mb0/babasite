@@ -12,6 +12,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/mb0/babasite/game/ids"
 	"github.com/mb0/babasite/game/lvl"
 )
 
@@ -155,7 +156,7 @@ func (s *FileStore) DropWorld(name string) error {
 	return nil
 }
 
-func (s *FileStore) SaveLevel(w *lvl.World, id lvl.LevelID) (l *lvl.Level, err error) {
+func (s *FileStore) SaveLevel(w *lvl.World, id ids.Level) (l *lvl.Level, err error) {
 	if w == nil || w.Name == "" {
 		return nil, fmt.Errorf("invalid level %v", w)
 	}
@@ -173,7 +174,7 @@ func (s *FileStore) SaveLevel(w *lvl.World, id lvl.LevelID) (l *lvl.Level, err e
 	return l, writeLevel(l, path)
 }
 
-func (s *FileStore) DropLevel(w *lvl.World, id lvl.LevelID) error {
+func (s *FileStore) DropLevel(w *lvl.World, id ids.Level) error {
 	if w == nil || id <= 0 {
 		return fmt.Errorf("invalid level id %d", id)
 	}
@@ -222,13 +223,13 @@ func readTileMapFull(dir fs.FS, pat string) (*lvl.World, error) {
 	return m, nil
 }
 
-func readLevels(dir fs.FS, apath string) (map[lvl.LevelID]*lvl.Level, lvl.LevelID, error) {
+func readLevels(dir fs.FS, apath string) (map[ids.Level]*lvl.Level, ids.Level, error) {
 	files, err := fs.ReadDir(dir, apath)
 	if err != nil {
 		return nil, 0, err
 	}
-	m := make(map[lvl.LevelID]*lvl.Level)
-	var max lvl.LevelID
+	m := make(map[ids.Level]*lvl.Level)
+	var max ids.Level
 	for _, f := range files {
 		if f.IsDir() {
 			continue
@@ -242,7 +243,7 @@ func readLevels(dir fs.FS, apath string) (map[lvl.LevelID]*lvl.Level, lvl.LevelI
 		if err != nil {
 			return nil, 0, err
 		}
-		id := lvl.LevelID(uid)
+		id := ids.Level(uid)
 		if id > max {
 			max = id
 		}

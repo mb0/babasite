@@ -5,109 +5,114 @@ import (
 
 	"github.com/mb0/babasite/game/geo"
 	"github.com/mb0/babasite/game/grid"
+	"github.com/mb0/babasite/game/ids"
 )
+
+type ProdTable = ids.ListTable[ids.Prod, Prod, *Prod]
+type ItemTable = ids.ListTable[ids.Item, Item, *Item]
+type InvTable = ids.ListTable[ids.Inv, Inv, *Inv]
+
+type Store struct {
+	Prod ProdTable
+	Item ItemTable
+	Inv  InvTable
+}
+
+func (s *Store) Dirty() bool {
+	return len(s.Item.Mod) > 0 || len(s.Inv.Mod) > 0 || len(s.Prod.Mod) > 0
+}
 
 // Sys is the inventory system where the ids map into corresponding lists offset by one.
 type Sys struct {
-	Prods []*Prod
-	Items []*Item
-	Invs  []*Inv
+	*Store
 }
 
-func (s *Sys) Prod(id ProdID) *Prod {
-	if id < 1 || int(id) > len(s.Prods) {
-		return nil
+func (s *Sys) NewProd(name string) (*Prod, error) {
+	id, err := s.Prod.NewID()
+	if err != nil {
+		return nil, err
 	}
-	return s.Prods[id-1]
-}
-
-func (s *Sys) Item(id ItemID) *Item {
-	if id < 1 || int(id) > len(s.Items) {
-		return nil
-	}
-	return s.Items[id-1]
-}
-
-func (s *Sys) Inv(id InvID) *Inv {
-	if id < 1 || int(id) > len(s.Invs) {
-		return nil
-	}
-	return s.Invs[id-1]
-}
-
-func (s *Sys) NewProd(name string) *Prod {
-	id := ProdID(len(s.Prods) + 1)
 	res := &Prod{ID: id, Name: name, Dim: geo.Dim{W: 1, H: 1}}
-	s.Prods = append(s.Prods, res)
-	return res
+	err = s.Store.Prod.Set(id, res)
+	return res, err
 }
 
-func (s *Sys) NewItem(prod *Prod) *Item {
-	id := ItemID(len(s.Items) + 1)
+func (s *Sys) NewItem(prod *Prod) (*Item, error) {
+	id, err := s.Item.NewID()
+	if err != nil {
+		return nil, err
+	}
 	res := &Item{ID: id, Prod: prod.ID, Box: geo.Box{Dim: prod.Dim}}
-	s.Items = append(s.Items, res)
-	return res
+	err = s.Item.Set(id, res)
+	return res, err
 }
 
-func (s *Sys) NewInv(dim geo.Dim) *Inv {
-	id := InvID(len(s.Invs) + 1)
+func (s *Sys) NewInv(dim geo.Dim) (*Inv, error) {
+	id, err := s.Inv.NewID()
+	if err != nil {
+		return nil, err
+	}
 	res := &Inv{ID: id, Dim: dim}
-	s.Invs = append(s.Invs, res)
-	return res
+	err = s.Inv.Set(id, res)
+	return res, err
 }
 
-func (s *Sys) DelProd(id ProdID) {
-	if id < 1 || int(id) > len(s.Prods) {
+func (s *Sys) DelProd(id ids.Prod) {
+	p, _ := s.Prod.Get(id)
+	if p == nil {
 		return
 	}
-	for _, it := range s.Items {
+	for _, it := range s.Item.List {
 		if it != nil && it.Prod == id {
-			if inv := s.Inv(it.Inv); inv != nil {
+			if inv, _ := s.Inv.Get(it.Inv); inv != nil {
 				s.delItemFromInv(it, inv)
 			}
 			s.delItem(it)
 		}
 	}
-	s.Prods[id-1] = nil
+	s.Prod.Set(id, nil)
 }
 
-func (s *Sys) DelItem(id ItemID) {
-	if id < 1 || int(id) > len(s.Items) {
-		return
-	}
-	it := s.Items[id-1]
+func (s *Sys) DelItem(id ids.Item) {
+	it, _ := s.Item.Get(id)
 	if it != nil {
-		if inv := s.Inv(it.Inv); inv != nil {
+		if inv, _ := s.Inv.Get(it.Inv); inv != nil {
 			s.delItemFromInv(it, inv)
 		}
 		s.delItem(it)
 	}
 }
 
-func (s *Sys) DelInv(id InvID) {
-	if id < 1 || int(id) > len(s.Invs) {
-		return
-	}
-	inv := s.Invs[id-1]
-	for _, it := range inv.Items {
-		if it.Inv == id {
+func (s *Sys) DelInv(id ids.Inv) {
+	inv, _ := s.Inv.Get(id)
+	if inv != nil {
+		for _, it := range inv.Items {
 			s.delItem(it)
 		}
+		s.Inv.Set(id, nil)
 	}
-	s.Invs[id-1] = nil
 }
 
-func (s *Sys) Move(id ItemID, to InvID, pos *geo.Pos) error {
-	it := s.Item(id)
-	if it == nil {
-		return fmt.Errorf("item not found")
+func (s *Sys) Move(id ids.Item, to ids.Inv, pos *geo.Pos) error {
+	it, err := s.Item.Get(id)
+	if err != nil {
+		return err
 	}
 	// fetch the current inventory (might be nil)
-	cur := s.Inv(it.Inv)
+	var cur *Inv
+	if it.Inv != 0 {
+		cur, err = s.Inv.Get(it.Inv)
+		if err != nil {
+			return err
+		}
+	}
 	// if to is 0 or the same use cur as target or fetch the target inventory
 	nxt := cur
 	if to != 0 && nxt.ID != to {
-		nxt = s.Inv(to)
+		nxt, err = s.Inv.Get(to)
+		if err != nil {
+			return err
+		}
 	}
 	if nxt == nil {
 		return fmt.Errorf("inv not found")
@@ -135,7 +140,7 @@ func (s *Sys) delItem(it *Item) {
 	if it.Sub != 0 {
 		s.DelInv(it.Sub)
 	}
-	s.Items[it.ID-1] = nil
+	s.Item.Set(it.ID, nil)
 }
 func (s *Sys) delItemFromInv(it *Item, inv *Inv) {
 	for idx, ot := range inv.Items {
@@ -158,10 +163,18 @@ func (s *Sys) canNestInto(it *Item, inv *Inv) bool {
 		return true
 	}
 	// otherwise move up the inv chain and look for the item
-	for cur := inv; cur != nil && cur.Sub != nil; cur = s.Inv(cur.Sub.Inv) {
+	for cur := inv; cur != nil && cur.Sub != nil; {
 		if cur.Sub.ID == it.ID {
 			return false
 		}
+		if cur.Sub.Inv == 0 {
+			return true
+		}
+		nxt, err := s.Inv.Get(cur.Sub.Inv)
+		if err != nil {
+			return false
+		}
+		cur = nxt
 	}
 	return true
 }

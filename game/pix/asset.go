@@ -2,10 +2,6 @@ package pix
 
 import "github.com/mb0/babasite/game/geo"
 
-// AssetPath is a text that identifies an asset and optionally a sequence.
-// For example: "items/keycard" or "player_martin".
-type AssetPath string
-
 type AssetInfo struct {
 	Name string `json:"name"`
 	Kind string `json:"kind"`

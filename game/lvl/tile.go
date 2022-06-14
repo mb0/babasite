@@ -1,6 +1,6 @@
 package lvl
 
-import "github.com/mb0/babasite/game/pix"
+import "github.com/mb0/babasite/game/ids"
 
 type Tileset struct {
 	Name  string     `json:"name"`
@@ -8,10 +8,10 @@ type Tileset struct {
 }
 
 type TileInfo struct {
-	Tile  Tile          `json:"tile"`
-	Name  string        `json:"name"`
-	Color uint32        `json:"color"`
-	Block bool          `json:"block,omitempty"`
-	Group string        `json:"group,omitempty"`
-	Asset pix.AssetPath `json:"asset,omitempty"`
+	Tile  Tile      `json:"tile"`
+	Name  string    `json:"name"`
+	Color uint32    `json:"color"`
+	Block bool      `json:"block,omitempty"`
+	Group string    `json:"group,omitempty"`
+	Asset ids.Asset `json:"asset,omitempty"`
 }

@@ -1,41 +1,44 @@
 // Package inv provides an item and inventory system.
 package inv
 
-import "github.com/mb0/babasite/game/geo"
+import (
+	"encoding/json"
 
-// AssetPath is a text that identifies an asset and optionally a sequence. eg. "items/keycard".
-type AssetPath string
-
-// IDs are consecutive positive numbers valid within an inventory system.
-// The zero value does represent a null instance.
-type (
-	ProdID uint
-	ItemID uint
-	InvID  uint
+	"github.com/mb0/babasite/game/geo"
+	"github.com/mb0/babasite/game/ids"
 )
 
 // Prod represents an abstract product or item type that has common attributes.
 type Prod struct {
-	ID   ProdID `json:"id"`
-	Name string `json:"name"`
+	ID   ids.Prod `json:"id"`
+	Name string   `json:"name"`
 	geo.Dim
-	Asset AssetPath `json:"asset,omitempty"`
+	Asset ids.Asset `json:"asset,omitempty"`
 	Text  string    `json:"text,omitempty"`
 }
 
 // Item is an unique instance of a product in an inventory.
 type Item struct {
-	ID   ItemID `json:"id"`
-	Prod ProdID `json:"prod"`
-	Inv  InvID  `json:"inv"`
+	ID   ids.Item `json:"id"`
+	Prod ids.Prod `json:"prod"`
+	Inv  ids.Inv  `json:"inv"`
 	geo.Box
-	Sub InvID `json:"sub,omitempty"`
+	Sub ids.Inv `json:"sub,omitempty"`
 }
 
 // Inv is an inventory or container for items.
 type Inv struct {
-	ID InvID `json:"id"`
+	ID ids.Inv `json:"id"`
 	geo.Dim
 	Items []*Item `json:"-"`
 	Sub   *Item   `json:"-"`
 }
+
+func (inv *Prod) UnmarshalBinary(raw []byte) error { return json.Unmarshal(raw, inv) }
+func (inv *Prod) MarshalBinary() ([]byte, error)   { return json.Marshal(inv) }
+
+func (inv *Item) UnmarshalBinary(raw []byte) error { return json.Unmarshal(raw, inv) }
+func (inv *Item) MarshalBinary() ([]byte, error)   { return json.Marshal(inv) }
+
+func (inv *Inv) UnmarshalBinary(raw []byte) error { return json.Unmarshal(raw, inv) }
+func (inv *Inv) MarshalBinary() ([]byte, error)   { return json.Marshal(inv) }

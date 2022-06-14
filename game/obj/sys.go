@@ -1,27 +1,30 @@
 package obj
 
+import "github.com/mb0/babasite/game/ids"
+
+type ObjTable = ids.ListTable[ids.Obj, Obj, *Obj]
+
+type Store struct {
+	Obj ObjTable
+}
+
+func (s *Store) Dirty() bool { return len(s.Obj.Mod) > 0 }
+
 // Sys is the object system of a game world where the obj ids map into the list offset by one.
 type Sys struct {
-	Objs []*Obj
+	*Store
 }
 
-func (s *Sys) Obj(id ObjID) *Obj {
-	if id < 1 || int(id) > len(s.Objs) {
-		return nil
+func (s *Sys) NewObj() (*Obj, error) {
+	id, err := s.Obj.NewID()
+	if err != nil {
+		return nil, err
 	}
-	return s.Objs[id-1]
-}
-
-func (s *Sys) NewObj() *Obj {
-	id := ObjID(len(s.Objs) + 1)
 	res := &Obj{ID: id}
-	s.Objs = append(s.Objs, res)
-	return res
+	s.Obj.Set(id, res)
+	return res, nil
 }
 
-func (s *Sys) DelObj(id ObjID) {
-	if id < 1 || int(id) > len(s.Objs) {
-		return
-	}
-	s.Objs[id-1] = nil
+func (s *Sys) DelObj(id ids.Obj) {
+	s.Obj.Set(id, nil)
 }

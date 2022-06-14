@@ -12,6 +12,7 @@ import (
 	"path/filepath"
 
 	"github.com/mb0/babasite/game/geo"
+	"github.com/mb0/babasite/game/ids"
 	"github.com/mb0/babasite/game/lvl"
 	"github.com/mb0/babasite/site"
 	"xelf.org/daql/hub"
@@ -217,7 +218,7 @@ func (r *Room) handle(m *hub.Msg) *hub.Msg {
 			return m.ReplyErr(fmt.Errorf("not subscribed"))
 		}
 		var req struct {
-			ID lvl.LevelID `json:"id"`
+			ID ids.Level `json:"id"`
 		}
 		m.Unmarshal(&req)
 		lvl := ms.Levels[req.ID]
@@ -234,8 +235,8 @@ func (r *Room) handle(m *hub.Msg) *hub.Msg {
 			return m.ReplyErr(fmt.Errorf("not subscribed"))
 		}
 		var req struct {
-			ID   lvl.LevelID `json:"id"`
-			Name string      `json:"name"`
+			ID   ids.Level `json:"id"`
+			Name string    `json:"name"`
 		}
 		m.Unmarshal(&req)
 		lvl := ms.Levels[req.ID]
