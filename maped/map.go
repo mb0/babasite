@@ -18,7 +18,7 @@ var DefaultTileset = lvl.Tileset{Name: "default", Infos: []lvl.TileInfo{
 }}
 
 type EditLevel struct {
-	ID   ids.Level `json:"id"`
+	ID   ids.Lvl   `json:"id"`
 	Copy bool      `json:"copy,omitempty"`
 	Repl bool      `json:"repl,omitempty"`
 	Fill *lvl.Tile `json:"fill,omitempty"`

@@ -12,8 +12,8 @@ import (
 type ObjID = ids.Obj
 
 type Obj struct {
-	ID  ids.Obj   `json:"id"`
-	Lvl ids.Level `json:"lvl,omitempty"`
+	ID  ids.Obj `json:"id"`
+	Lvl ids.Lvl `json:"lvl,omitempty"`
 	geo.Box
 	Asset ids.Asset `json:"asset,omitempty"`
 	// specific components:

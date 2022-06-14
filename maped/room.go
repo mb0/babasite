@@ -218,7 +218,7 @@ func (r *Room) handle(m *hub.Msg) *hub.Msg {
 			return m.ReplyErr(fmt.Errorf("not subscribed"))
 		}
 		var req struct {
-			ID ids.Level `json:"id"`
+			ID ids.Lvl `json:"id"`
 		}
 		m.Unmarshal(&req)
 		lvl := ms.Levels[req.ID]
@@ -235,8 +235,8 @@ func (r *Room) handle(m *hub.Msg) *hub.Msg {
 			return m.ReplyErr(fmt.Errorf("not subscribed"))
 		}
 		var req struct {
-			ID   ids.Level `json:"id"`
-			Name string    `json:"name"`
+			ID   ids.Lvl `json:"id"`
+			Name string  `json:"name"`
 		}
 		m.Unmarshal(&req)
 		lvl := ms.Levels[req.ID]
