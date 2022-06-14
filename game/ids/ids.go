@@ -1,5 +1,9 @@
 package ids
 
+// Asset is a text that identifies an asset and optionally a sequence.
+// For example: "items/keycard" or "player_martin".
+type Asset string
+
 type ID interface {
 	~uint32
 	Topic() []byte
