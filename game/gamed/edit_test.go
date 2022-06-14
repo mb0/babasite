@@ -1,4 +1,4 @@
-package chared
+package gamed
 
 import (
 	"reflect"

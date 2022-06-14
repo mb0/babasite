@@ -11,6 +11,7 @@ import (
 	"log"
 	"path/filepath"
 
+	"github.com/mb0/babasite/game/gamed"
 	"github.com/mb0/babasite/game/geo"
 	"github.com/mb0/babasite/game/ids"
 	"github.com/mb0/babasite/game/lvl"
@@ -18,16 +19,10 @@ import (
 	"xelf.org/daql/hub"
 )
 
-type WorldSubs struct {
-	*lvl.World
-	site.Conns
-}
-
 type Room struct {
 	site.ChatRoom
 	Store *FileStore
-	WSubs map[string]*WorldSubs
-	Subs  map[int64]*WorldSubs
+	gamed.RoomSubs
 }
 
 func NewRoom(name, datapath string) *Room {
@@ -40,8 +35,7 @@ func NewRoom(name, datapath string) *Room {
 	return &Room{
 		ChatRoom: *site.NewChat(name),
 		Store:    store,
-		WSubs:    make(map[string]*WorldSubs),
-		Subs:     make(map[int64]*WorldSubs),
+		RoomSubs: gamed.MakeRoomSubs(),
 	}
 }
 func (r *Room) Route(m *hub.Msg) {
@@ -62,7 +56,7 @@ func (r *Room) handle(m *hub.Msg) *hub.Msg {
 	case "chat":
 		r.Chat(m)
 	case "exit":
-		r.unsub(m.From.ID())
+		r.Unsub(m.From.ID())
 		r.Exit(m)
 	case "tileset.new":
 		var req struct {
@@ -70,7 +64,7 @@ func (r *Room) handle(m *hub.Msg) *hub.Msg {
 			Copy string
 		}
 		m.Unmarshal(&req)
-		if !NameCheck.MatchString(req.Name) {
+		if !gamed.NameCheck.MatchString(req.Name) {
 			return m.ReplyErr(fmt.Errorf("invalid tileset name %s", req.Name))
 		}
 		ts := r.Store.Tileset(req.Name)
@@ -78,7 +72,7 @@ func (r *Room) handle(m *hub.Msg) *hub.Msg {
 			return m.ReplyErr(fmt.Errorf("tileset %s already exists", req.Name))
 		}
 		// TODO use copy if set to copy an existing tileset
-		tmp := DefaultTileset
+		tmp := gamed.DefaultTileset
 		tmp.Name = req.Name
 		r.Store.SaveTileset(&tmp)
 		r.Bcast(site.RawMsg(m.Subj, req), 0)
@@ -91,7 +85,7 @@ func (r *Room) handle(m *hub.Msg) *hub.Msg {
 			lvl.TileInfo
 		}
 		m.Unmarshal(&req)
-		if !NameCheck.MatchString(req.Tileset) {
+		if !gamed.NameCheck.MatchString(req.Tileset) {
 			return m.ReplyErr(fmt.Errorf("invalid tileset name %s", req.Tileset))
 		}
 		ts := r.Store.Tileset(req.Tileset)
@@ -131,7 +125,7 @@ func (r *Room) handle(m *hub.Msg) *hub.Msg {
 			Tileset string
 		}
 		m.Unmarshal(&req)
-		if !NameCheck.MatchString(req.Name) {
+		if !gamed.NameCheck.MatchString(req.Name) {
 			return m.ReplyErr(fmt.Errorf("invalid map name %s", req.Name))
 		}
 		tm := r.Store.World(req.Name)
@@ -158,10 +152,9 @@ func (r *Room) handle(m *hub.Msg) *hub.Msg {
 		if err != nil {
 			return m.ReplyErr(err)
 		}
-		r.unsub(m.From.ID())
-		ms := &WorldSubs{World: tm}
-		r.WSubs[tm.Name] = ms
-		r.sub(m.From, ms)
+		ms := &gamed.WorldSubs{World: tm}
+		r.Worlds[tm.Name] = ms
+		r.SubWorld(m.From, ms)
 		r.Bcast(site.RawMsg("map.new", tm.WorldInfo), 0)
 		return site.RawMsg("map.open", tm)
 	case "map.open", "map.del":
@@ -169,34 +162,33 @@ func (r *Room) handle(m *hub.Msg) *hub.Msg {
 			Name string `json:"name"`
 		}
 		m.Unmarshal(&req)
-		if !NameCheck.MatchString(req.Name) {
+		if !gamed.NameCheck.MatchString(req.Name) {
 			return m.ReplyErr(fmt.Errorf("invalid map name %s", req.Name))
 		}
 		tm := r.Store.World(req.Name)
 		if tm == nil {
 			return m.ReplyErr(fmt.Errorf("no map with name %s", req.Name))
 		}
-		ms := r.WSubs[tm.Name]
+		ms := r.Worlds[tm.Name]
 		if m.Subj == "map.open" {
 			if ms == nil {
-				ms = &WorldSubs{World: tm}
-				r.WSubs[tm.Name] = ms
+				ms = &gamed.WorldSubs{World: tm}
+				r.Worlds[tm.Name] = ms
 			}
-			r.unsub(m.From.ID())
-			r.sub(m.From, ms)
+			r.SubWorld(m.From, ms)
 			return m.Reply(tm)
 		} else {
 			if ms != nil {
 				for _, s := range ms.Conns {
 					delete(r.Subs, s.ID())
 				}
-				delete(r.WSubs, ms.Name)
+				delete(r.Worlds, ms.Name)
 			}
 			r.Store.DropWorld(tm.Name)
 			r.Bcast(site.RawMsg(m.Subj, req), 0)
 		}
 	case "level.new":
-		ms := r.Subs[m.From.ID()]
+		ms := r.WorldSub(m.From)
 		if ms == nil {
 			return m.ReplyErr(fmt.Errorf("not subscribed"))
 		}
@@ -213,7 +205,7 @@ func (r *Room) handle(m *hub.Msg) *hub.Msg {
 		}
 		r.Bcast(site.RawMsg(m.Subj, lvl), 0)
 	case "level.del":
-		ms := r.Subs[m.From.ID()]
+		ms := r.WorldSub(m.From)
 		if ms == nil {
 			return m.ReplyErr(fmt.Errorf("not subscribed"))
 		}
@@ -230,7 +222,7 @@ func (r *Room) handle(m *hub.Msg) *hub.Msg {
 		r.Store.DropLevel(ms.World, req.ID)
 		ms.Bcast(site.RawMsg(m.Subj, req), 0)
 	case "level.rename":
-		ms := r.Subs[m.From.ID()]
+		ms := r.WorldSub(m.From)
 		if ms == nil {
 			return m.ReplyErr(fmt.Errorf("not subscribed"))
 		}
@@ -250,14 +242,14 @@ func (r *Room) handle(m *hub.Msg) *hub.Msg {
 		}
 		ms.Bcast(site.RawMsg(m.Subj, req), 0)
 	case "level.edit":
-		ms := r.Subs[m.From.ID()]
+		ms := r.WorldSub(m.From)
 		if ms == nil {
 			return m.ReplyErr(fmt.Errorf("not subscribed"))
 		}
-		var req EditLevel
+		var req gamed.EditLevel
 		m.Unmarshal(&req)
 		// apply edit
-		err := Apply(ms.World, req)
+		err := req.Apply(ms.World)
 		if err != nil {
 			return m.ReplyErr(err)
 		}
@@ -271,24 +263,6 @@ func (r *Room) handle(m *hub.Msg) *hub.Msg {
 		ms.Bcast(site.RawMsg("level.edit", req), 0)
 	}
 	return nil
-}
-func (r *Room) sub(c hub.Conn, ms *WorldSubs) {
-	ms.Conns = append(ms.Conns, c)
-	r.Subs[c.ID()] = ms
-}
-func (r *Room) unsub(id int64) {
-	sub, ok := r.Subs[id]
-	if ok {
-		delete(r.Subs, id)
-		if sub != nil {
-			for i, s := range sub.Conns {
-				if s.ID() == id {
-					sub.Conns = append(sub.Conns[:i], sub.Conns[i+1:]...)
-					break
-				}
-			}
-		}
-	}
 }
 
 type Info struct {

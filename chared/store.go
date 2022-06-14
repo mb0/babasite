@@ -12,6 +12,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/mb0/babasite/game/gamed"
 	"github.com/mb0/babasite/game/pix"
 )
 
@@ -87,7 +88,7 @@ func (s *FileStore) LoadAll() error {
 	if err != nil {
 		return err
 	}
-	pal := DefaultPalette()
+	pal := gamed.DefaultPalette()
 	s.Pals[pal.Name] = pal
 	for _, f := range files {
 		name := f.Name()

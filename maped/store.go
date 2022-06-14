@@ -12,6 +12,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/mb0/babasite/game/gamed"
 	"github.com/mb0/babasite/game/ids"
 	"github.com/mb0/babasite/game/lvl"
 )
@@ -80,7 +81,7 @@ func (s *FileStore) LoadAll() error {
 		}
 	}
 	if ts := s.sets["default"]; ts == nil {
-		def := DefaultTileset
+		def := gamed.DefaultTileset
 		s.sets[def.Name] = &def
 	}
 	for _, f := range files {
