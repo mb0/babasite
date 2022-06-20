@@ -81,18 +81,24 @@ const editorSubs = (v:WeditView):Subs => {
 		// render worldSel if show
 		if (!v.w || v.w.data.name == res.name) v.setWorld()
 	}),
-	"world.open": checkErr(res => {
-		v.setWorld(res as WorldData)
+	"world.open": checkErr((res:WorldData) => {
+		v.setWorld(res)
 		const path = location.hash?.slice(1).split('/')
-		if (path[0] != "wedit" || path[1] != res.name) {
-			location.hash = '#wedit/'+ res.name
+		switch (path[2]) {
+		case "lvl":
+			const lid = parseInt(path[3])
+			const lvl = res.lvl.find(l => l.id == lid)
+			if (!lvl) break
+			app.send('grid.open', {id:lvl.grid})
+			return
+		case "img":
+			const id = parseInt(path[3])
+			const img = res.img.find(im => im.id == id)
+			if (!img) break
+			app.send('img.open', {id})
 			return
 		}
-		// TODO open specific view
-		switch (path[2]) {
-		case "grid":
-		case "clip":
-		}
+		location.hash = '#wedit/'+ res.name
 	}),
 	"pal.new": checkW(({data}, res:Pal) => {
 		// add pal to world store
@@ -188,8 +194,8 @@ const editorSubs = (v:WeditView):Subs => {
 		// lookup lvl and edit
 		// repaint tset view and lvl editor if active lvl
 	}),
-	"grid.open": checkErr(res => {
-		v.w?.gridOpen(gridTiles<number>(res, res.raw) as Grid)
+	"grid.open": checkW((w, res) => {
+		w.gridOpen(gridTiles<number>(res, res.raw) as Grid)
 	}),
 	"grid.edit": checkErr(res => {
 		// lookup and edit grid

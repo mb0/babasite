@@ -21,33 +21,38 @@ export class ImgView {
 	img:Img
 	pal:Pal
 	clips:Clip[]
+	clip?:Clip
 	tool:{fg:number, bg:number}
 	palv:PalView
 	toolv:ToolView<number>
-	constructor(wd:WorldData, dock:Layout, id:number) {
-		const img = this.img = wd.img.find(i => i.id == id)!
-		const pal = this.pal = wd.pal.find(p => p.id == img.pal)!
-		const clips = this.clips = wd.clip.filter(c => c.img == id)!
-		const fst = clips[0]
-		const d = {w:fst.w||img.w, h:fst.h||img.h}
-		const ed = this.ed = gridEditor(d, t => palColor(pal, t), edit => {
+	constructor(public wd:WorldData, dock:Layout, id:number) {
+		this.img = wd.img.find(i => i.id == id)!
+		this.pal = wd.pal.find(p => p.id == this.img.pal)!
+		this.clips = wd.clip.filter(c => c.img == id)!
+		let d = {w:this.img.w, h:this.img.h}
+		const ed = this.ed = gridEditor(d, t => palColor(this.pal, t), edit => {
 			app.send("pic.edit", {
 				...edit,
-				img:img.id,
+				img:this.img.id,
 				pic:ed.img!.id,
 			})
 			ed.tmp.reset()
 		})
 		this.tool = ed.tool
-		ed.c.setStage({x:8, y:8, ...d, zoom:12, bg:ed.color(0)})
-		const pic = wd.pics?.get(fst.seq[0].pic)
-		if (pic) ed.update(pic)
-		const clipv = new ClipView(wd, fst, pal, p => ed.update(p))
-		h.repl(dock.main, h('#img-view', clipv.el, ed.c.el))
-		const group = 'img'
-		
 		this.toolv = toolView(ed)
-		dock.add({label:'Tools', el:this.toolv.el, group}, 1)
+		dock.add({label:'Tools', el:this.toolv.el, group:'img'}, 1)
+		const [cid, pid] = this.readHash(location.hash)
+		if (cid) this.clip = this.clips.find(c => c.id == cid)
+		if (!this.clip) this.clip = this.clips[0]
+		if (!this.clip) {
+			throw new Error("TODO think about img without clip or pic")
+		}
+		const fst = this.clip
+		ed.c.setStage({x:8, y:8, w:fst.w, h:fst.h, zoom:12, bg:ed.color(0)})
+		const pic = pid && wd.pics?.get(pid) || wd.pics?.get(fst.seq[0].pic)
+		if (pic) ed.update(pic)
+		const clipv = new ClipView(wd, fst, this.pal, p => ed.update(p))
+		h.repl(dock.main, h('#img-view', clipv.el, ed.c.el))
 		dock.add(this.palv = new PalView(this, wd.pal, idx => {
 			let b = {x:0,y:0,w:0,h:0}
 			gridEach(ed.img!, (p, t) => {
@@ -71,6 +76,19 @@ export class ImgView {
 	}
 	color(t:number):string {
 		return palColor(this.pal, t)
+	}
+	readHash(h:string) {
+		const p = h.split('/')
+		const {wd, img} = this
+		if (p[0] != '#wedit' || p[1] != wd.name || p[2] != 'img' || p[3] != ''+img.id)
+			return [0, 0]
+		return [parseInt(p[4]||'0'), parseInt(p[5]||'0')]
+	}
+	writeHash():string {
+		let h = `#wedit/${this.wd.name}/img/${this.img.id}`
+		if (this.clip) h += '/'+ this.clip.id
+		if (this.ed.img) h += '/'+ this.ed.img.id
+		return h
 	}
 }
 

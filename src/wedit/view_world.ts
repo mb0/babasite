@@ -33,7 +33,8 @@ export class WorldView {
 		}
 		data.grid = g
 		dock.filter(({group}) => !group || group == "wedit")
-		this.gridv = new GridView(data, dock)
+		const gv = this.gridv = new GridView(data, dock)
+		location.hash = gv.writeHash()
 	}
 	imgOpen(pd:PicData):void {
 		const {data, dock} = this
@@ -41,7 +42,8 @@ export class WorldView {
 		if (!data.pics) data.pics = new Map()
 		pd.pics.forEach(p => data.pics!.set(p.id, p))
 		dock.filter(({group}) => !group || group == "wedit")
-		this.imgv = new ImgView(data, dock, pd.id)
+		const iv = this.imgv = new ImgView(data, dock, pd.id)
+		location.hash = iv.writeHash()
 	}
 }
 

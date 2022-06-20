@@ -16,7 +16,7 @@ export class GridView {
 	tsetv:TilesetView
 	toolv:ToolView<number>
 
-	constructor(wd:WorldData, dock:Layout) {
+	constructor(public wd:WorldData, dock:Layout) {
 		const grid = wd.grid!
 		const lvl = this.lvl = wd.lvl.find(l => l.grid == grid.id)!
 		this.tset = wd.tset.find(t => t.id == lvl!.tset)!
@@ -41,5 +41,9 @@ export class GridView {
 	}
 	color(t:number):string {
 		return tileColor(this.tset, t)
+	}
+	writeHash():string {
+		const {wd, lvl} = this
+		return `#wedit/${wd.name}/lvl/${lvl.id}`
 	}
 }
