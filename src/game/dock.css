@@ -24,6 +24,7 @@
 	display: flex;
 	flex-direction: column;
 	min-width: 200px;
+	padding:3px;
 }
 .dock {
 	flex: 0 0 auto;
@@ -38,12 +39,22 @@
 	min-height: 35px;
 }
 .dock > summary {
-	background-color: #2c2c2c;
+	background-color: #acacac;
 	padding: 8px;
+	border-radius: 5px;
+}
+.dock[open] > summary {
+	border-radius: 5px 5px 0 0;
 }
 details.dock[open] #chat-view {
 	height: calc(100% - 30px);
 }
 details.dock:not([open]) {
 	max-height: 35px;
+}
+
+@media (prefers-color-scheme: dark) {
+	.dock > summary {
+		background-color: #2c2c2c;
+	}
 }

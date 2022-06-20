@@ -1,4 +1,4 @@
-import h from 'web/html'
+import {h, hIcon} from 'web/html'
 import {ToolCtx, tools} from 'game/editor'
 import {Grid, gridMirrorH, gridMirrorV, gridRot270, gridRot90} from 'game/grid'
 
@@ -26,12 +26,11 @@ export function toolView<T>(ctx:ToolViewCtx<T>):ToolView<T> {
 	const bgs = h('span')
 	const fl = h('')
 	h.add(el,
-		h('header', 'Tools'),
 		h('', Object.keys(tools).map(tool => h('label', h('input', {
 			type:'radio', name:'tool', value:tool,
 			checked: ctx.tool.active == tool,
 			onchange: () => ctx.tool.active = tool,
-		}), tool))),
+		}), hIcon(tool)))),
 		h('', opts.map(opt => h('label', h('input', {
 			type:'checkbox', name:opt,
 			checked: (ctx.tool as any)[opt],
@@ -40,8 +39,7 @@ export function toolView<T>(ctx:ToolViewCtx<T>):ToolView<T> {
 				c[opt] = !c[opt]
 				if (opt == 'grid') ctx.repaint()
 			},
-		}), opt))),
-		h('.color', fgs, bgs),
+		}), hIcon(opt))), h('span.color', fgs, bgs)),
 		fl,
 	)
 	const updateColor = () => {

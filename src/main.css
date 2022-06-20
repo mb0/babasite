@@ -17,6 +17,23 @@ form label {
 	display: inline-block;
 	margin: .5em 2em;
 }
+.icon {
+	display: inline-block;
+	width: 24px;
+	height: 24px;
+}
+.icon svg {
+	width: 24px;
+	height: 24px;
+	fill: #666 !important;
+}
+.tool input[type="radio"], .tool input[type="checkbox"] {
+	display:none;
+}
+.tool input[type="radio"]:checked + .icon svg,
+.tool input[type="checkbox"]:checked + .icon svg {
+	fill: #222 !important;
+}
 @media (prefers-color-scheme: dark) {
 	body {
 		color: #ddd;
@@ -27,5 +44,12 @@ form label {
 	}
 	#modal {
 		background-color: #555;
+	}
+	.icon svg {
+		fill: #777 !important;
+	}
+	.tool input[type="radio"]:checked + .icon svg,
+	.tool input[type="checkbox"]:checked + .icon svg {
+		fill: #eee !important;
 	}
 }

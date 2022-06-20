@@ -1,11 +1,14 @@
 .wtree {
 	max-height: 40vh;
 	overflow-y: auto;
-	padding: 4px 0 4px 1em;
+	padding: 4px 0 4px 8px;
 	margin: 0;
 }
 .wtree ul {
 	padding-left: 1em;
+}
+.wtree > ul {
+	padding-left: 0;
 }
 .wtree li {
 	list-style-position: inside;
@@ -26,17 +29,34 @@
 	flex: 1 1 0;
 	max-width: 100%;
 }
-.color {
+div.color {
 	display: flex;
 	align-content: center;
+}
+span.color {
+	display: inline-flex;
+	align-content: center;
+}
+span.color span {
+	width: 20px;
+	height:20px;
+	border-radius: 3px;
+	border: 1px solid #222;
+	margin-left: 2px
 }
 .color label {
 	min-width: 4em;
 }
-.color span {
+div.color span {
 	width:1.4em;
 	height:1.4em;
 }
 .color div {
 	margin-left: 4px;
+}
+.tool {
+	padding: 4px;
+}
+.pal {
+	padding: 4px;
 }

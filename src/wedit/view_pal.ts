@@ -16,7 +16,7 @@ export class PalView {
 	group="img"
 	el:HTMLElement
 	constructor(public ctx:PalViewCtx, public pals:Pal[], public click?:(idx:number)=>void) {
-		this.el = h('section.tileset.inline')
+		this.el = h('section.pal.inline')
 		this.update()
 	}
 	update():void {
