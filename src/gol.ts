@@ -46,7 +46,7 @@ app.addView({name: "gol",
 		const chatel = chat.start(app)
 		const dock = newLayout('#gol', menu(), c.el)
 		dock.add({label:'Kacheln', el:tools})
-		dock.add({label:'Chat', el:chatel})
+		dock.add({label:'Chat', el:chatel, sel:'.dyn'})
 		c.init(paintMap)
 		return dock.el
 	},

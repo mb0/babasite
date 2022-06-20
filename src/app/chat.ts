@@ -10,18 +10,26 @@ const style = `
 #chat-view {
 	display: flex;
 	flex-direction: column;
+	position:relative;
 }
 #output {
-	flex: 1 1 0;
+	flex: 1 1 auto;
 	overflow-y:auto;
+	min-height: 1em;
 }
 #chat-view form {
+	align-self: end;
+	flex: 0 0 auto;
 	display: flex;
+	max-width: 100%;
+	flex-direction: row;
+	margin: 5px 0;
 }
 #chat-view input[type=text] {
 	flex: 1 1 auto;
+	min-width: 0;
 }
-#chat-view input[type=submit] {
+#chat-view button {
 	flex: 0 0 auto;
 }
 `
@@ -47,10 +55,7 @@ export const chat:View = {
 				scrollEnd()
 			}
 		})
-		return h('#chat-view', h('style', style),
-			h('h4', "Chat"),
-			output, form,
-		)
+		return h('#chat-view', h('style', style), output, form)
 	},
 	stop(app) {
 		app.off(this.subs!)

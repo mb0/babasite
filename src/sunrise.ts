@@ -30,7 +30,7 @@ app.addView({name: "simple",
 		const chatel = chat.start(app)
 		const dock = newLayout('#sunrise', menu(), c.el)
 		h.add(dock.el, h('style', style))
-		dock.add({label:'Chat', el:chatel})
+		dock.add({label:'Chat', el:chatel, sel:'.dyn'})
 		return dock.el
 	},
 	stop(app) {
