@@ -9,8 +9,6 @@ import (
 	"github.com/mb0/babasite/game/pfind"
 )
 
-type ObjID = ids.Obj
-
 type Obj struct {
 	ID  ids.Obj `json:"id"`
 	Lvl ids.Lvl `json:"lvl,omitempty"`
@@ -32,5 +30,6 @@ type Info struct {
 	Text string `json:"text,omitempty"`
 }
 
+func (*Obj) New(id uint32) *Obj                 { return &Obj{ID: ids.Obj(id)} }
 func (o *Obj) UnmarshalBinary(raw []byte) error { return json.Unmarshal(raw, o) }
 func (o *Obj) MarshalBinary() ([]byte, error)   { return json.Marshal(o) }

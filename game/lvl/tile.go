@@ -1,8 +1,13 @@
 package lvl
 
-import "github.com/mb0/babasite/game/ids"
+import (
+	"encoding/json"
+
+	"github.com/mb0/babasite/game/ids"
+)
 
 type Tileset struct {
+	ID    ids.Tset   `json:"id"`
 	Name  string     `json:"name"`
 	Infos []TileInfo `json:"infos"`
 }
@@ -15,3 +20,7 @@ type TileInfo struct {
 	Group string    `json:"group,omitempty"`
 	Asset ids.Asset `json:"asset,omitempty"`
 }
+
+func (*Tileset) New(id uint32) *Tileset              { return &Tileset{ID: ids.Tset(id)} }
+func (ts *Tileset) UnmarshalBinary(raw []byte) error { return json.Unmarshal(raw, ts) }
+func (ts *Tileset) MarshalBinary() ([]byte, error)   { return json.Marshal(ts) }

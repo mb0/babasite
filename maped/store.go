@@ -20,29 +20,29 @@ import (
 type FileStore struct {
 	path  string
 	dirfs fs.FS
-	maps  map[string]*lvl.World
-	sets  map[string]*lvl.Tileset
+	Maps  map[string]*lvl.World
+	Sets  map[string]*lvl.Tileset
 }
 
 func NewFileStore(path string) *FileStore {
 	return &FileStore{path: path,
 		dirfs: os.DirFS(path),
-		maps:  make(map[string]*lvl.World),
-		sets:  make(map[string]*lvl.Tileset),
+		Maps:  make(map[string]*lvl.World),
+		Sets:  make(map[string]*lvl.Tileset),
 	}
 }
 
 func (s *FileStore) Tileset(name string) *lvl.Tileset {
-	return s.sets[name]
+	return s.Sets[name]
 }
 
 func (s *FileStore) World(name string) *lvl.World {
-	return s.maps[name]
+	return s.Maps[name]
 }
 
 func (s *FileStore) WorldInfos() []lvl.WorldInfo {
-	res := make([]lvl.WorldInfo, 0, len(s.maps))
-	for _, m := range s.maps {
+	res := make([]lvl.WorldInfo, 0, len(s.Maps))
+	for _, m := range s.Maps {
 		res = append(res, m.WorldInfo)
 	}
 	sort.Slice(res, func(i, j int) bool {
@@ -52,8 +52,8 @@ func (s *FileStore) WorldInfos() []lvl.WorldInfo {
 }
 
 func (s *FileStore) Tilesets() []string {
-	res := make([]string, 0, len(s.sets))
-	for _, ts := range s.sets {
+	res := make([]string, 0, len(s.Sets))
+	for _, ts := range s.Sets {
 		res = append(res, ts.Name)
 	}
 	sort.Strings(res)
@@ -80,9 +80,9 @@ func (s *FileStore) LoadAll() error {
 			}
 		}
 	}
-	if ts := s.sets["default"]; ts == nil {
+	if ts := s.Sets["default"]; ts == nil {
 		def := gamed.DefaultTileset
-		s.sets[def.Name] = &def
+		s.Sets[def.Name] = &def
 	}
 	for _, f := range files {
 		name := f.Name()
@@ -106,7 +106,7 @@ func (s *FileStore) LoadTileset(name string) (*lvl.Tileset, error) {
 		return nil, err
 	}
 	ts.Name = name
-	s.sets[name] = ts
+	s.Sets[name] = ts
 	return ts, nil
 }
 
@@ -116,7 +116,7 @@ func (s *FileStore) LoadWorld(name string) (*lvl.World, error) {
 		return nil, err
 	}
 	w.Tileset = s.Tileset(w.WorldInfo.Tileset)
-	s.maps[name] = w
+	s.Maps[name] = w
 	return w, nil
 }
 
@@ -126,13 +126,13 @@ func (s *FileStore) SaveTileset(ts *lvl.Tileset) error {
 	if err != nil {
 		return err
 	}
-	s.sets[ts.Name] = ts
+	s.Sets[ts.Name] = ts
 	return nil
 }
 
 func (s *FileStore) DropTileset(name string) error {
-	if _, ok := s.sets[name]; ok {
-		delete(s.sets, name)
+	if _, ok := s.Sets[name]; ok {
+		delete(s.Sets, name)
 		return os.RemoveAll(filepath.Join(s.path, fmt.Sprintf("%s.json", name)))
 	}
 	return fmt.Errorf("not found")
@@ -144,14 +144,14 @@ func (s *FileStore) SaveWorld(w *lvl.World) error {
 	if err != nil {
 		return err
 	}
-	s.maps[w.Name] = w
+	s.Maps[w.Name] = w
 	return nil
 }
 
 func (s *FileStore) DropWorld(name string) error {
-	a := s.maps[name]
+	a := s.Maps[name]
 	if a != nil {
-		delete(s.maps, name)
+		delete(s.Maps, name)
 		return os.RemoveAll(filepath.Join(s.path, name))
 	}
 	return nil

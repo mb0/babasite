@@ -1,16 +1,19 @@
 package bolt
 
-import "github.com/mb0/babasite/game/ids"
+import (
+	"fmt"
+
+	"github.com/mb0/babasite/game/ids"
+)
 
 func LoadTable[ID ids.ID, T any, D ids.Dec[T]](tx Src, data *ids.ListTable[ID, T, D]) error {
-	var zero ID
-	b := tx.Bucket(zero.Topic())
+	b := tx.Bucket([]byte(ID(0).Top()))
 	if b == nil {
 		return nil
 	}
-	max := b.Sequence()
+	max := uint32(b.Sequence())
 	if max > 0 {
-		data.List = make([]D, b.Sequence()-1)
+		data.List = make([]ids.Slot[T, D], max)
 	}
 	return b.ForEach(func(k, raw []byte) error {
 		if len(k) != 8 || k[0] == '_' {
@@ -20,21 +23,22 @@ func LoadTable[ID ids.ID, T any, D ids.Dec[T]](tx Src, data *ids.ListTable[ID, T
 		if err != nil {
 			return err
 		}
-		if id < 1 || int(id) > len(data.List) {
-			return ids.ErrNotFound
+		idx := int(id) - 1
+		if idx < 0 || idx >= len(data.List) {
+			return fmt.Errorf("unexpected id %d with seq %d, idx %d len %d", id, max, idx, len(data.List))
 		}
-		d := D(new(T))
-		err = d.UnmarshalBinary(raw)
+		sl := &data.List[idx]
+		sl.Data = D(new(T))
+		err = sl.Data.UnmarshalBinary(raw)
 		if err != nil {
 			return err
 		}
-		data.List[int(id)-1] = d
 		return nil
 	})
 }
 
 func SaveTable[ID ids.ID, T any, D ids.Dec[T]](tx Src, data *ids.ListTable[ID, T, D]) error {
-	top := ID(0).Topic()
+	top := []byte(ID(0).Top())
 	if old := tx.Bucket(top); old != nil {
 		tx.DeleteBucket(top)
 	}
@@ -43,10 +47,10 @@ func SaveTable[ID ids.ID, T any, D ids.Dec[T]](tx Src, data *ids.ListTable[ID, T
 		return err
 	}
 	for idx, d := range data.List {
-		if d == nil {
+		if d.Data == nil {
 			continue
 		}
-		val, err := d.MarshalBinary()
+		val, err := d.Data.MarshalBinary()
 		if err != nil {
 			return err
 		}
@@ -56,38 +60,39 @@ func SaveTable[ID ids.ID, T any, D ids.Dec[T]](tx Src, data *ids.ListTable[ID, T
 			return err
 		}
 	}
-	return nil
+	return b.SetSequence(uint64(len(data.List)))
 }
 
 func SyncTable[ID ids.ID, T any, D ids.Dec[T]](tx Src, data *ids.ListTable[ID, T, D]) error {
-	var zero ID
-	b, err := tx.CreateBucketIfNotExists(zero.Topic())
+	b, err := tx.CreateBucketIfNotExists([]byte(ID(0).Top()))
 	if err != nil {
 		return err
 	}
 	seq := uint64(len(data.List))
 	old := b.Sequence()
-	if seq > old || len(data.Mod) > 0 {
-		for id, mod := range data.Mod {
+	if seq > old || data.Mods > 0 {
+		for idx, sl := range data.List {
+			if sl.Sync == 0 {
+				continue
+			}
+			id := ID(idx + 1)
 			key := WriteID(uint32(id))
-			if !mod {
+			if d := sl.Data; d == nil {
 				err := b.Delete(key)
 				if err != nil {
 					return err
 				}
 			} else {
-				d, _ := data.Get(id)
-				if d != nil {
-					val, err := d.MarshalBinary()
-					if err != nil {
-						return err
-					}
-					err = b.Put(key, val)
-					if err != nil {
-						return err
-					}
+				val, err := d.MarshalBinary()
+				if err != nil {
+					return err
+				}
+				err = b.Put(key, val)
+				if err != nil {
+					return err
 				}
 			}
+			sl.Sync = 0
 		}
 	}
 	if old != seq {

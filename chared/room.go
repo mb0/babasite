@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 
 	"github.com/mb0/babasite/game/gamed"
+	"github.com/mb0/babasite/game/ids"
 	"github.com/mb0/babasite/game/pix"
 	"github.com/mb0/babasite/site"
 	"xelf.org/daql/hub"
@@ -62,13 +63,13 @@ func (r *Room) handle(m *hub.Msg) *hub.Msg {
 			Copy string `json:"copy"`
 		}
 		m.Unmarshal(&req)
-		p = &pix.Palette{Name: name}
+		p = &pix.Pal{Name: name}
 		if req.Copy != "" {
 			ref := r.Store.Pal(req.Copy)
-			p.Feat = make([]*pix.Feature, len(ref.Feat))
-			for i, f := range ref.Feat {
+			p.Feats = make([]*pix.Feat, len(ref.Feats))
+			for i, f := range ref.Feats {
 				colors := append([]pix.Color(nil), f.Colors...)
-				p.Feat[i] = &pix.Feature{Name: f.Name, Colors: colors}
+				p.Feats[i] = &pix.Feat{Name: f.Name, Colors: colors}
 			}
 		}
 		err = r.Store.SavePal(p)
@@ -123,7 +124,7 @@ func (r *Room) handle(m *hub.Msg) *hub.Msg {
 		if p == nil {
 			return m.ReplyErr(fmt.Errorf("no pal %s", req.Name))
 		}
-		f := p.GetFeature(req.Feat)
+		f := p.Feat(req.Feat)
 		if f != nil {
 			tmp := make([]pix.Color, 0, len(f.Colors)-req.Del+len(req.Ins))
 			tmp = append(tmp, f.Colors[:req.Idx]...)
@@ -131,8 +132,8 @@ func (r *Room) handle(m *hub.Msg) *hub.Msg {
 			tmp = append(tmp, f.Colors[req.Idx+req.Del:]...)
 			f.Colors = tmp
 		} else if req.Idx == 0 && req.Del == 0 {
-			f = &pix.Feature{Name: req.Feat, Colors: req.Ins}
-			p.Feat = append(p.Feat, f)
+			f = &pix.Feat{Name: req.Feat, Colors: req.Ins}
+			p.Feats = append(p.Feats, f)
 		} else {
 			return m.ReplyErr(fmt.Errorf("feature not found %s %s", req.Name, req.Feat))
 		}
@@ -248,7 +249,7 @@ func (r *Room) handleSub(m *hub.Msg, a *gamed.AssetSubs) *hub.Msg {
 		if s == nil {
 			p := a.NewPic()
 			s = a.AddSeq(name)
-			s.IDs = []pix.PicID{p.ID}
+			s.IDs = []ids.Pic{p.ID}
 			err = r.Store.SaveAssetInfo(a.Asset)
 			if err != nil {
 				return m.ReplyErr(err)
@@ -258,12 +259,12 @@ func (r *Room) handleSub(m *hub.Msg, a *gamed.AssetSubs) *hub.Msg {
 		return site.RawMsg("seq.open", SeqData{s, a.GetPics(s.IDs...)})
 	case "seq.edit":
 		var req struct {
-			Name string      `json:"name"`
-			Idx  int         `json:"idx"`
-			Del  int         `json:"del"`
-			Ins  []pix.PicID `json:"ins"`
-			Pics []*pix.Pic  `json:"pics"`
-			Copy bool        `json:"copy,omitempty"`
+			Name string     `json:"name"`
+			Idx  int        `json:"idx"`
+			Del  int        `json:"del"`
+			Ins  []ids.Pic  `json:"ins"`
+			Pics []*pix.Pic `json:"pics"`
+			Copy bool       `json:"copy,omitempty"`
 		}
 		err := m.Unmarshal(&req)
 		s := a.GetSeq(req.Name)
@@ -298,7 +299,7 @@ func (r *Room) handleSub(m *hub.Msg, a *gamed.AssetSubs) *hub.Msg {
 				}
 			}
 		}
-		tmp := make([]pix.PicID, 0, len(s.IDs)-req.Del+len(req.Ins))
+		tmp := make([]ids.Pic, 0, len(s.IDs)-req.Del+len(req.Ins))
 		tmp = append(tmp, s.IDs[:req.Idx]...)
 		tmp = append(tmp, req.Ins...)
 		tmp = append(tmp, s.IDs[req.Idx+req.Del:]...)
@@ -341,6 +342,6 @@ func nameMsg(m *hub.Msg) (string, error) {
 }
 
 type Info struct {
-	Assets []AssetInfo   `json:"assets,omitempty"`
-	Pals   []pix.Palette `json:"pals,omitempty"`
+	Assets []AssetInfo `json:"assets,omitempty"`
+	Pals   []pix.Pal   `json:"pals,omitempty"`
 }

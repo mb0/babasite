@@ -4,11 +4,13 @@ import (
 	"fmt"
 
 	"github.com/mb0/babasite/game/geo"
+	"github.com/mb0/babasite/game/ids"
 	"github.com/mb0/babasite/game/pix"
 )
 
 type EditPic struct {
-	Pic pix.PicID `json:"pic"`
+	Img ids.Img `json:"img"`
+	Pic ids.Pic `json:"pic"`
 	EditGrid[pix.Pixel]
 }
 

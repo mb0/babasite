@@ -8,18 +8,17 @@ import (
 )
 
 type Dialog struct {
-	ID      ids.Dia  `json:"id"`
-	Title   string   `json:"title"`
-	Text    string   `json:"text"`
-	Choices []Choice `json:"choices"`
+	ID     ids.Dia  `json:"id"`
+	Title  string   `json:"title"`
+	Text   string   `json:"text"`
+	Choice []Choice `json:"choice"`
 }
 
 type Choice struct {
 	Text string  `json:"text"`
 	Next ids.Dia `json:"next,omitempty"`
-	Trig string  `json:"trig,omitempty"`
-	Cond string  `json:"cond,omitempty"`
 }
 
+func (*Dialog) New(id uint32) *Dialog              { return &Dialog{ID: ids.Dia(id)} }
 func (d *Dialog) UnmarshalBinary(raw []byte) error { return json.Unmarshal(raw, d) }
 func (d *Dialog) MarshalBinary() ([]byte, error)   { return json.Marshal(d) }

@@ -1,3 +1,4 @@
+// Packages bolt provides ways to store and query game data in the bbolt database.
 package bolt
 
 import (
@@ -8,7 +9,7 @@ import (
 	"go.etcd.io/bbolt"
 )
 
-var ErrShort = fmt.Errorf("short data")
+var ErrShort = fmt.Errorf("short id data")
 
 func ReadID(raw []byte) (uint32, error) {
 	if len(raw) != 8 {
@@ -34,4 +35,11 @@ type Src interface {
 	CreateBucket([]byte) (*bbolt.Bucket, error)
 	DeleteBucket([]byte) error
 	CreateBucketIfNotExists([]byte) (*bbolt.Bucket, error)
+	Cursor() *bbolt.Cursor
+}
+
+type Sync interface {
+	Load(Src) error
+	Save(Src) error
+	Sync(Src) error
 }

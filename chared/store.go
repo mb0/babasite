@@ -13,6 +13,7 @@ import (
 	"strings"
 
 	"github.com/mb0/babasite/game/gamed"
+	"github.com/mb0/babasite/game/ids"
 	"github.com/mb0/babasite/game/pix"
 )
 
@@ -39,22 +40,36 @@ import (
 // sodass wir gleiche bilder mehrmals benutzen können.
 
 type FileStore struct {
-	*pix.Sys
-	path  string
-	dirfs fs.FS
+	Assets map[string]*pix.Asset
+	Pals   map[string]*pix.Pal
+	path   string
+	dirfs  fs.FS
 }
 
 func NewFileStore(path string) *FileStore {
 	return &FileStore{
-		Sys:   pix.NewSys(),
-		path:  path,
-		dirfs: os.DirFS(path),
+		Assets: make(map[string]*pix.Asset),
+		Pals:   make(map[string]*pix.Pal),
+		path:   path,
+		dirfs:  os.DirFS(path),
 	}
 }
 
 type AssetInfo struct {
 	Name string `json:"name"`
 	Kind string `json:"kind"`
+}
+
+func (s *FileStore) Pal(name string) *pix.Pal { return s.Pals[name] }
+
+func (s *FileStore) Asset(name string) *pix.Asset { return s.Assets[name] }
+
+func (s *FileStore) Pics(name string, ids ...ids.Pic) ([]*pix.Pic, error) {
+	a := s.Assets[name]
+	if a == nil {
+		return nil, fmt.Errorf("asset %s not found", name)
+	}
+	return a.GetPics(ids...), nil
 }
 
 func (s *FileStore) AssetInfos() []AssetInfo {
@@ -68,8 +83,8 @@ func (s *FileStore) AssetInfos() []AssetInfo {
 	return res
 }
 
-func (s *FileStore) PalInfos() []pix.Palette {
-	res := make([]pix.Palette, 0, len(s.Pals))
+func (s *FileStore) PalInfos() []pix.Pal {
+	res := make([]pix.Pal, 0, len(s.Pals))
 	for _, p := range s.Pals {
 		res = append(res, *p)
 	}
@@ -113,7 +128,7 @@ func (s *FileStore) LoadAll() error {
 	return nil
 }
 
-func (s *FileStore) LoadPal(name string) (*pix.Palette, error) {
+func (s *FileStore) LoadPal(name string) (*pix.Pal, error) {
 	pal, err := readPal(s.dirfs, fmt.Sprintf("%s.json", name))
 	if err != nil {
 		return nil, err
@@ -132,7 +147,7 @@ func (s *FileStore) LoadAsset(name string) (*pix.Asset, error) {
 	return a, nil
 }
 
-func (s *FileStore) SavePal(p *pix.Palette) error {
+func (s *FileStore) SavePal(p *pix.Pal) error {
 	path := filepath.Join(s.path, fmt.Sprintf("%s.json", p.Name))
 	err := writePal(p, path)
 	if err != nil {
@@ -181,7 +196,7 @@ func (s *FileStore) DropAsset(name string) error {
 	return nil
 }
 
-func (s *FileStore) SavePic(a *pix.Asset, id pix.PicID) (pic *pix.Pic, err error) {
+func (s *FileStore) SavePic(a *pix.Asset, id ids.Pic) (pic *pix.Pic, err error) {
 	if a == nil || a.Name == "" {
 		return nil, fmt.Errorf("invalid asset %v", a)
 	}
@@ -201,7 +216,7 @@ func (s *FileStore) SavePic(a *pix.Asset, id pix.PicID) (pic *pix.Pic, err error
 	return pic, writeSel(pic.Pix, path)
 }
 
-func (s *FileStore) DropPic(a *pix.Asset, id pix.PicID) error {
+func (s *FileStore) DropPic(a *pix.Asset, id ids.Pic) error {
 	if a == nil || id <= 0 {
 		return fmt.Errorf("invalid pic id %d", id)
 	}
@@ -217,12 +232,12 @@ func (s *FileStore) DropPic(a *pix.Asset, id pix.PicID) error {
 	return os.Remove(path)
 }
 
-func readPal(dir fs.FS, pat string) (*pix.Palette, error) {
+func readPal(dir fs.FS, pat string) (*pix.Pal, error) {
 	raw, err := fs.ReadFile(dir, pat)
 	if err != nil {
 		return nil, err
 	}
-	var p pix.Palette
+	var p pix.Pal
 	err = json.Unmarshal(raw, &p)
 	return &p, err
 }
@@ -255,12 +270,12 @@ func readAsset(dir fs.FS, pat string) (*pix.Asset, error) {
 	return &pix.Asset{AssetInfo: m, Pics: pics, Last: max}, nil
 }
 
-func readPics(dir fs.FS, apath string) (m map[pix.PicID]*pix.Pic, max pix.PicID, _ error) {
+func readPics(dir fs.FS, apath string) (m map[ids.Pic]*pix.Pic, max ids.Pic, _ error) {
 	files, err := fs.ReadDir(dir, apath)
 	if err != nil {
 		return nil, 0, err
 	}
-	m = make(map[pix.PicID]*pix.Pic)
+	m = make(map[ids.Pic]*pix.Pic)
 	for _, f := range files {
 		if f.IsDir() {
 			continue
@@ -274,7 +289,7 @@ func readPics(dir fs.FS, apath string) (m map[pix.PicID]*pix.Pic, max pix.PicID,
 		if err != nil {
 			return nil, 0, err
 		}
-		id := pix.PicID(uid)
+		id := ids.Pic(uid)
 		if id > max {
 			max = id
 		}
@@ -292,7 +307,7 @@ func readSel(dir fs.FS, path string) (sel pix.Pix, err error) {
 	return sel, err
 }
 
-func writePal(p *pix.Palette, path string) error {
+func writePal(p *pix.Pal, path string) error {
 	err := ensureDir(filepath.Dir(path))
 	if err != nil {
 		return err

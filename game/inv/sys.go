@@ -12,49 +12,40 @@ type ProdTable = ids.ListTable[ids.Prod, Prod, *Prod]
 type ItemTable = ids.ListTable[ids.Item, Item, *Item]
 type InvTable = ids.ListTable[ids.Inv, Inv, *Inv]
 
-type Store struct {
+// Sys is the inventory system where the ids map into corresponding lists offset by one.
+type Sys struct {
 	Prod ProdTable
 	Item ItemTable
 	Inv  InvTable
 }
 
-func (s *Store) Dirty() bool {
-	return len(s.Item.Mod) > 0 || len(s.Inv.Mod) > 0 || len(s.Prod.Mod) > 0
-}
-
-// Sys is the inventory system where the ids map into corresponding lists offset by one.
-type Sys struct {
-	*Store
-}
-
 func (s *Sys) NewProd(name string) (*Prod, error) {
-	id, err := s.Prod.NewID()
+	p, err := s.Prod.New()
 	if err != nil {
 		return nil, err
 	}
-	res := &Prod{ID: id, Name: name, Dim: geo.Dim{W: 1, H: 1}}
-	err = s.Store.Prod.Set(id, res)
-	return res, err
+	p.Name = name
+	p.Dim = geo.Dim{W: 1, H: 1}
+	return p, nil
 }
 
 func (s *Sys) NewItem(prod *Prod) (*Item, error) {
-	id, err := s.Item.NewID()
+	it, err := s.Item.New()
 	if err != nil {
 		return nil, err
 	}
-	res := &Item{ID: id, Prod: prod.ID, Box: geo.Box{Dim: prod.Dim}}
-	err = s.Item.Set(id, res)
-	return res, err
+	it.Prod = prod.ID
+	it.Dim = prod.Dim
+	return it, nil
 }
 
 func (s *Sys) NewInv(dim geo.Dim) (*Inv, error) {
-	id, err := s.Inv.NewID()
+	inv, err := s.Inv.New()
 	if err != nil {
 		return nil, err
 	}
-	res := &Inv{ID: id, Dim: dim}
-	err = s.Inv.Set(id, res)
-	return res, err
+	inv.Dim = dim
+	return inv, nil
 }
 
 func (s *Sys) DelProd(id ids.Prod) {
@@ -62,8 +53,8 @@ func (s *Sys) DelProd(id ids.Prod) {
 	if p == nil {
 		return
 	}
-	for _, it := range s.Item.List {
-		if it != nil && it.Prod == id {
+	for _, sl := range s.Item.List {
+		if it := sl.Data; it != nil && it.Prod == id {
 			if inv, _ := s.Inv.Get(it.Inv); inv != nil {
 				s.delItemFromInv(it, inv)
 			}

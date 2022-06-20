@@ -34,11 +34,14 @@ type Inv struct {
 	Sub   *Item   `json:"-"`
 }
 
+func (*Prod) New(id uint32) *Prod                  { return &Prod{ID: ids.Prod(id)} }
 func (inv *Prod) UnmarshalBinary(raw []byte) error { return json.Unmarshal(raw, inv) }
 func (inv *Prod) MarshalBinary() ([]byte, error)   { return json.Marshal(inv) }
 
+func (*Item) New(id uint32) *Item                  { return &Item{ID: ids.Item(id)} }
 func (inv *Item) UnmarshalBinary(raw []byte) error { return json.Unmarshal(raw, inv) }
 func (inv *Item) MarshalBinary() ([]byte, error)   { return json.Marshal(inv) }
 
+func (*Inv) New(id uint32) *Inv                   { return &Inv{ID: ids.Inv(id)} }
 func (inv *Inv) UnmarshalBinary(raw []byte) error { return json.Unmarshal(raw, inv) }
 func (inv *Inv) MarshalBinary() ([]byte, error)   { return json.Marshal(inv) }

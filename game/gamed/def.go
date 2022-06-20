@@ -1,22 +1,21 @@
 package gamed
 
 import (
-	"regexp"
-
 	"github.com/mb0/babasite/game/geo"
+	"github.com/mb0/babasite/game/ids"
 	"github.com/mb0/babasite/game/lvl"
 	"github.com/mb0/babasite/game/pix"
 )
 
-var NameCheck = regexp.MustCompile(`^[a-z0-9_]+$`)
+var NameCheck = ids.NameCheck
 
 var DefaultTileset = lvl.Tileset{Name: "default", Infos: []lvl.TileInfo{
 	{Tile: 0, Name: "void", Color: 0xffffff, Block: true, Group: "basic"},
 	{Tile: 1, Name: "wall", Color: 0x888888, Block: true, Group: "basic"},
 }}
 
-func DefaultPalette() *pix.Palette {
-	return &pix.Palette{Name: "default", Feat: []*pix.Feature{
+func DefaultPalette() *pix.Pal {
+	return &pix.Pal{Name: "default", Feats: []*pix.Feat{
 		{Name: "basic", Colors: []pix.Color{0xffffff, 0x000000}},
 		{Name: "skin", Colors: []pix.Color{0xffcbb8, 0xfca99a, 0xc58e81, 0x190605}},
 		{Name: "eyes", Colors: []pix.Color{0xfffff0, 0x1a5779, 0x110100}},
