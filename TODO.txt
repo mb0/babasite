@@ -8,6 +8,7 @@ Jakob:
     * Arbeitet an einem Grafik Konzept
 
 Martin programmiert:
-    * Charakter Editor: Binäre nachrichten versenden, History, Save
-    * Map Editor
-    * Moon Preview
+    * Editor: Binäre nachrichten versenden, History, Save
+    * Bessere Datenbank benutzen
+    * World editor aus map editor and char editor zusammenlegen
+    * World preview aus dem editor starten
