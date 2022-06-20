@@ -21,7 +21,12 @@ export class WorldView {
 		const click = (top:string, el:any) => {
 			console.log("open "+ top, el)
 			if (top == "lvl") app.send("grid.open", {id:el.grid})
-			if (top == "img") app.send("img.open", {id:el.id})
+			else if (top == "img") app.send("img.open", {id:el.id})
+			else if (top == "clip") {
+				// TODO do not reopen img
+				location.hash = `#wedit/${data.name}/img/${el.img}/${el.id}`
+				app.send("img.open", {id:el.img})
+			}
 		}
 		dock.add({label:'World '+ data.name, el:worldTree(data, click), group:"wedit"}, 0)
 		h.repl(dock.main, "")
