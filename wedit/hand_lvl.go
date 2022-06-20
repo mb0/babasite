@@ -94,10 +94,10 @@ func lvlEdit(ed *Editor, m *hub.Msg) error {
 	var req lvl.Lvl
 	m.Unmarshal(&req)
 	sl := ed.Lvl.Lvl.Slot(req.ID)
-	if sl == nil || sl.Data == nil {
+	if sl.Empty() {
 		return ids.ErrNotFound
 	}
-	*sl.Data = req
+	sl.Data = req
 	sl.Sync = ids.SyncMod
 	ed.Bcast(site.RawMsg(m.Subj, req), 0)
 	return nil
@@ -127,7 +127,7 @@ func gridEdit(ed *Editor, m *hub.Msg) error {
 		return err
 	}
 	sl := ed.Lvl.Grid.Slot(l.Grid)
-	if sl == nil || sl.Data == nil {
+	if sl.Empty() {
 		return ids.ErrNotFound
 	}
 	g := sl.Data

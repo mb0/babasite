@@ -34,7 +34,8 @@ type Pic struct {
 	Pix
 }
 
-func (*Pic) New(id uint32) *Pic { return &Pic{ID: ids.Pic(id)} }
+func (*Pic) Make(id uint32) Pic { return Pic{ID: ids.Pic(id)} }
+func (p *Pic) UID() uint32      { return uint32(p.ID) }
 func (p *Pic) UnmarshalBinary(raw []byte) error {
 	if len(raw) < 12 {
 		return fmt.Errorf("short grid")

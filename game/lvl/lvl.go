@@ -77,7 +77,8 @@ func (w *World) NewLevel() (l *Level) {
 	w.Levels[id] = l
 	return l
 }
-func (*Grid) New(id uint32) *Grid { return &Grid{ID: ids.Grid(id)} }
+func (*Grid) Make(id uint32) Grid { return Grid{ID: ids.Grid(id)} }
+func (g *Grid) UID() uint32       { return uint32(g.ID) }
 func (g *Grid) UnmarshalBinary(raw []byte) error {
 	if len(raw) < 12 {
 		return fmt.Errorf("short grid")
@@ -92,6 +93,7 @@ func (g *Grid) MarshalBinary() ([]byte, error) {
 	return append(b, data...), nil
 }
 
-func (*Lvl) New(id uint32) *Lvl                 { return &Lvl{ID: ids.Lvl(id)} }
+func (*Lvl) Make(id uint32) Lvl                 { return Lvl{ID: ids.Lvl(id)} }
+func (l *Lvl) UID() uint32                      { return uint32(l.ID) }
 func (l *Lvl) UnmarshalBinary(raw []byte) error { return json.Unmarshal(raw, l) }
 func (l *Lvl) MarshalBinary() ([]byte, error)   { return json.Marshal(l) }

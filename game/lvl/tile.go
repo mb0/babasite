@@ -21,6 +21,7 @@ type TileInfo struct {
 	Asset ids.Asset `json:"asset,omitempty"`
 }
 
-func (*Tileset) New(id uint32) *Tileset              { return &Tileset{ID: ids.Tset(id)} }
+func (*Tileset) Make(id uint32) Tileset              { return Tileset{ID: ids.Tset(id)} }
+func (ts *Tileset) UID() uint32                      { return uint32(ts.ID) }
 func (ts *Tileset) UnmarshalBinary(raw []byte) error { return json.Unmarshal(raw, ts) }
 func (ts *Tileset) MarshalBinary() ([]byte, error)   { return json.Marshal(ts) }

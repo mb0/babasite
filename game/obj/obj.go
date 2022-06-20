@@ -30,6 +30,7 @@ type Info struct {
 	Text string `json:"text,omitempty"`
 }
 
-func (*Obj) New(id uint32) *Obj                 { return &Obj{ID: ids.Obj(id)} }
+func (*Obj) Make(id uint32) Obj                 { return Obj{ID: ids.Obj(id)} }
+func (o *Obj) UID() uint32                      { return uint32(o.ID) }
 func (o *Obj) UnmarshalBinary(raw []byte) error { return json.Unmarshal(raw, o) }
 func (o *Obj) MarshalBinary() ([]byte, error)   { return json.Marshal(o) }

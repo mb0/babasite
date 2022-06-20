@@ -53,12 +53,12 @@ func (s *Sys) DelProd(id ids.Prod) {
 	if p == nil {
 		return
 	}
-	for _, sl := range s.Item.List {
-		if it := sl.Data; it != nil && it.Prod == id {
-			if inv, _ := s.Inv.Get(it.Inv); inv != nil {
-				s.delItemFromInv(it, inv)
+	for idx := range s.Item.List {
+		if sl := &s.Item.List[idx]; sl.Data.Prod == id {
+			if inv, _ := s.Inv.Get(sl.Data.Inv); inv != nil {
+				s.delItemFromInv(&sl.Data, inv)
 			}
-			s.delItem(it)
+			s.delItem(&sl.Data)
 		}
 	}
 	s.Prod.Set(id, nil)

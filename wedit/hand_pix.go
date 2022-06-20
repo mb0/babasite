@@ -33,11 +33,11 @@ func palEdit(ed *Editor, m *hub.Msg) error {
 	var req pix.Pal
 	m.Unmarshal(&req)
 	sl := ed.Pix.Pal.Slot(req.ID)
-	if sl == nil || sl.Data == nil {
+	if sl.Empty() {
 		return ids.ErrNotFound
 	}
 	// TODO check req data
-	*sl.Data = req
+	sl.Data = req
 	sl.Sync = ids.SyncMod
 	ed.Bcast(site.RawMsg(m.Subj, req), 0)
 	return nil
@@ -103,11 +103,11 @@ func imgEdit(ed *Editor, m *hub.Msg) error {
 	var req pix.Img
 	m.Unmarshal(&req)
 	sl := ed.Pix.Img.Slot(req.ID)
-	if sl == nil || sl.Data == nil {
+	if sl.Empty() {
 		return ids.ErrNotFound
 	}
 	// TODO check req data
-	*sl.Data = req
+	sl.Data = req
 	sl.Sync = ids.SyncMod
 	ed.Bcast(site.RawMsg(m.Subj, req), 0)
 	return nil
@@ -137,11 +137,11 @@ func clipEdit(ed *Editor, m *hub.Msg) error {
 	var req pix.Clip
 	m.Unmarshal(&req)
 	sl := ed.Pix.Clip.Slot(req.ID)
-	if sl == nil || sl.Data == nil {
+	if sl.Empty() {
 		return ids.ErrNotFound
 	}
 	// TODO check req data
-	*sl.Data = req
+	sl.Data = req
 	sl.Sync = ids.SyncMod
 	ed.Bcast(site.RawMsg(m.Subj, req), 0)
 	return nil
@@ -155,7 +155,7 @@ func picEdit(ed *Editor, m *hub.Msg) error {
 	}
 	// apply edit
 	sl := ed.Pix.Pic.Slot(req.Pic)
-	if sl == nil || sl.Data == nil {
+	if sl.Empty() {
 		return ids.ErrNotFound
 	}
 	err = req.EditGrid.Apply(geo.Box{Dim: img.Dim}, &sl.Data.Pix)

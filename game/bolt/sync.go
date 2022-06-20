@@ -27,9 +27,7 @@ func LoadTable[ID ids.ID, T any, D ids.Dec[T]](tx Src, data *ids.ListTable[ID, T
 		if idx < 0 || idx >= len(data.List) {
 			return fmt.Errorf("unexpected id %d with seq %d, idx %d len %d", id, max, idx, len(data.List))
 		}
-		sl := &data.List[idx]
-		sl.Data = D(new(T))
-		err = sl.Data.UnmarshalBinary(raw)
+		err = D(&data.List[idx].Data).UnmarshalBinary(raw)
 		if err != nil {
 			return err
 		}
@@ -46,11 +44,12 @@ func SaveTable[ID ids.ID, T any, D ids.Dec[T]](tx Src, data *ids.ListTable[ID, T
 	if err != nil {
 		return err
 	}
-	for idx, d := range data.List {
-		if d.Data == nil {
+	for idx := range data.List {
+		d := &data.List[idx]
+		if d.Empty() {
 			continue
 		}
-		val, err := d.Data.MarshalBinary()
+		val, err := D(&d.Data).MarshalBinary()
 		if err != nil {
 			return err
 		}
@@ -71,19 +70,20 @@ func SyncTable[ID ids.ID, T any, D ids.Dec[T]](tx Src, data *ids.ListTable[ID, T
 	seq := uint64(len(data.List))
 	old := b.Sequence()
 	if seq > old || data.Mods > 0 {
-		for idx, sl := range data.List {
+		for idx := range data.List {
+			sl := &data.List[idx]
 			if sl.Sync == 0 {
 				continue
 			}
 			id := ID(idx + 1)
 			key := WriteID(uint32(id))
-			if d := sl.Data; d == nil {
+			if sl.Empty() {
 				err := b.Delete(key)
 				if err != nil {
 					return err
 				}
 			} else {
-				val, err := d.MarshalBinary()
+				val, err := D(&sl.Data).MarshalBinary()
 				if err != nil {
 					return err
 				}

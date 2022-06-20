@@ -19,6 +19,7 @@ type Choice struct {
 	Next ids.Dia `json:"next,omitempty"`
 }
 
-func (*Dialog) New(id uint32) *Dialog              { return &Dialog{ID: ids.Dia(id)} }
+func (*Dialog) Make(id uint32) Dialog              { return Dialog{ID: ids.Dia(id)} }
+func (d *Dialog) UID() uint32                      { return uint32(d.ID) }
 func (d *Dialog) UnmarshalBinary(raw []byte) error { return json.Unmarshal(raw, d) }
 func (d *Dialog) MarshalBinary() ([]byte, error)   { return json.Marshal(d) }
