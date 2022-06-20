@@ -44,3 +44,4 @@ export function boxGrow(b:Box, p:Pos|Box):Box {
 	const e = posMax('w' in p ? boxEnd(p) : p, boxEnd(b))
 	return {x, y, w:1+e.x-x, h:1+e.y-y}
 }
+export function boxCopy({x,y,w,h}:Box):Box { return {x,y,w,h} }
