@@ -10,10 +10,9 @@ import (
 	"os"
 	"time"
 
-	"github.com/mb0/babasite/chared"
 	"github.com/mb0/babasite/gol"
-	"github.com/mb0/babasite/maped"
 	"github.com/mb0/babasite/site"
+	"github.com/mb0/babasite/wedit"
 	"github.com/tidwall/buntdb"
 	"xelf.org/daql/hub/wshub"
 	"xelf.org/daql/ses"
@@ -69,16 +68,17 @@ func main() {
 
 	auth := site.Auth{Man: man, Store: userStore}
 
+	wed, err := wedit.NewRoom(*datapath)
+	if err != nil {
+		log.Fatal(err)
+	}
 	// create new site with multiple rooms
 	s := site.NewSite(
 		site.NewChat("simple"),
 		gol.NewRoom("gol"),
-		maped.NewRoom("maped", *datapath),
-		chared.NewRoom("chared", *datapath),
+		wed,
 	)
-	exporter := &Exporter{FS: os.DirFS(*datapath), List: []ExportFunc{
-		chared.Export, maped.Export,
-	}}
+	exporter := &Exporter{FS: os.DirFS(*datapath), List: []ExportFunc{}}
 
 	// create a mux or also known as router where we provide session cookies
 	sesmux := http.NewServeMux()
