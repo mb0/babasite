@@ -41,12 +41,16 @@ function addChild(el:HTMLElement, data:HArg|HData):data is HData {
 	return true
 }
 
+let maxFormID = 0
+export const formID = ():string => 'f'+ (++maxFormID)
+
 export function hInput(sel:string, opts?:any) {
-	sel = sel||'input'
-	if (sel[0]=='.'||sel[0]=='#') sel = 'input'+sel
+	if (!sel || sel[0] == '.' || sel[0] == '#') sel = 'input' + sel
 	opts = opts||{}
 	if (!opts.type) opts.type='text'
-	return h(sel, opts) as HTMLInputElement
+	const el = h(sel, opts) as HTMLInputElement
+	if (!el.id) el.id = formID()
+	return el
 }
 
 export function datalistInput(id:string, hand?:(opt:string)=>void) {
