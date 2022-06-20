@@ -20,6 +20,7 @@ export function newColorCache<T>(conv:(t:T)=>string):ColorCache<T> {
 }
 
 export function cssColor(c:number):string {
+	if (!c && c != 0 || c < 0) return ''
 	let s = c.toString(16)
 	return '#' + '000000'.slice(s.length) + s
 }

@@ -1,7 +1,7 @@
 import {ColorCache, newColorCache, cssColor} from 'game/color'
 import {Pixel} from './asset'
 
-export type Color = number
+export type Color = string
 
 export interface Palette {
 	name:string
@@ -23,10 +23,10 @@ export function palColor(pal:Palette, p:Pixel):Color {
 			return feat.colors[c]
 		}
 	}
-	return 0
+	return ''
 }
 
 export function palCssColor(pal:Palette, p:Pixel):string {
-	if (!pal.cache)	pal.cache = newColorCache<Pixel>(p => cssColor(palColor(pal, p)))
+	if (!pal.cache)	pal.cache = newColorCache<Pixel>(p => cssColor(parseInt(palColor(pal, p), 16)))
 	return pal.cache.color(p)
 }
