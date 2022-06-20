@@ -1,4 +1,5 @@
 import {h, HData} from 'web/html'
+import './dock.css'
 
 /*
 we want a responsive page layout primarily for editors and maybe for games.
@@ -35,8 +36,7 @@ export function newLayout(sel?:string, header?:HData, body?:HData):Layout {
 	const cont = h('.docks')
 	const head = h('.dock-head', header||null)
 	const main = h('.dock-main', body||null)
-	const el = h((sel||'')+'.dock-layout',
-		h('style', dockCss), head,
+	const el = h((sel||'')+'.dock-layout', head,
 		h('.dock-cont', cont, main),
 	)
 	return {el, head, main, docks:[],
@@ -64,55 +64,3 @@ export function newLayout(sel?:string, header?:HData, body?:HData):Layout {
 		},
 	}
 }
-
-const dockCss = `
-.dock-layout {
-	width: 100vw;
-	height: 100vh;
-	display: flex;
-	flex-direction: column;
-}
-.dock-cont {
-	flex:1 1 0;
-	display: flex;
-	overflow-y: hidden;
-}
-.dock-main {
-	flex:1 1 0;
-	display: flex;
-}
-.dock-main > canvas {
-	display:block;
-	max-width: 100%;
-	max-height: 100%;
-	flex: 1 1 0;
-}
-.docks {
-	flex: 0 0 0;
-	display: flex;
-	flex-direction: column;
-	min-width: 200px;
-}
-.dock {
-	flex: 0 0 auto;
-	border: thin solid #222;
-	box-shadow: 0 .1rem 1rem -.5rem rgba(0,0,0,.4);
-	margin-bottom: 5px;
-	border-radius: 5px;
-	position: relative;
-}
-.dock.dyn {
-	flex: 1 1 0;
-	min-height: 35px;
-}
-.dock > summary {
-	background-color: #2c2c2c;
-	padding: 8px;
-}
-details.dock[open] #chat-view {
-	height: calc(100% - 30px);
-}
-details.dock:not([open]) {
-	max-height: 35px;
-}
-`

@@ -1,0 +1,7 @@
+#sunrise-canvas {
+	flex: 0 1 auto;
+	align-self:center;
+}
+#sunrise .dock-main {
+	justify-content:center;
+}

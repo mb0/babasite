@@ -1,0 +1,31 @@
+html, body {
+	margin:0;
+	padding:0;
+	background-color: gray;
+	width:100vw;
+	height:100vh;
+	font-family: Ubuntu, Helvetica, Arial, sans-serif;
+}
+form {
+	padding-bottom: 8px;
+}
+form label {
+	display: inline-block;
+	min-width: 100px;
+}
+.menu span {
+	display: inline-block;
+	margin: .5em 2em;
+}
+@media (prefers-color-scheme: dark) {
+	body {
+		color: #ddd;
+		background-color: #333;
+	}
+	#modalparent {
+		background-color: #333333bb;
+	}
+	#modal {
+		background-color: #555;
+	}
+}

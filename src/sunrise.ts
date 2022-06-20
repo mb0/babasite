@@ -3,15 +3,7 @@ import {Canvas, newCanvas} from 'web/canvas'
 import {app, chat, menu} from 'app'
 import {Pos, Dim} from 'game/geo'
 import {newLayout} from 'game/dock'
-
-const style = `
-#sunrise-canvas {
-	flex: 0 1 auto;
-	align-self:center;
-}
-#sunrise .dock-main {
-	justify-content:center;
-}`
+import './sunrise.css'
 
 let stop = false
 app.addView({name: "simple",

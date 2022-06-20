@@ -1,38 +1,11 @@
 import {h, hInput} from 'web/html'
 import {View} from 'app'
+import './chat.css'
 
 export interface ChatData {
 	user:string
 	msg:string
 }
-
-const style = `
-#chat-view {
-	display: flex;
-	flex-direction: column;
-	position:relative;
-}
-#output {
-	flex: 1 1 auto;
-	overflow-y:auto;
-	min-height: 1em;
-}
-#chat-view form {
-	align-self: end;
-	flex: 0 0 auto;
-	display: flex;
-	max-width: 100%;
-	flex-direction: row;
-	margin: 5px 0;
-}
-#chat-view input[type=text] {
-	flex: 1 1 auto;
-	min-width: 0;
-}
-#chat-view button {
-	flex: 0 0 auto;
-}
-`
 
 export const chat:View = {
 	name: "chat",
@@ -55,7 +28,7 @@ export const chat:View = {
 				scrollEnd()
 			}
 		})
-		return h('#chat-view', h('style', style), output, form)
+		return h('#chat-view', output, form)
 	},
 	stop(app) {
 		app.off(this.subs!)

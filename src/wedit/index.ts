@@ -8,6 +8,7 @@ import {Subs} from 'app/hub'
 import {WorldData} from './world'
 import {WorldView, worldSel} from './view_world'
 import {PicData} from './view_img'
+import './wedit.css'
 
 export interface WeditView extends View {
 	dock:Layout
@@ -23,7 +24,6 @@ const v:WeditView = {name:"wedit", label:"World Editor",
 		app.on(v.subs = editorSubs(v))
 		const d = v.dock
 		h.add(d.head, h('', menu()))
-		h.add(d.el, h('style', style))
 		const chatel = chat.start(app)
 		d.add({label:'Chat', el:chatel, sel:'.dyn'})
 		return d.el
@@ -204,45 +204,3 @@ const checkErr = (h:handler):handler => (res, subj) => {
 		// TODO show alert dialog instead
 	} else h(res, subj)
 }
-
-
-const style = `
-.wtree {
-	max-height: 40vh;
-	overflow-y: auto;
-	padding: 4px 0 4px 1em;
-	margin: 0;
-}
-.wtree ul {
-	padding-left: 1em;
-}
-.wtree li {
-	list-style-position: inside;
-}
-.wtree li.sum {
-	list-style: none;
-}
-#img-view {
-	flex: 1 1 0;
-	display: flex;
-	flex-direction: column;
-	align-items: stretch;
-}
-#img-view #editor-canvas {
-	flex: 1 1 auto;
-}
-.color {
-	display: flex;
-	align-content: center;
-}
-.color label {
-	min-width: 4em;
-}
-.color span {
-	width:1.4em;
-	height:1.4em;
-}
-.color div {
-	margin-left: 4px;
-}
-`

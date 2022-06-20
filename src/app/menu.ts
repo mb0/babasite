@@ -13,6 +13,5 @@ export function menu() {
 			}}, v.label||v.name)
 		),
 		h('span', {onclick: () => location.href = '/logout'}, "Logout"),
-		h('style', `.menu span { display: inline-block; margin: .5em 2em }`),
 	)
 }

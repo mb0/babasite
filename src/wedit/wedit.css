@@ -1,0 +1,38 @@
+.wtree {
+	max-height: 40vh;
+	overflow-y: auto;
+	padding: 4px 0 4px 1em;
+	margin: 0;
+}
+.wtree ul {
+	padding-left: 1em;
+}
+.wtree li {
+	list-style-position: inside;
+}
+.wtree li.sum {
+	list-style: none;
+}
+#img-view {
+	flex: 1 1 0;
+	display: flex;
+	flex-direction: column;
+	align-items: stretch;
+}
+#img-view #editor-canvas {
+	flex: 1 1 auto;
+}
+.color {
+	display: flex;
+	align-content: center;
+}
+.color label {
+	min-width: 4em;
+}
+.color span {
+	width:1.4em;
+	height:1.4em;
+}
+.color div {
+	margin-left: 4px;
+}
