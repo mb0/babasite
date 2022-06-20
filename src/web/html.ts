@@ -1,6 +1,6 @@
 
 export type HArg = {[key:string]:any}
-export type HData = HTMLElement|string|HData[]|null
+export type HData = HTMLElement|SVGElement|string|HData[]|null
 
 const selRegex = /^(\w+)?(?:#([^.]*))?(?:[.]([^ ]*))?$/
 export function h(sel:string, args?:HArg|HData, ...data:HData[]):HTMLElement {
@@ -81,4 +81,10 @@ export function pickColor(val:string, submit:(val:string)=>void) {
 		if (input.value[0]=='#') submit(input.value.slice(1))
 	}
 	input.click()
+}
+
+export function hIcon(name:string) {
+	const el = h('span.icon', {title:name})
+	el.innerHTML = `<svg><use href="/ic.svg#${ name }" /></svg>`
+	return el
 }

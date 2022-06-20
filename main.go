@@ -94,6 +94,9 @@ func main() {
 	sesmux.Handle("/hub", site.Authenticate(hubsrv))
 	sesmux.HandleFunc("/login", auth.Login)
 	sesmux.HandleFunc("/logout", auth.Logout)
+	sesmux.HandleFunc("/ic.svg", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "./wedit/ic.svg")
+	})
 	// we want to provide session info for the index site, to remember users
 	sesmux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		if s := ses.Get(r); !site.IsUserSess(s) {
