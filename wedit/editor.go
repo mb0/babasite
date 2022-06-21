@@ -11,7 +11,24 @@ import (
 	"xelf.org/daql/hub"
 )
 
-type EditFunc = func(*Editor, *hub.Msg) error
+type EditFunc = func(*ConnSubs, *hub.Msg) error
+
+// Editor provides the world data and ways to edit this data.
+// It also holds client subscriptions for certain topics.
+type Editor struct {
+	// The world data that is saved to disk.
+	*game.World
+	// Conns holds a list of clients connected to this editor.
+	site.Conns
+
+	// Tops stores all topics and the clients that are subscribed to them.
+	Tops map[Top]*TopicSubs
+}
+
+func NewEditor(w *game.World) *Editor {
+	ed := &Editor{World: w, Tops: make(map[Top]*TopicSubs)}
+	return ed
+}
 
 var editFuncs = map[string]EditFunc{
 	"tset.new":  tsetNew,
@@ -20,27 +37,18 @@ var editFuncs = map[string]EditFunc{
 	"lvl.new":   lvlNew,
 	"lvl.del":   lvlDel,
 	"lvl.edit":  lvlEdit,
-	"grid.open": gridOpen,
+	"lvl.open":  lvlOpen,
+	"lvl.close": lvlClose,
 	"grid.edit": gridEdit,
 	"img.new":   imgNew,
 	"img.del":   imgDel,
-	"img.open":  imgOpen,
 	"img.edit":  imgDel,
+	"img.open":  imgOpen,
+	"img.close": imgClose,
 	"clip.new":  clipNew,
 	"clip.del":  clipDel,
 	"clip.edit": clipEdit,
 	"pic.edit":  picEdit,
-}
-
-// Editor provides the world data and ways to edit this data.
-type Editor struct {
-	*game.World
-	site.Conns
-}
-
-func NewEditor(w *game.World) *Editor {
-	ed := &Editor{World: w}
-	return ed
 }
 
 type NameReq struct {

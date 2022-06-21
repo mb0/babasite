@@ -16,6 +16,15 @@ func (subs Conns) Bcast(m *hub.Msg, except int64) {
 		}
 	}
 }
+func (subs Conns) Sub(cc hub.Conn) Conns {
+	id := cc.ID()
+	for _, c := range subs {
+		if c.ID() == id {
+			return subs
+		}
+	}
+	return append(subs, cc)
+}
 func (subs Conns) Unsub(id int64) Conns {
 	for idx, c := range subs {
 		if c.ID() == id {

@@ -1,22 +1,37 @@
 package wedit
 
 import (
-	"fmt"
-	"time"
-
-	"github.com/mb0/babasite/game"
-	"github.com/mb0/babasite/game/ids"
+	"github.com/mb0/babasite/site"
 	"xelf.org/daql/hub"
 )
 
-type ConnSubs struct {
-	Editor *Editor
-}
-
 type RoomSubs struct {
-	Worlds  []string
 	Editors map[string]*Editor
 	Subs    map[int64]*ConnSubs
+}
+
+type ConnSubs struct {
+	Conn hub.Conn
+	*Editor
+	Subs []*TopicSubs
+}
+
+type Top interface {
+	Top() string
+}
+
+// most model changes are sent to all connected clients
+// however the level grids an img pics are only subscribed when needed
+// when user opens a img or lvl we auto subscribe for grid and pics changes
+type TopicSubs struct {
+	Top Top
+	site.Conns
+}
+
+func (ts *TopicSubs) BcastRaw(subj string, data any, except int64) {
+	if ts != nil && len(ts.Conns) != 0 {
+		ts.Bcast(site.RawMsg(subj, data), except)
+	}
 }
 
 func MakeRoomSubs() RoomSubs {
@@ -30,13 +45,11 @@ func (r *RoomSubs) SubEditor(c hub.Conn, ed *Editor) {
 	id := c.ID()
 	sub, ok := r.Subs[id]
 	if !ok {
-		sub = &ConnSubs{}
+		sub = &ConnSubs{Conn: c}
 		r.Subs[id] = sub
 	}
 	if old := sub.Editor; old != ed {
-		if old != nil {
-			old.Conns = old.Unsub(id)
-		}
+		sub.unsubAll()
 		sub.Editor = ed
 		ed.Conns = append(ed.Conns, c)
 	}
@@ -45,10 +58,8 @@ func (r *RoomSubs) SubEditor(c hub.Conn, ed *Editor) {
 func (r *RoomSubs) Unsub(id int64) {
 	sub, ok := r.Subs[id]
 	if ok {
+		sub.unsubAll()
 		delete(r.Subs, id)
-		if s := sub.Editor; s != nil {
-			s.Conns = s.Conns.Unsub(id)
-		}
 	}
 }
 
@@ -59,38 +70,63 @@ func (r *RoomSubs) EditorSub(c hub.Conn) *Editor {
 	return nil
 }
 
-func (s *RoomSubs) WorldIdx(name string) int {
-	for idx, o := range s.Worlds {
-		if o == name {
-			return idx
-		}
+func (sub *ConnSubs) unsubAll() {
+	id := sub.Conn.ID()
+	for _, top := range sub.Subs {
+		top.Conns = top.Unsub(id)
 	}
-	return -1
-}
-func (s *RoomSubs) HasWorld(name string) bool {
-	for _, o := range s.Worlds {
-		if o == name {
-			return true
-		}
+	if ed := sub.Editor; ed != nil {
+		ed.Conns = ed.Unsub(id)
 	}
-	return false
+	sub.Editor, sub.Subs = nil, nil
 }
 
-func (s *RoomSubs) NewWorld(name string) (*game.World, error) {
-	if !ids.NameCheck.MatchString(name) {
-		return nil, fmt.Errorf("invalid name %s", name)
+func (sub *ConnSubs) SubTop(t Top) *TopicSubs {
+	if sub == nil || sub.Editor == nil {
+		return nil
 	}
-	if s.HasWorld(name) {
-		return nil, fmt.Errorf("already exists")
+	ed := sub.Editor
+	tc := ed.Tops[t]
+	if tc == nil {
+		tc = &TopicSubs{Top: t}
+		ed.Tops[t] = tc
 	}
-	var w game.World
-	w.Name = name
-	s.Worlds = append(s.Worlds, name)
-	return &w, s.SetDefaults(&w)
+	tc.Conns = tc.Sub(sub.Conn)
+	sub.Subs = append(sub.Subs, tc)
+	return tc
 }
-func (s *RoomSubs) SetDefaults(w *game.World) error {
-	if w.Vers.Mod == 0 {
-		w.Vers.Mod = time.Now().Unix()
+func (sub *ConnSubs) UnsubTop(t Top) *TopicSubs {
+	if sub == nil || sub.Editor == nil {
+		return nil
 	}
-	return nil
+	ed := sub.Editor
+	tc := ed.Tops[t]
+	if tc == nil {
+		return nil
+	}
+	id := sub.Conn.ID()
+	tc.Conns = tc.Unsub(id)
+	tmp := sub.Subs[:0]
+	for _, top := range sub.Subs {
+		if top.Top != t {
+			tmp = append(tmp, top)
+		}
+	}
+	sub.Subs = tmp
+	return tc
+}
+func (sub *ConnSubs) UnsubKind(kind string) {
+	if sub == nil || sub.Editor == nil {
+		return
+	}
+	id := sub.Conn.ID()
+	tmp := sub.Subs[:0]
+	for _, tc := range sub.Subs {
+		if tc.Top.Top() != kind {
+			tmp = append(tmp, tc)
+			continue
+		}
+		tc.Conns = tc.Unsub(id)
+	}
+	sub.Subs = tmp
 }

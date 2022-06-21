@@ -17,6 +17,8 @@ type Room struct {
 	site.ChatRoom
 	RoomSubs
 	input chan *hub.Msg
+
+	Worlds []string
 }
 
 func NewRoom(datapath string) (*Room, error) {
@@ -75,7 +77,7 @@ func (r *Room) handle(m *hub.Msg) *hub.Msg {
 		if err != nil {
 			return m.ReplyErr(err)
 		}
-		ed := &Editor{World: w}
+		ed := NewEditor(w)
 		r.Editors[w.Name] = ed
 		r.SubEditor(m.From, ed)
 		r.Bcast(site.RawMsg("world.new", req), 0)
@@ -114,15 +116,15 @@ func (r *Room) handle(m *hub.Msg) *hub.Msg {
 		r.Bcast(site.RawMsg("world.del", req), 0)
 		return nil
 	default:
-		ed := r.EditorSub(m.From)
-		if ed == nil {
+		sub := r.Subs[m.From.ID()]
+		if sub == nil || sub.Editor == nil {
 			return m.ReplyErr(fmt.Errorf("not subscribed"))
 		}
 		f := editFuncs[m.Subj]
 		if f == nil {
 			return m.ReplyErr(fmt.Errorf("unknown subj"))
 		}
-		err := f(ed, m)
+		err := f(sub, m)
 		if err != nil {
 			return m.ReplyErr(err)
 		}
@@ -132,4 +134,35 @@ func (r *Room) handle(m *hub.Msg) *hub.Msg {
 
 type InitInfo struct {
 	Worlds []string `json:"worlds"`
+}
+
+func (r *Room) WorldIdx(name string) int {
+	for idx, o := range r.Worlds {
+		if o == name {
+			return idx
+		}
+	}
+	return -1
+}
+func (r *Room) HasWorld(name string) bool {
+	return r.WorldIdx(name) >= 0
+}
+
+func (r *Room) NewWorld(name string) (*game.World, error) {
+	if !ids.NameCheck.MatchString(name) {
+		return nil, fmt.Errorf("invalid name %s", name)
+	}
+	if r.HasWorld(name) {
+		return nil, fmt.Errorf("already exists")
+	}
+	var w game.World
+	w.Name = name
+	r.Worlds = append(r.Worlds, name)
+	return &w, r.SetDefaults(&w)
+}
+func (r *Room) SetDefaults(w *game.World) error {
+	if w.Vers.Mod == 0 {
+		w.Vers.Mod = time.Now().Unix()
+	}
+	return nil
 }

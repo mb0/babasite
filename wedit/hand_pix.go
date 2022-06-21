@@ -42,7 +42,7 @@ func palEdit(ed *Editor, m *hub.Msg) error {
 	ed.Bcast(site.RawMsg(m.Subj, req), 0)
 	return nil
 }
-func imgNew(ed *Editor, m *hub.Msg) error {
+func imgNew(ed *ConnSubs, m *hub.Msg) error {
 	req := ParseName(m)
 	pal, err := ed.Pix.NewPal(req.Name)
 	if err != nil {
@@ -52,7 +52,7 @@ func imgNew(ed *Editor, m *hub.Msg) error {
 	ed.Bcast(site.RawMsg(m.Subj, pal), 0)
 	return nil
 }
-func imgDel(ed *Editor, m *hub.Msg) error {
+func imgDel(ed *ConnSubs, m *hub.Msg) error {
 	req := ParseID[ids.Img](m)
 	// TODO check for references and decide what to do
 	err := ed.Pix.Img.Set(req.ID, nil)
@@ -62,7 +62,7 @@ func imgDel(ed *Editor, m *hub.Msg) error {
 	ed.Bcast(site.RawMsg(m.Subj, req), 0)
 	return nil
 }
-func imgOpen(ed *Editor, m *hub.Msg) error {
+func imgOpen(ed *ConnSubs, m *hub.Msg) error {
 	req := ParseID[ids.Img](m)
 	img, err := ed.Pix.Img.Get(req.ID)
 	if err != nil {
@@ -85,12 +85,16 @@ func imgOpen(ed *Editor, m *hub.Msg) error {
 			res = append(res, p)
 		}
 	}
-	// TODO manage clip subscriptions, every user can only be subscribed to one clip editor?
-	// but then we can "publish" changes to the whole editor?
+	ed.SubTop(img.ID)
 	hub.Send(m.From, site.RawMsg(m.Subj, PicsData{
 		ID:   req.ID,
 		Pics: res,
 	}))
+	return nil
+}
+func imgClose(ed *ConnSubs, m *hub.Msg) error {
+	req := ParseID[ids.Img](m)
+	ed.UnsubTop(req.ID)
 	return nil
 }
 
@@ -99,7 +103,7 @@ type PicsData struct {
 	Pics []*pix.Pic `json:"pics"`
 }
 
-func imgEdit(ed *Editor, m *hub.Msg) error {
+func imgEdit(ed *ConnSubs, m *hub.Msg) error {
 	var req pix.Img
 	m.Unmarshal(&req)
 	sl := ed.Pix.Img.Slot(req.ID)
@@ -112,7 +116,7 @@ func imgEdit(ed *Editor, m *hub.Msg) error {
 	ed.Bcast(site.RawMsg(m.Subj, req), 0)
 	return nil
 }
-func clipNew(ed *Editor, m *hub.Msg) error {
+func clipNew(ed *ConnSubs, m *hub.Msg) error {
 	req := ParseName(m)
 	clip, err := ed.Pix.NewClip(req.Name)
 	if err != nil {
@@ -122,7 +126,7 @@ func clipNew(ed *Editor, m *hub.Msg) error {
 	ed.Bcast(site.RawMsg(m.Subj, clip), 0)
 	return nil
 }
-func clipDel(ed *Editor, m *hub.Msg) error {
+func clipDel(ed *ConnSubs, m *hub.Msg) error {
 	req := ParseID[ids.Clip](m)
 	// TODO check for references and decide what to do
 	err := ed.Pix.Clip.Set(req.ID, nil)
@@ -133,7 +137,7 @@ func clipDel(ed *Editor, m *hub.Msg) error {
 	return nil
 }
 
-func clipEdit(ed *Editor, m *hub.Msg) error {
+func clipEdit(ed *ConnSubs, m *hub.Msg) error {
 	var req pix.Clip
 	m.Unmarshal(&req)
 	sl := ed.Pix.Clip.Slot(req.ID)
@@ -146,7 +150,7 @@ func clipEdit(ed *Editor, m *hub.Msg) error {
 	ed.Bcast(site.RawMsg(m.Subj, req), 0)
 	return nil
 }
-func picEdit(ed *Editor, m *hub.Msg) error {
+func picEdit(ed *ConnSubs, m *hub.Msg) error {
 	var req gamed.EditPic
 	m.Unmarshal(&req)
 	img, err := ed.Pix.Img.Get(req.Img)
@@ -164,6 +168,6 @@ func picEdit(ed *Editor, m *hub.Msg) error {
 	}
 	sl.Sync = ids.SyncMod
 	// share edit with all subscribers
-	ed.Bcast(site.RawMsg("pic.edit", req), 0)
+	ed.Tops[img.ID].BcastRaw(m.Subj, req, 0)
 	return nil
 }
