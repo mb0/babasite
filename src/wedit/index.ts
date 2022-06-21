@@ -194,8 +194,8 @@ const editorSubs = (v:WeditView):Subs => {
 		// lookup lvl and edit
 		// repaint tset view and lvl editor if active lvl
 	}),
-	"grid.open": checkW((w, res) => {
-		w.gridOpen(gridTiles<number>(res, res.raw) as Grid)
+	"lvl.open": checkW((w, res) => {
+		w.lvlOpen(gridTiles<number>(res, res.raw) as Grid)
 	}),
 	"grid.edit": checkErr(res => {
 		// lookup and edit grid

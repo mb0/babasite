@@ -20,7 +20,7 @@ export class WorldView {
 	constructor(readonly data:WorldData, readonly dock:Layout) {
 		const click = (top:string, el:any) => {
 			console.log("open "+ top, el)
-			if (top == "lvl") app.send("grid.open", {id:el.grid})
+			if (top == "lvl") app.send("lvl.open", {id:el.id})
 			else if (top == "img") app.send("img.open", {id:el.id})
 			else if (top == "clip") {
 				// TODO do not reopen img
@@ -31,7 +31,7 @@ export class WorldView {
 		dock.add({label:'World '+ data.name, el:worldTree(data, click), group:"wedit"}, 0)
 		h.repl(dock.main, "")
 	}
-	gridOpen(g:Grid):void {
+	lvlOpen(g:Grid):void {
 		const {data, dock} = this
 		if (data.grid) {
 			// TODO clean up old editor
