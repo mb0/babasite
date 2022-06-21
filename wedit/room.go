@@ -2,6 +2,7 @@ package wedit
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/mb0/babasite/game"
 	"github.com/mb0/babasite/game/bolt"
@@ -15,6 +16,7 @@ type Room struct {
 	DB *bbolt.DB
 	site.ChatRoom
 	RoomSubs
+	input chan *hub.Msg
 }
 
 func NewRoom(datapath string) (*Room, error) {
@@ -23,20 +25,38 @@ func NewRoom(datapath string) (*Room, error) {
 		return nil, err
 	}
 	subs := MakeRoomSubs()
-	db.View(func(tx *bbolt.Tx) error {
-		subs.Worlds = bolt.LoadWorldInfos(tx)
+	chat := site.NewChat("wedit")
+	r := &Room{DB: db, ChatRoom: *chat, RoomSubs: subs,
+		input: make(chan *hub.Msg, 64),
+	}
+	err = db.View(func(tx *bbolt.Tx) error {
+		r.Worlds = bolt.LoadWorldInfos(tx)
 		return nil
 	})
-	chat := site.NewChat("wedit")
-	return &Room{DB: db, ChatRoom: *chat, RoomSubs: subs}, nil
+	if err != nil {
+		return nil, err
+	}
+	// for now run all editors within one go routine to keep things simple.
+	// we may later isolate each world editor to its own routine.
+	go func() {
+		ticker := time.NewTicker(time.Second)
+		tick, _ := hub.RawMsg("_tick", nil)
+		for {
+			select {
+			case m := <-r.input:
+				res := r.handle(m)
+				if res != nil {
+					hub.Send(m.From, res)
+				}
+			case <-ticker.C:
+				r.handle(tick)
+			}
+		}
+	}()
+	return r, nil
 }
 
-func (r *Room) Route(m *hub.Msg) {
-	res := r.handle(m)
-	if res != nil {
-		hub.Send(m.From, res)
-	}
-}
+func (r *Room) Route(m *hub.Msg) { r.input <- m }
 
 func (r *Room) handle(m *hub.Msg) *hub.Msg {
 	switch m.Subj {
