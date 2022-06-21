@@ -115,7 +115,12 @@ func (r *Room) handle(m *hub.Msg) *hub.Msg {
 		r.Worlds = append(r.Worlds[:idx], r.Worlds[idx+1:]...)
 		r.Bcast(site.RawMsg("world.del", req), 0)
 		return nil
+	case "_tick":
+
 	default:
+		if m.From == nil {
+			return nil
+		}
 		sub := r.Subs[m.From.ID()]
 		if sub == nil || sub.Editor == nil {
 			return m.ReplyErr(fmt.Errorf("not subscribed"))
