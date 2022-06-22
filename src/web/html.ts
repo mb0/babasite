@@ -88,6 +88,6 @@ export function pickColor(val:string, submit:(val:string)=>void) {
 
 export function hIcon(name:string, opts?:any) {
 	const el = h('i.icon', opts||{title:name})
-	el.innerHTML = `<svg><use href="/ic.svg#${ name }" /></svg>`
+	el.innerHTML = `<svg><use href="/dist/ic.svg#${ name }" /></svg>`
 	return el
 }
