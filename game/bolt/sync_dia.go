@@ -8,6 +8,10 @@ func (s *DiaSync) Load(tx Src) error {
 	return LoadTable(tx, &s.Dia)
 }
 
+func (s *DiaSync) Dirty() bool {
+	return s.Dia.Mods > 0
+}
+
 func (s *DiaSync) Sync(tx Src) error {
 	return SyncTable(tx, &s.Dia)
 }

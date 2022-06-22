@@ -119,8 +119,8 @@ func Import(dbpath, dir string) (*bbolt.DB, error) {
 		return nil, err
 	}
 	for _, w := range worlds {
+		ws := bolt.MakeWorldSync(w)
 		err = db.Update(func(tx *bbolt.Tx) error {
-			ws := (*bolt.WorldSync)(w)
 			return ws.Save(tx)
 		})
 		if err != nil {

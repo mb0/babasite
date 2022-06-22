@@ -40,6 +40,7 @@ type Src interface {
 
 type Sync interface {
 	Load(Src) error
-	Save(Src) error
+	Dirty() bool
 	Sync(Src) error
+	Save(Src) error
 }

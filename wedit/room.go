@@ -2,6 +2,7 @@ package wedit
 
 import (
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/mb0/babasite/game"
@@ -92,7 +93,7 @@ func (r *Room) handle(m *hub.Msg) *hub.Msg {
 			ed = NewEditor(&game.World{})
 			ed.Name = req.Name
 			err := r.DB.View(func(tx *bbolt.Tx) error {
-				return (*bolt.WorldSync)(ed.World).Load(tx)
+				return ed.Load(tx)
 			})
 			if err != nil {
 				return m.ReplyErr(err)
@@ -116,7 +117,17 @@ func (r *Room) handle(m *hub.Msg) *hub.Msg {
 		r.Bcast(site.RawMsg("world.del", req), 0)
 		return nil
 	case "_tick":
-
+		for _, ed := range r.Editors {
+			if !ed.Dirty() {
+				continue
+			}
+			err := r.DB.Update(func(tx *bbolt.Tx) error {
+				return ed.Sync(tx)
+			})
+			if err != nil {
+				log.Printf("failed to sync to db: %+v", err)
+			}
+		}
 	default:
 		if m.From == nil {
 			return nil

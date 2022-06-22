@@ -63,6 +63,9 @@ func SaveTable[ID ids.ID, T any, D ids.Dec[T]](tx Src, data *ids.ListTable[ID, T
 }
 
 func SyncTable[ID ids.ID, T any, D ids.Dec[T]](tx Src, data *ids.ListTable[ID, T, D]) error {
+	if data.Mods == 0 {
+		return nil
+	}
 	b, err := tx.CreateBucketIfNotExists([]byte(ID(0).Top()))
 	if err != nil {
 		return err
@@ -98,5 +101,6 @@ func SyncTable[ID ids.ID, T any, D ids.Dec[T]](tx Src, data *ids.ListTable[ID, T
 	if old != seq {
 		err = b.SetSequence(seq)
 	}
+	data.Mods = 0
 	return err
 }

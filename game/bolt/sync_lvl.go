@@ -17,6 +17,10 @@ func (s *LvlSync) Load(tx Src) (err error) {
 	return nil
 }
 
+func (s *LvlSync) Dirty() bool {
+	return s.Tset.Mods+s.Lvl.Mods+s.Grid.Mods > 0
+}
+
 func (s *LvlSync) Sync(tx Src) (err error) {
 	if err = SyncTable(tx, &s.Tset); err != nil {
 		return err

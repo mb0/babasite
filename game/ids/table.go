@@ -52,6 +52,7 @@ func (lt *ListTable[I, T, D]) New() (D, error) {
 		Sync: SyncAdd,
 		Data: D(nil).Make(uint32(len(lt.List) + 1)),
 	})
+	lt.Mods++
 	return &lt.List[len(lt.List)-1].Data, nil
 }
 
@@ -77,15 +78,19 @@ func (lt *ListTable[I, T, D]) Set(id I, d D) error {
 		return ErrNotFound
 	}
 	if s.Empty() {
-		if d != nil {
-			s.Sync |= SyncAdd
+		if d == nil {
+			return nil
 		}
-	} else if d == nil {
-		s.Sync = SyncDel
+		s.Data = *d
+		lt.mark(s, SyncAdd)
+	} else if d != nil {
+		s.Data = *d
+		lt.mark(s, SyncMod)
 	} else {
-		s.Sync = SyncMod
+		var zero T
+		s.Data = zero
+		lt.mark(s, SyncDel)
 	}
-	s.Data = *d
 	return nil
 }
 
@@ -107,13 +112,12 @@ func (lt *ListTable[I, T, D]) Find(c Cond[T, D]) D {
 	}
 	return nil
 }
-func (lt *ListTable[I, T, D]) Mark(id I, mod bool) {
-	s := lt.Slot(id)
-	if s != nil {
-		if mod {
-			s.Sync = SyncMod
-		} else {
-			s.Sync = SyncDel
-		}
+func (lt *ListTable[I, T, D]) Mark(id I, sync SyncFlag) {
+	if s := lt.Slot(id); s != nil {
+		lt.mark(s, sync)
 	}
+}
+func (lt *ListTable[I, T, D]) mark(s *Slot[T, D], sync SyncFlag) {
+	lt.Mods++
+	s.Sync = sync
 }

@@ -20,6 +20,10 @@ func (s *PixSync) Load(tx Src) (err error) {
 	return nil
 }
 
+func (s *PixSync) Dirty() bool {
+	return s.Pal.Mods+s.Img.Mods+s.Clip.Mods+s.Pic.Mods > 0
+}
+
 func (s *PixSync) Sync(tx Src) (err error) {
 	if err = SyncTable(tx, &s.Pal); err != nil {
 		return err

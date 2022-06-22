@@ -6,6 +6,7 @@ package wedit
 
 import (
 	"github.com/mb0/babasite/game"
+	"github.com/mb0/babasite/game/bolt"
 	"github.com/mb0/babasite/game/ids"
 	"github.com/mb0/babasite/site"
 	"xelf.org/daql/hub"
@@ -17,7 +18,7 @@ type EditFunc = func(*ConnSubs, *hub.Msg) error
 // It also holds client subscriptions for certain topics.
 type Editor struct {
 	// The world data that is saved to disk.
-	*game.World
+	bolt.WorldSync
 	// Conns holds a list of clients connected to this editor.
 	site.Conns
 
@@ -26,7 +27,7 @@ type Editor struct {
 }
 
 func NewEditor(w *game.World) *Editor {
-	ed := &Editor{World: w, Tops: make(map[Top]*TopicSubs)}
+	ed := &Editor{WorldSync: bolt.MakeWorldSync(w), Tops: make(map[Top]*TopicSubs)}
 	return ed
 }
 

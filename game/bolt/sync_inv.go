@@ -17,6 +17,10 @@ func (s *InvSync) Load(tx Src) (err error) {
 	return nil
 }
 
+func (s *InvSync) Dirty() bool {
+	return s.Prod.Mods+s.Item.Mods+s.Inv.Mods > 0
+}
+
 func (s *InvSync) Sync(tx Src) (err error) {
 	if err = SyncTable(tx, &s.Prod); err != nil {
 		return err

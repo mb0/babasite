@@ -8,6 +8,10 @@ func (s *ObjSync) Load(tx Src) error {
 	return LoadTable(tx, &s.Obj)
 }
 
+func (s *ObjSync) Dirty() bool {
+	return s.Obj.Mods > 0
+}
+
 func (s *ObjSync) Sync(tx Src) error {
 	return SyncTable(tx, &s.Obj)
 }
