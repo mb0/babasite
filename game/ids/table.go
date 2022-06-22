@@ -56,7 +56,7 @@ func (lt *ListTable[I, T, D]) New() (D, error) {
 	return &lt.List[len(lt.List)-1].Data, nil
 }
 
-func (lt *ListTable[I, T, D]) Slot(id I) *Slot[T, D] {
+func (lt *ListTable[I, T, D]) slot(id I) *Slot[T, D] {
 	idx := int(id) - 1
 	if idx < 0 || idx >= len(lt.List) {
 		return nil
@@ -64,8 +64,12 @@ func (lt *ListTable[I, T, D]) Slot(id I) *Slot[T, D] {
 	return &lt.List[idx]
 }
 
+func (lt *ListTable[I, T, D]) Slot(id I) ModSlot[I, T, D] {
+	return ModSlot[I, T, D]{lt, lt.slot(id)}
+}
+
 func (lt *ListTable[I, T, D]) Get(id I) (d D, _ error) {
-	s := lt.Slot(id)
+	s := lt.slot(id)
 	if s.Empty() {
 		return nil, ErrNotFound
 	}
@@ -73,7 +77,7 @@ func (lt *ListTable[I, T, D]) Get(id I) (d D, _ error) {
 }
 
 func (lt *ListTable[I, T, D]) Set(id I, d D) error {
-	s := lt.Slot(id)
+	s := lt.slot(id)
 	if s == nil {
 		return ErrNotFound
 	}
@@ -82,15 +86,16 @@ func (lt *ListTable[I, T, D]) Set(id I, d D) error {
 			return nil
 		}
 		s.Data = *d
-		lt.mark(s, SyncAdd)
+		s.Sync = SyncAdd
 	} else if d != nil {
 		s.Data = *d
-		lt.mark(s, SyncMod)
+		s.Sync = SyncMod
 	} else {
 		var zero T
 		s.Data = zero
-		lt.mark(s, SyncDel)
+		s.Sync = SyncDel
 	}
+	lt.Mods++
 	return nil
 }
 
@@ -112,12 +117,16 @@ func (lt *ListTable[I, T, D]) Find(c Cond[T, D]) D {
 	}
 	return nil
 }
-func (lt *ListTable[I, T, D]) Mark(id I, sync SyncFlag) {
-	if s := lt.Slot(id); s != nil {
-		lt.mark(s, sync)
-	}
+
+type ModSlot[I ID, T any, D Dec[T]] struct {
+	*ListTable[I, T, D]
+	*Slot[T, D]
 }
-func (lt *ListTable[I, T, D]) mark(s *Slot[T, D], sync SyncFlag) {
-	lt.Mods++
-	s.Sync = sync
+
+func (ts ModSlot[I, T, D]) Mark(sync SyncFlag) {
+	ts.Sync = sync
+	ts.Mods++
 }
+func (ts ModSlot[I, T, D]) MarkAdd() { ts.Mark(SyncAdd) }
+func (ts ModSlot[I, T, D]) MarkMod() { ts.Mark(SyncMod) }
+func (ts ModSlot[I, T, D]) MarkDel() { ts.Mark(SyncDel) }

@@ -23,8 +23,7 @@ func tsetNew(ed *ConnSubs, m *hub.Msg) error {
 }
 func tsetDel(ed *ConnSubs, m *hub.Msg) error {
 	req := ParseID[ids.Tset](m)
-	// TODO think about cleaning up reference or aborting the deletion
-	err := ed.Lvl.Tset.Set(req.ID, nil)
+	err := ed.Lvl.DelTset(req.ID)
 	if err != nil {
 		return err
 	}
@@ -39,10 +38,11 @@ func tsetEdit(ed *ConnSubs, m *hub.Msg) error {
 		lvl.TileInfo
 	}
 	m.Unmarshal(&req)
-	ts, err := ed.Lvl.Tset.Get(req.ID)
-	if err != nil {
-		return err
+	sl := ed.Lvl.Tset.Slot(req.ID)
+	if sl.Empty() {
+		return ids.ErrNotFound
 	}
+	ts := &sl.Data
 	if req.Tile < 0 {
 		var max lvl.Tile
 		for _, nfo := range ts.Infos {
@@ -50,6 +50,7 @@ func tsetEdit(ed *ConnSubs, m *hub.Msg) error {
 				max = nfo.Tile
 			}
 		}
+		req.Tile = int(max + 1)
 		req.TileInfo.Tile = max + 1
 		ts.Infos = append(ts.Infos, req.TileInfo)
 	} else {
@@ -63,26 +64,46 @@ func tsetEdit(ed *ConnSubs, m *hub.Msg) error {
 		}
 		if idx < 0 {
 			return fmt.Errorf("tile %d not found in %s", req.Tile, ts.Name)
-		} else {
-			ts.Infos[idx] = req.TileInfo
 		}
+		ts.Infos[idx] = req.TileInfo
 	}
+	sl.MarkMod()
 	ed.Bcast(site.RawMsg(m.Subj, req), 0)
 	return nil
 }
+
 func lvlNew(ed *ConnSubs, m *hub.Msg) error {
-	req := ParseName(m)
+	var req lvl.Lvl
+	m.Unmarshal(&req)
 	lvl, err := ed.Lvl.Lvl.New()
 	if err != nil {
 		return err
 	}
+	g, err := ed.Lvl.Grid.New()
+	if err != nil {
+		return err
+	}
 	lvl.Name = req.Name
+	lvl.Dim = req.Dim
+	lvl.Tset = req.Tset
+	lvl.Grid = g.ID
+	if lvl.W <= 0 {
+		lvl.W = 80
+	}
+	if lvl.H <= 0 {
+		lvl.H = lvl.W
+	}
+	if lvl.Tset == 0 {
+		// TODO create default tileset?
+		lvl.Tset = 1
+	}
 	ed.Bcast(site.RawMsg(m.Subj, lvl), 0)
 	return nil
 }
 func lvlDel(ed *ConnSubs, m *hub.Msg) error {
 	req := ParseID[ids.Lvl](m)
 	// TODO think about cleaning up reference or aborting the deletion
+	// lvl can be referenced in objs for now
 	err := ed.Lvl.Lvl.Set(req.ID, nil)
 	if err != nil {
 		return err
@@ -98,7 +119,7 @@ func lvlEdit(ed *ConnSubs, m *hub.Msg) error {
 		return ids.ErrNotFound
 	}
 	sl.Data = req
-	sl.Sync = ids.SyncMod
+	sl.MarkMod()
 	ed.Bcast(site.RawMsg(m.Subj, req), 0)
 	return nil
 }
@@ -137,12 +158,11 @@ func gridEdit(ed *ConnSubs, m *hub.Msg) error {
 	if sl.Empty() {
 		return ids.ErrNotFound
 	}
-	g := sl.Data
-	err = req.EditGrid.Apply(geo.Box{Dim: l.Dim}, &g.Tiles)
+	err = req.EditGrid.Apply(geo.Box{Dim: l.Dim}, &sl.Data.Tiles)
 	if err != nil {
 		return err
 	}
-	sl.Sync = ids.SyncMod
+	sl.MarkMod()
 	// share edit with all subscribers
 	ed.Tops[l.ID].BcastRaw(m.Subj, req, 0)
 	return nil

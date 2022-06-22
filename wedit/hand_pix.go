@@ -38,7 +38,7 @@ func palEdit(ed *Editor, m *hub.Msg) error {
 	}
 	// TODO check req data
 	sl.Data = req
-	sl.Sync = ids.SyncMod
+	sl.MarkMod()
 	ed.Bcast(site.RawMsg(m.Subj, req), 0)
 	return nil
 }
@@ -112,7 +112,7 @@ func imgEdit(ed *ConnSubs, m *hub.Msg) error {
 	}
 	// TODO check req data
 	sl.Data = req
-	sl.Sync = ids.SyncMod
+	sl.MarkMod()
 	ed.Bcast(site.RawMsg(m.Subj, req), 0)
 	return nil
 }
@@ -146,7 +146,7 @@ func clipEdit(ed *ConnSubs, m *hub.Msg) error {
 	}
 	// TODO check req data
 	sl.Data = req
-	sl.Sync = ids.SyncMod
+	sl.MarkMod()
 	ed.Bcast(site.RawMsg(m.Subj, req), 0)
 	return nil
 }
@@ -166,7 +166,7 @@ func picEdit(ed *ConnSubs, m *hub.Msg) error {
 	if err != nil {
 		return err
 	}
-	sl.Sync = ids.SyncMod
+	sl.MarkMod()
 	// share edit with all subscribers
 	ed.Tops[img.ID].BcastRaw(m.Subj, req, 0)
 	return nil
