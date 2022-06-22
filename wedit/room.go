@@ -1,6 +1,7 @@
 package wedit
 
 import (
+	"archive/zip"
 	"fmt"
 	"log"
 	"time"
@@ -181,4 +182,19 @@ func (r *Room) SetDefaults(w *game.World) error {
 		w.Vers.Mod = time.Now().Unix()
 	}
 	return nil
+}
+
+func (r *Room) Export(dir string, zw *zip.Writer) error {
+	return r.DB.View(func(tx *bbolt.Tx) error {
+		dst, err := zw.CreateHeader(&zip.FileHeader{
+			Name:     "baba.db",
+			Method:   zip.Deflate,
+			Modified: time.Now(),
+		})
+		if err != nil {
+			return err
+		}
+		_, err = tx.WriteTo(dst)
+		return err
+	})
 }

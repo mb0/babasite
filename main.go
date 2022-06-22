@@ -4,10 +4,8 @@ import (
 	"archive/zip"
 	"flag"
 	"fmt"
-	"io/fs"
 	"log"
 	"net/http"
-	"os"
 	"time"
 
 	"github.com/mb0/babasite/gol"
@@ -78,7 +76,7 @@ func main() {
 		gol.NewRoom("gol"),
 		wed,
 	)
-	exporter := &Exporter{FS: os.DirFS(*datapath), List: []ExportFunc{}}
+	exporter := &Exporter{Path: *datapath, List: []ExportFunc{wed.Export}}
 
 	// create a mux or also known as router where we provide session cookies
 	sesmux := http.NewServeMux()
@@ -118,9 +116,9 @@ func main() {
 	}
 }
 
-type ExportFunc func(fs.FS, *zip.Writer) error
+type ExportFunc func(string, *zip.Writer) error
 type Exporter struct {
-	FS   fs.FS
+	Path string
 	List []ExportFunc
 }
 
@@ -133,7 +131,7 @@ func (e *Exporter) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	defer bfr.Put(b)
 	zw := zip.NewWriter(b)
 	for _, ex := range e.List {
-		err := ex(e.FS, zw)
+		err := ex(e.Path, zw)
 		if err != nil {
 			msg := fmt.Sprintf("export failed: %v", err)
 			http.Error(w, msg, http.StatusInternalServerError)
