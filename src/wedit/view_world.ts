@@ -5,7 +5,7 @@ import app from 'app'
 import {Img} from 'game/pix'
 import {Grid} from 'game/lvl'
 import {WorldData, namedTables} from './world'
-import {GridView} from './view_grid'
+import {LvlView} from './view_lvl'
 import {ImgView, PicData} from './view_img'
 import {nameInput, simpleForm} from './form'
 
@@ -17,7 +17,7 @@ export function worldSel(worlds:string[]):HTMLElement {
 
 export class WorldView {
 	treev:WorldTree
-	gridv?:GridView
+	lvlv?:LvlView
 	imgv?:ImgView
 	constructor(readonly data:WorldData, readonly dock:Layout) {
 		dock.add(this.treev = new WorldTree(this), 0)
@@ -30,8 +30,8 @@ export class WorldView {
 		}
 		data.grid = g
 		dock.filter(({group}) => !group || group == "wedit")
-		const gv = this.gridv = new GridView(data, dock)
-		location.hash = gv.writeHash()
+		const lv = this.lvlv = new LvlView(data, dock)
+		location.hash = lv.writeHash()
 	}
 	imgOpen(pd:PicData):void {
 		const {data, dock} = this
