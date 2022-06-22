@@ -49,6 +49,6 @@ span.color {
 .color div {
 	margin-left: 4px;
 }
-.pal {
+.pal, .tset {
 	padding: 4px;
 }

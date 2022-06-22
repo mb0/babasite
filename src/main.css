@@ -7,16 +7,6 @@ html, body {
 	font-family: Ubuntu, Helvetica, Arial, sans-serif;
 	color: #222;
 }
-form {
-	padding-bottom: 8px;
-}
-form label {
-	display: inline-block;
-	min-width: 100px;
-}
-form span.help {
-	margin-left: 16px;
-}
 .menu {
 	display: flex;
 	align-items: baseline;
@@ -56,6 +46,60 @@ form span.help {
 a:hover .icon svg, input:hover + .icon svg {
 	fill: #222 !important;
 }
+button {
+	border: thin solid #111;
+	color:#ddd;
+	background-color: #333;
+	border-radius: 3px;
+}
+button:hover {
+	box-shadow: 0 0 3px #aaa;
+	background-color: #444;
+	color: #eee;
+}
+button:hover .icon svg {
+	fill: #222 !important;
+}
+.form .row {
+	margin-top: 8px;
+	align-items: center;
+}
+.form button {
+	margin-top: 30px;
+	line-height: 24px;
+	min-height: 30px
+}
+.form label {
+	min-width: 100px;
+}
+.form input {
+	box-sizing: border-box;
+	background-color: inherit;
+}
+.form input[type="checkbox"] {
+	min-height: 22px;
+}
+.form input[type="text"]:invalid {
+	border-color: red;
+}
+.form input + span.help {
+	display: none;
+}
+.form input:invalid + span.help {
+	display: inline-block;
+	margin-left: 16px;
+}
+.form input[type="color"] {
+	height: 28px;
+	padding: 0;
+	border: none;
+}
+.form input[type="text"] {
+	height: 28px;
+	border: 0 solid #222;
+	border-bottom-width: 1px;
+}
+
 @media (prefers-color-scheme: dark) {
 	body {
 		color: #ddd;
@@ -79,3 +123,4 @@ a:hover .icon svg, input:hover + .icon svg {
 		fill: #eee !important;
 	}
 }
+

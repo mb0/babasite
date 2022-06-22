@@ -78,7 +78,7 @@ export function dimInput(d?:Partial<Dim>):Input {
 	}}
 }
 export function labelWrap(label:string, el:HTMLElement, help?:string) {
-	return h('', h('label', {htmlFor:el.id}, label), el, help ? h('span.help', help) : null)
+	return h('.row', h('label', {htmlFor:el.id}, label), el, help ? h('span.help', help) : null)
 }
 
 export function simpleForm<T>(title:string, s:Partial<T>, isnew:boolean,
@@ -88,7 +88,7 @@ export function simpleForm<T>(title:string, s:Partial<T>, isnew:boolean,
 		list.forEach(f => f.write(s))
 		submit(s)
 	}
-	return h('section.form',
+	return h('.form',
 		h('header', title+ (isnew?' erstellen':' ändern')),
 		h('form', {onsubmit},
 			list.map(el => el.wrap),
