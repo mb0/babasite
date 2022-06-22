@@ -35,9 +35,9 @@ func (w *World) Info() WorldData {
 
 type WorldData struct {
 	WorldMeta
-	Pal  []*pix.Pal     `json:"pal"`
-	Img  []*pix.Img     `json:"img"`
-	Clip []*pix.Clip    `json:"clip"`
-	Tset []*lvl.Tileset `json:"tset"`
-	Lvl  []*lvl.Lvl     `json:"lvl"`
+	Pal  []*pix.Pal  `json:"pal"`
+	Img  []*pix.Img  `json:"img"`
+	Clip []*pix.Clip `json:"clip"`
+	Tset []*lvl.Tset `json:"tset"`
+	Lvl  []*lvl.Lvl  `json:"lvl"`
 }

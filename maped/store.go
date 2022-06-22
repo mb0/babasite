@@ -21,18 +21,18 @@ type FileStore struct {
 	path  string
 	dirfs fs.FS
 	Maps  map[string]*lvl.World
-	Sets  map[string]*lvl.Tileset
+	Sets  map[string]*lvl.Tset
 }
 
 func NewFileStore(path string) *FileStore {
 	return &FileStore{path: path,
 		dirfs: os.DirFS(path),
 		Maps:  make(map[string]*lvl.World),
-		Sets:  make(map[string]*lvl.Tileset),
+		Sets:  make(map[string]*lvl.Tset),
 	}
 }
 
-func (s *FileStore) Tileset(name string) *lvl.Tileset {
+func (s *FileStore) Tileset(name string) *lvl.Tset {
 	return s.Sets[name]
 }
 
@@ -100,7 +100,7 @@ func (s *FileStore) LoadAll() error {
 	return nil
 }
 
-func (s *FileStore) LoadTileset(name string) (*lvl.Tileset, error) {
+func (s *FileStore) LoadTileset(name string) (*lvl.Tset, error) {
 	ts, err := readTileset(s.dirfs, fmt.Sprintf("%s.json", name))
 	if err != nil {
 		return nil, err
@@ -120,7 +120,7 @@ func (s *FileStore) LoadWorld(name string) (*lvl.World, error) {
 	return w, nil
 }
 
-func (s *FileStore) SaveTileset(ts *lvl.Tileset) error {
+func (s *FileStore) SaveTileset(ts *lvl.Tset) error {
 	path := filepath.Join(s.path, fmt.Sprintf("%s.json", ts.Name))
 	err := writeTileset(ts, path)
 	if err != nil {
@@ -184,12 +184,12 @@ func (s *FileStore) DropLevel(w *lvl.World, id ids.Lvl) error {
 	return os.Remove(path)
 }
 
-func readTileset(dir fs.FS, pat string) (*lvl.Tileset, error) {
+func readTileset(dir fs.FS, pat string) (*lvl.Tset, error) {
 	raw, err := fs.ReadFile(dir, pat)
 	if err != nil {
 		return nil, err
 	}
-	var ts lvl.Tileset
+	var ts lvl.Tset
 	err = json.Unmarshal(raw, &ts)
 	return &ts, err
 }
@@ -264,7 +264,7 @@ func readLevel(dir fs.FS, path string) (l *lvl.Level, err error) {
 	return l, err
 }
 
-func writeTileset(ts *lvl.Tileset, path string) error {
+func writeTileset(ts *lvl.Tset, path string) error {
 	err := ensureDir(filepath.Dir(path))
 	if err != nil {
 		return err

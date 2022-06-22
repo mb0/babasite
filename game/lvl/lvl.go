@@ -46,7 +46,7 @@ type WorldInfo struct {
 
 type World struct {
 	WorldInfo
-	Tileset *Tileset           `json:"tileset"`
+	Tileset *Tset              `json:"tileset"`
 	Levels  map[ids.Lvl]*Level `json:"levels"`
 	// we want a map to all generic object states on the map
 	// we can use the object states to document and configure initial map states and
@@ -54,7 +54,7 @@ type World struct {
 	// here go more details like level connections and scripting stuff.
 }
 
-func NewWorld(name string, d geo.Dim, set *Tileset) *World {
+func NewWorld(name string, d geo.Dim, set *Tset) *World {
 	var l Level
 	l.ID = 1
 	l.Dim = d

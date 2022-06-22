@@ -9,7 +9,7 @@ import (
 
 var NameCheck = ids.NameCheck
 
-var DefaultTileset = lvl.Tileset{Name: "default", Infos: []lvl.TileInfo{
+var DefaultTileset = lvl.Tset{Name: "default", Infos: []lvl.TileInfo{
 	{Tile: 0, Name: "void", Color: 0xffffff, Block: true, Group: "basic"},
 	{Tile: 1, Name: "wall", Color: 0x888888, Block: true, Group: "basic"},
 }}

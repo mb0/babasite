@@ -6,7 +6,7 @@ import (
 	"github.com/mb0/babasite/game/ids"
 )
 
-type TsetTable = ids.ListTable[ids.Tset, Tileset, *Tileset]
+type TsetTable = ids.ListTable[ids.Tset, Tset, *Tset]
 type LvlTable = ids.ListTable[ids.Lvl, Lvl, *Lvl]
 type GridTable = ids.ListTable[ids.Grid, Grid, *Grid]
 
@@ -17,12 +17,12 @@ type Sys struct {
 	Grid GridTable
 }
 
-func (s *Sys) GetTset(name string) *Tileset {
-	return s.Tset.Find(func(ts *Tileset) bool {
+func (s *Sys) GetTset(name string) *Tset {
+	return s.Tset.Find(func(ts *Tset) bool {
 		return ts.Name == name
 	})
 }
-func (s *Sys) NewTileset(name string) (*Tileset, error) {
+func (s *Sys) NewTset(name string) (*Tset, error) {
 	if !ids.NameCheck.MatchString(name) {
 		return nil, fmt.Errorf("invalid name %s", name)
 	}
@@ -35,4 +35,11 @@ func (s *Sys) NewTileset(name string) (*Tileset, error) {
 	}
 	ts.Name = name
 	return ts, nil
+}
+func (s *Sys) DelTset(id ids.Tset) error {
+	// abort if tset still in use
+	if s.Lvl.Find(func(l *Lvl) bool { return l.Tset == id }) != nil {
+		return fmt.Errorf("cannot delete %s %d used", id.Top(), id)
+	}
+	return s.Tset.Set(id, nil)
 }

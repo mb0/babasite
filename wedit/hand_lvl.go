@@ -13,7 +13,7 @@ import (
 
 func tsetNew(ed *ConnSubs, m *hub.Msg) error {
 	req := ParseName(m)
-	ts, err := ed.Lvl.NewTileset(req.Name)
+	ts, err := ed.Lvl.NewTset(req.Name)
 	if err != nil {
 		return err
 	}

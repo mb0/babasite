@@ -6,7 +6,7 @@ import (
 	"github.com/mb0/babasite/game/ids"
 )
 
-type Tileset struct {
+type Tset struct {
 	ID    ids.Tset   `json:"id"`
 	Name  string     `json:"name"`
 	Infos []TileInfo `json:"infos"`
@@ -21,7 +21,7 @@ type TileInfo struct {
 	Asset ids.Asset `json:"asset,omitempty"`
 }
 
-func (*Tileset) Make(id uint32) Tileset              { return Tileset{ID: ids.Tset(id)} }
-func (ts *Tileset) UID() uint32                      { return uint32(ts.ID) }
-func (ts *Tileset) UnmarshalBinary(raw []byte) error { return json.Unmarshal(raw, ts) }
-func (ts *Tileset) MarshalBinary() ([]byte, error)   { return json.Marshal(ts) }
+func (*Tset) Make(id uint32) Tset                 { return Tset{ID: ids.Tset(id)} }
+func (ts *Tset) UID() uint32                      { return uint32(ts.ID) }
+func (ts *Tset) UnmarshalBinary(raw []byte) error { return json.Unmarshal(raw, ts) }
+func (ts *Tset) MarshalBinary() ([]byte, error)   { return json.Marshal(ts) }

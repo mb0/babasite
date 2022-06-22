@@ -8,8 +8,6 @@ and share one tileset for multiple maps. We want a simple interface to manage an
 
 import (
 	"fmt"
-	"log"
-	"path/filepath"
 
 	"github.com/mb0/babasite/game/gamed"
 	"github.com/mb0/babasite/game/geo"
@@ -26,98 +24,12 @@ type Room struct {
 }
 
 func NewRoom(name, datapath string) *Room {
-	store := NewFileStore(filepath.Join(datapath, "maped"))
-	// load all assets into store
-	err := store.LoadAll()
-	if err != nil {
-		log.Fatalf("maped failed to load store: %v", err)
-	}
-	return &Room{
-		ChatRoom: *site.NewChat(name),
-		Store:    store,
-		RoomSubs: gamed.MakeRoomSubs(),
-	}
+	return &Room{}
 }
 func (r *Room) Route(m *hub.Msg) {
-	res := r.handle(m)
-	if res != nil {
-		hub.Send(m.From, res)
-	}
 }
 func (r *Room) handle(m *hub.Msg) *hub.Msg {
 	switch m.Subj {
-	case "enter":
-		r.Enter(m)
-		// init info message with map infos and tilesets
-		return site.RawMsg("init", Info{
-			Infos:    r.Store.WorldInfos(),
-			Tilesets: r.Store.Tilesets(),
-		})
-	case "chat":
-		r.Chat(m)
-	case "exit":
-		r.Unsub(m.From.ID())
-		r.Exit(m)
-	case "tileset.new":
-		var req struct {
-			Name string
-			Copy string
-		}
-		m.Unmarshal(&req)
-		if !gamed.NameCheck.MatchString(req.Name) {
-			return m.ReplyErr(fmt.Errorf("invalid tileset name %s", req.Name))
-		}
-		ts := r.Store.Tileset(req.Name)
-		if ts != nil {
-			return m.ReplyErr(fmt.Errorf("tileset %s already exists", req.Name))
-		}
-		// TODO use copy if set to copy an existing tileset
-		tmp := gamed.DefaultTileset
-		tmp.Name = req.Name
-		r.Store.SaveTileset(&tmp)
-		r.Bcast(site.RawMsg(m.Subj, req), 0)
-		return site.RawMsg("tileset.open", tmp)
-	case "tile.edit":
-		// edit a specific tile
-		var req struct {
-			Tileset string `json:"tileset"`
-			Tile    int    `json:"tile"`
-			lvl.TileInfo
-		}
-		m.Unmarshal(&req)
-		if !gamed.NameCheck.MatchString(req.Tileset) {
-			return m.ReplyErr(fmt.Errorf("invalid tileset name %s", req.Tileset))
-		}
-		ts := r.Store.Tileset(req.Tileset)
-		if ts == nil {
-			return m.ReplyErr(fmt.Errorf("tileset %s does not exist", req.Tileset))
-		}
-		if req.Tile < 0 {
-			var max lvl.Tile
-			for _, nfo := range ts.Infos {
-				if nfo.Tile > max {
-					max = nfo.Tile
-				}
-			}
-			req.TileInfo.Tile = max + 1
-			ts.Infos = append(ts.Infos, req.TileInfo)
-		} else {
-			idx := -1
-			req.TileInfo.Tile = lvl.Tile(req.Tile)
-			for i, nfo := range ts.Infos {
-				if req.TileInfo.Tile == nfo.Tile {
-					idx = i
-					break
-				}
-			}
-			if idx < 0 {
-				return m.ReplyErr(fmt.Errorf("tile %d not found in %s", req.Tile, req.Tileset))
-			} else {
-				ts.Infos[idx] = req.TileInfo
-			}
-		}
-		r.Store.SaveTileset(ts)
-		r.Bcast(site.RawMsg(m.Subj, req), 0)
 	case "map.new":
 		var req struct {
 			Name string
@@ -143,7 +55,7 @@ func (r *Room) handle(m *hub.Msg) *hub.Msg {
 		}
 		ts := r.Store.Tileset(req.Tileset)
 		if ts == nil {
-			ts = &lvl.Tileset{Name: req.Tileset, Infos: []lvl.TileInfo{
+			ts = &lvl.Tset{Name: req.Tileset, Infos: []lvl.TileInfo{
 				{Tile: 0, Name: "void", Color: 0xffffff, Block: true, Group: "basic"},
 			}}
 		}
