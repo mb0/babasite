@@ -37,25 +37,17 @@ span.color {
 	display: inline-flex;
 	align-content: center;
 }
-span.color span {
-	width: 20px;
-	height:20px;
-	border-radius: 3px;
-	border: 1px solid #222;
-	margin-left: 2px
+.color span {
+	width:24px;
+	height:24px;
 }
 .color label {
-	min-width: 4em;
-}
-div.color span {
-	width:1.4em;
-	height:1.4em;
+	width: 48px;
+	text-overflow: ellipse;
+	white-space: nowrap;
 }
 .color div {
 	margin-left: 4px;
-}
-.tool {
-	padding: 4px;
 }
 .pal {
 	padding: 4px;

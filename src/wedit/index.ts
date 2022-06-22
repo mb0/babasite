@@ -89,7 +89,7 @@ const editorSubs = (v:WeditView):Subs => {
 			const lid = parseInt(path[3])
 			const lvl = res.lvl.find(l => l.id == lid)
 			if (!lvl) break
-			app.send('grid.open', {id:lvl.grid})
+			app.send('lvl.open', {id:lvl.id})
 			return
 		case "img":
 			const id = parseInt(path[3])

@@ -5,6 +5,7 @@ html, body {
 	width:100vw;
 	height:100vh;
 	font-family: Ubuntu, Helvetica, Arial, sans-serif;
+	color: #222;
 }
 form {
 	padding-bottom: 8px;
@@ -13,25 +14,46 @@ form label {
 	display: inline-block;
 	min-width: 100px;
 }
-.menu span {
-	display: inline-block;
-	margin: .5em 2em;
+form span.help {
+	margin-left: 16px;
+}
+.menu {
+	display: flex;
+	align-items: baseline;
+}
+.menu span, .menu b {
+	display: block;
+	margin: .5em 1.5em;
 }
 .icon {
-	display: inline-block;
-	width: 24px;
-	height: 24px;
+	display: flex;
+	align-items: center;
+	align-content: center;
 }
 .icon svg {
 	width: 24px;
 	height: 24px;
 	fill: #666 !important;
 }
+.row {
+	display:flex;
+}
+.tool .row {
+	margin-bottom: 5px;
+}
 .tool input[type="radio"], .tool input[type="checkbox"] {
 	display:none;
 }
 .tool input[type="radio"]:checked + .icon svg,
 .tool input[type="checkbox"]:checked + .icon svg {
+	fill: #222 !important;
+}
+#modal header {
+	font-size: 24px;
+	line-height: 30px;
+	margin-bottom: 10px;
+}
+a:hover .icon svg, input:hover + .icon svg {
 	fill: #222 !important;
 }
 @media (prefers-color-scheme: dark) {
@@ -44,12 +66,16 @@ form label {
 	}
 	#modal {
 		background-color: #555;
+		color: #222;
 	}
 	.icon svg {
 		fill: #777 !important;
 	}
 	.tool input[type="radio"]:checked + .icon svg,
 	.tool input[type="checkbox"]:checked + .icon svg {
+		fill: #eee !important;
+	}
+	a:hover .icon svg, input:hover + .icon svg {
 		fill: #eee !important;
 	}
 }

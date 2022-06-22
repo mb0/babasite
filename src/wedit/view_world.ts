@@ -1,5 +1,6 @@
 import h from 'web/html'
-import {Layout} from 'game/dock'
+import {Menu} from 'web/menu'
+import {Dock, Layout} from 'game/dock'
 import app from 'app'
 import {Img} from 'game/pix'
 import {Grid} from 'game/lvl'
@@ -15,20 +16,11 @@ export function worldSel(worlds:string[]):HTMLElement {
 }
 
 export class WorldView {
+	treev:WorldTree
 	gridv?:GridView
 	imgv?:ImgView
 	constructor(readonly data:WorldData, readonly dock:Layout) {
-		const click = (top:string, el:any) => {
-			console.log("open "+ top, el)
-			if (top == "lvl") app.send("lvl.open", {id:el.id})
-			else if (top == "img") app.send("img.open", {id:el.id})
-			else if (top == "clip") {
-				// TODO do not reopen img
-				location.hash = `#wedit/${data.name}/img/${el.img}/${el.id}`
-				app.send("img.open", {id:el.img})
-			}
-		}
-		dock.add({label:'World '+ data.name, el:worldTree(data, click), group:"wedit"}, 0)
+		dock.add(this.treev = new WorldTree(this), 0)
 		h.repl(dock.main, "")
 	}
 	lvlOpen(g:Grid):void {
@@ -53,14 +45,37 @@ export class WorldView {
 }
 
 type TopClick = (top:string, el:any)=>void
-function worldTree(data:WorldData, click:TopClick):HTMLElement {
-	return h('ul.wtree', namedTables.map(({top, label}) => {
-		if (top == "clip") return
-		const el = top == "img" ? imgTree(data, click) :
-			tableTree((data as any)[top], top, click)
-		const open = top == "lvl" || top == "img"
-		return h('li.sum', h('details', {open}, h('summary', label), el))
-	}))
+
+class WorldTree implements Dock {
+	el:HTMLElement
+	label:string
+	group = "wedit"
+	cont?:HTMLElement
+	menu:Menu
+	constructor(public w:WorldView) {
+		const d = w.data
+		this.label = "World "+ d.name
+		this.menu = {act:it=>console.log('menu', it), list:[
+			{name:'world.sel', icon:'swap', label:'Welt auswählen'},
+		]}
+		const click = (top:string, el:any) => {
+			console.log("open "+ top, el)
+			if (top == "lvl") app.send("lvl.open", {id:el.id})
+			else if (top == "img") app.send("img.open", {id:el.id})
+			else if (top == "clip") {
+				// TODO do not reopen img
+				location.hash = `#wedit/${d.name}/img/${el.img}/${el.id}`
+				app.send("img.open", {id:el.img})
+			}
+		}
+		this.el = h('ul.wtree', namedTables.map(({top, label}) => {
+			if (top == "clip") return
+			const sub = top == "img" ? imgTree(d, click) :
+				tableTree((d as any)[top], top, click)
+			const open = top == "lvl" || top == "img"
+			return h('li.sum', h('details', {open}, h('summary', label), sub))
+		}))
+	}
 }
 
 function tableTree(list:any[], top:string, click:TopClick):HTMLElement {

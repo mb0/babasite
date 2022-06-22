@@ -26,12 +26,12 @@ export function toolView<T>(ctx:ToolViewCtx<T>):ToolView<T> {
 	const bgs = h('span')
 	const fl = h('')
 	h.add(el,
-		h('', Object.keys(tools).map(tool => h('label', h('input', {
+		h('.row', Object.keys(tools).map(tool => h('label', h('input', {
 			type:'radio', name:'tool', value:tool,
 			checked: ctx.tool.active == tool,
 			onchange: () => ctx.tool.active = tool,
 		}), hIcon(tool)))),
-		h('', opts.map(opt => h('label', h('input', {
+		h('.row', opts.map(opt => h('label', h('input', {
 			type:'checkbox', name:opt,
 			checked: (ctx.tool as any)[opt],
 			onchange: () => {

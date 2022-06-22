@@ -25,6 +25,11 @@ export function strInput(key:string, label:string, val?:string, opts?:any, help?
 	const wrap = labelWrap(label, el, help)
 	return {el, wrap, write: to => to[key] = el.value}
 }
+export function numInput(key:string, label:string, val?:number, opts?:any, help?:string):Input {
+	let el = uintInput(val, opts)
+	const wrap = labelWrap(label, el, help)
+	return {el, wrap, write: to => to[key] = el.value}
+}
 export function colorInput(val?:number, opts?:any, help?:string):Input {
 	opts = opts||{}
 	opts.type = "color"
@@ -58,8 +63,9 @@ export function namedListSelect(key:string, label:string, list?:object[],
 export function tsetSelect(d:WorldData, cur?:number, opts?:object):Input {
 	return namedListSelect("tset", "Tileset", d.tset, cur, opts)
 }
-export function uintInput(val?:number):HTMLInputElement {
-	return hInput('', {value:val||'', required:true, inputMode:'numeric', pattern:'[0-9]+'})
+export function uintInput(val?:number, opts?:any):HTMLInputElement {
+	opts = Object.assign({value:val||'', required:true, inputMode:'numeric', pattern:'[0-9]+'}, opts)
+	return hInput('', opts)
 }
 export function dimInput(d?:Partial<Dim>):Input {
 	const wel = uintInput(d?.w)

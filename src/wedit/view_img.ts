@@ -22,9 +22,7 @@ export class ImgView {
 	pal:Pal
 	clips:Clip[]
 	clip?:Clip
-	tool:{fg:number, bg:number}
 	palv:PalView
-	toolv:ToolView<number>
 	constructor(public wd:WorldData, dock:Layout, id:number) {
 		this.img = wd.img.find(i => i.id == id)!
 		this.pal = wd.pal.find(p => p.id == this.img.pal)!
@@ -38,9 +36,6 @@ export class ImgView {
 			})
 			ed.tmp.reset()
 		})
-		this.tool = ed.tool
-		this.toolv = toolView(ed)
-		dock.add({label:'Tools', el:this.toolv.el, group:'img'}, 1)
 		const [cid, pid] = this.readHash(location.hash)
 		if (cid) this.clip = this.clips.find(c => c.id == cid)
 		if (!this.clip) this.clip = this.clips[0]
@@ -69,13 +64,7 @@ export class ImgView {
 				ed.sel = null
 			}
 			ed.repaint()
-		}), 2)
-	}
-	updateColor():void {
-		this.toolv.updateColor()
-	}
-	color(t:number):string {
-		return palColor(this.pal, t)
+		}), 1)
 	}
 	readHash(h:string) {
 		const p = h.split('/')

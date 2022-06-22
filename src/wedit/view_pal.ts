@@ -1,90 +1,88 @@
-import {h, pickColor} from 'web/html'
+import {h, hIcon, pickColor} from 'web/html'
 import {mount, unmount} from 'web/modal'
 import app from 'app'
 import {Pal, Feat} from 'game/pix'
 import {strInput, simpleForm} from './form'
+import {BaseDock} from 'game/dock'
+import {ToolView, toolView, ToolViewCtx} from 'game/tool'
 
 export interface PalViewCtx {
 	pal:Pal
-	tool:{fg:number, bg:number}
-	color(t:number):string
-	updateColor():void
+	ed:ToolViewCtx<number>
 }
 
-export class PalView {
-	label="Palette"
+export class PalView extends BaseDock {
+	head=h('span')
 	group="img"
-	el:HTMLElement
+	toolv:ToolView<number>
 	constructor(public ctx:PalViewCtx, public pals:Pal[], public click?:(idx:number)=>void) {
-		this.el = h('section.pal.inline')
+		super('.pal')
+		this.toolv = toolView(ctx.ed)
+		const act = (n:string) => {
+			if (n == 'pal.sel') mount(palSelect(pals, res => {
+				console.log("TODO img.edit pal", res)
+				unmount()
+			}))
+			else if (n == 'feat.new') mount(featForm({}, res => {
+				app.send("pal.edit", {
+					name:ctx.pal.name,
+					feat:res.name,
+					ins:[],
+				})
+				unmount()
+			}))
+		}
+		this.menu = {act, list:[
+			{name:'feat.new', icon:'plus', label:'Merkmal hinzufügen'},
+			{name:'pal.sel', icon:'swap', label:'Palette auswählen'},
+		]}
 		this.update()
 	}
 	update():void {
-		const {ctx, pals, click} = this
-		h.repl(this.el, h('header',
-				h('label', {onclick() {
-					mount(palSelect(pals, res => {
-						app.send("pal.open", {name:res.name})
-						unmount()
-					}))
-				}}, ctx.pal.name), ' ',
-				h('span', {onclick() {
-					mount(palForm({}, res => {
-						app.send("pal.new", res)
-						unmount()
-					}))
-				}}, '[new]')
-			),
-			h('', !ctx.pal.feat ? "no features" :
-				ctx.pal.feat.map((feat, f) => h('.color',
+		const {ctx:{ed, pal}, click} = this
+		this.head.innerText = 'Pal ' + pal.name
+		h.repl(this.el,
+			this.toolv.el,
+			h('', !pal.feat ? "no features" :
+				pal.feat.map((feat, f) => h('.color',
 					h('label', {onclick() {
 						if (click) click(f)
 					}}, feat.name),
 					feat.colors.map((_, c) => {
 						const pix = f*100+c
-						const css = ctx.color(pix)
+						const css = ed.color(pix)
 						return h('span', {
 							style:"background-color:"+css,
-						onclick() {
-							ctx.tool.fg = pix
-							ctx.updateColor()
+						onclick:()=> {
+							ed.tool.fg = pix
+							this.toolv.updateColor()
 						},
-						oncontextmenu(e) {
+						oncontextmenu:(e)=> {
 							e.preventDefault()
-							ctx.tool.bg = pix
-							ctx.updateColor()
+							ed.tool.bg = pix
+							this.toolv.updateColor()
 						},
 						ondblclick() {
 							pickColor(css, res => {
 								app.send("pal.edit", {
-									name:ctx.pal.name,
+									name:pal.name,
 									feat:feat.name,
 									idx:c, del:1, ins:[res],
 								})
 							})
 						},
 					})}),
-					h('span', {onclick() {
+					h('a', {onclick() {
 						pickColor('#7f7575', res => {
 							app.send("pal.edit", {
-								name:ctx.pal.name,
+								name:pal.name,
 								feat:feat.name,
 								idx:feat.colors.length,
 								ins:[res],
 							})
 						})
-					}}, '[+]')
+					}}, hIcon('plus'))
 				)),
-				h('span', {onclick() {
-					mount(featForm({}, res => {
-						app.send("pal.edit", {
-							name:ctx.pal.name,
-							feat:res.name,
-							ins:[],
-						})
-						unmount()
-					}))
-				}}, '[+]')
 			),
 		)
 	}
@@ -93,6 +91,12 @@ export class PalView {
 function palSelect(pals:Pal[], submit:(p:Pal)=>void) {
 	return h('section.form',
 		h('header', 'Palette auswählen'),
+		h('span', {onclick() {
+			mount(palForm({}, res => {
+				app.send("pal.new", res)
+				unmount()
+			}))
+		}}, '[new]'),
 		h('ul', pals.map(p => h('li', {onclick:()=> submit(p)}, p.name))),
 	)
 }

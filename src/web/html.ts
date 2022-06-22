@@ -11,9 +11,12 @@ export function h(sel:string, args?:HArg|HData, ...data:HData[]):HTMLElement {
 	if (m[3]) el.className = m[3].replace('.', ' ')
 	if (args && !addChild(el, args)) {
 		Object.keys(args).forEach(key => {
-			if (key == 'list' || key == 'for')
-				el.setAttribute(key, args[key])
-			else (el as any)[key] = args[key]
+			const v = args[key]
+			if (key == 'list' || key == 'for') {
+				el.setAttribute(key, v)
+			} else if (!key.indexOf("data-")) {
+				el.dataset[key.slice(5)] = v
+			} else (el as any)[key] = v
 		})
 	}
 	if (data) addChild(el, data)
@@ -83,8 +86,8 @@ export function pickColor(val:string, submit:(val:string)=>void) {
 	input.click()
 }
 
-export function hIcon(name:string) {
-	const el = h('span.icon', {title:name})
+export function hIcon(name:string, opts?:any) {
+	const el = h('i.icon', opts||{title:name})
 	el.innerHTML = `<svg><use href="/ic.svg#${ name }" /></svg>`
 	return el
 }

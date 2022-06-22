@@ -1,4 +1,5 @@
 import {h, HData} from 'web/html'
+import {Menu, renderMenu} from 'web/menu'
 import './dock.css'
 
 /*
@@ -14,12 +15,25 @@ on a smaller screen in landscape mode we show only one dock maximized.
 on a small screen in portrait mode we add a menu and use model popups for docks.
 */
 
+export abstract class BaseDock implements Dock {
+	el:HTMLElement
+	label?:string
+	group?:string
+	sel?:string
+	head?:HTMLElement
+	cont?:HTMLElement
+	menu?:Menu
+	constructor(sel:string) { this.el = h(sel) }
+}
+
 export interface Dock {
 	el:HTMLElement
-	label:string
+	label?:string
 	group?:string
+	head?:HTMLElement
 	cont?:HTMLElement
 	sel?:string
+	menu?:Menu
 }
 
 export interface Layout {
@@ -46,7 +60,8 @@ export function newLayout(sel?:string, header?:HData, body?:HData):Layout {
 			if (idx < 0) return
 			if (!d.cont) {
 				const sel = 'details.dock'+(d.sel||'')
-				d.cont = h(sel, {open:true}, h('summary', d.label), d.el)
+				const menu = d.menu && renderMenu(d.menu)
+				d.cont = h(sel, {open:true}, h('summary', d.head||d.label, menu||null), d.el)
 			}
 			docks.splice(idx, 0, d)
 			h.repl(cont, docks.map(d => d.cont!))

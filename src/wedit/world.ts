@@ -31,10 +31,10 @@ export interface Table {
 }
 
 export const namedTables:Table[] = [
-	{top:"tset", label:"Tiles"},
+	{top:"tset", label:"Tileset"},
 	{top:"lvl", label:"Level"},
-	{top:"pal", label:"Paletten"},
-	{top:"img",label: "Assets"},
-	{top:"clip", label:"Clips"},
+	{top:"pal", label:"Palette"},
+	{top:"img",label: "Asset"},
+	{top:"clip", label:"Clip"},
 ]
 
