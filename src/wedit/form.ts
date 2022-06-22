@@ -2,7 +2,7 @@ import {Dim} from 'game/geo'
 import {cssColor} from 'game/color'
 import {formID, h, hInput} from 'web/html'
 import {kinds} from 'game/pix'
-import {WorldData} from './world'
+import {Slots, Top, WorldData} from './world'
 
 export interface Input {
 	el:HTMLElement
@@ -51,7 +51,7 @@ export function kindSelect(val?:string):Input {
 	const wrap = labelWrap('Art', el)
 	return {el, wrap, write: to => to.kind = el.value}
 }
-export function namedListSelect(key:string, label:string, list?:object[],
+export function namedListSelect<T extends Top>(key:string, label:string, list?:Slots<T>,
 		cur?:number, opts?:object):Input {
 	let el = hInput('select', opts||{})
 	if (list) h.add(el, list.map((o:any) => {
@@ -59,9 +59,6 @@ export function namedListSelect(key:string, label:string, list?:object[],
 	}))
 	const wrap = labelWrap(label, el)
 	return {el, wrap, write: to => to[key] = parseInt(el.value, 10)}
-}
-export function tsetSelect(d:WorldData, cur?:number, opts?:object):Input {
-	return namedListSelect("tset", "Tileset", d.tset, cur, opts)
 }
 export function uintInput(val?:number, opts?:any):HTMLInputElement {
 	opts = Object.assign({value:val||'', required:true, inputMode:'numeric', pattern:'[0-9]+'}, opts)

@@ -9,6 +9,7 @@ import {toolView, ToolView, ToolViewCtx} from 'game/tool'
 import {WorldData} from './world'
 
 export interface TsetViewCtx {
+	wd:WorldData
 	tset:Tset
 	ed:ToolViewCtx<number>
 }
@@ -17,11 +18,11 @@ export class TsetView extends BaseDock {
 	head=h('span', 'Tset')
 	group="lvl"
 	toolv:ToolView<number>
-	constructor(public wd:WorldData, public ctx:TsetViewCtx) {
+	constructor(public ctx:TsetViewCtx) {
 		super('.tset')
 		this.toolv = toolView(ctx.ed)
 		const act = (n:string) => {
-			if (n == 'tset.sel') mount(tsetSelect(wd.tset, res => {
+			if (n == 'tset.sel') mount(tsetSelect(ctx.wd.tset.all(), res => {
 				console.log("TODO test.sel", res)
 				unmount()
 			}))

@@ -19,27 +19,27 @@ export class WorldView {
 	treev:WorldTree
 	lvlv?:LvlView
 	imgv?:ImgView
-	constructor(readonly data:WorldData, readonly dock:Layout) {
+	constructor(readonly d:WorldData, readonly dock:Layout) {
 		dock.add(this.treev = new WorldTree(this), 0)
 		h.repl(dock.main, "")
 	}
 	lvlOpen(g:Grid):void {
-		const {data, dock} = this
-		if (data.grid) {
+		const {d, dock} = this
+		if (d.grid) {
 			// TODO clean up old editor
 		}
-		data.grid = g
+		d.grid = g
 		dock.filter(({group}) => !group || group == "wedit")
-		const lv = this.lvlv = new LvlView(data, dock)
+		const lv = this.lvlv = new LvlView(d, dock)
 		location.hash = lv.writeHash()
 	}
 	imgOpen(pd:PicData):void {
-		const {data, dock} = this
+		const {d, dock} = this
 		// TODO clean up old state
-		if (!data.pics) data.pics = new Map()
-		pd.pics.forEach(p => data.pics!.set(p.id, p))
+		if (!d.pics) d.pics = new Map()
+		pd.pics.forEach(p => d.pics!.set(p.id, p))
 		dock.filter(({group}) => !group || group == "wedit")
-		const iv = this.imgv = new ImgView(data, dock, pd.id)
+		const iv = this.imgv = new ImgView(d, dock, pd.id)
 		location.hash = iv.writeHash()
 	}
 }
@@ -47,17 +47,19 @@ export class WorldView {
 type TopClick = (top:string, el:any)=>void
 
 class WorldTree implements Dock {
-	el:HTMLElement
+	el = h('ul.wtree')
 	label:string
 	group = "wedit"
 	cont?:HTMLElement
 	menu:Menu
 	constructor(public w:WorldView) {
-		const d = w.data
-		this.label = "World "+ d.name
+		this.label = "World "+ w.d.name
 		this.menu = {act:it=>console.log('menu', it), list:[
 			{name:'world.sel', icon:'swap', label:'Welt auswählen'},
 		]}
+	}
+	update():void {
+		const {d} = this.w
 		const click = (top:string, el:any) => {
 			console.log("open "+ top, el)
 			if (top == "lvl") app.send("lvl.open", {id:el.id})
@@ -68,8 +70,8 @@ class WorldTree implements Dock {
 				app.send("img.open", {id:el.img})
 			}
 		}
-		this.el = h('ul.wtree', namedTables.map(({top, label}) => {
-			if (top == "clip") return
+		h.repl(this.el, namedTables.map(({top, label}) => {
+			if (top == "clip") return null
 			const sub = top == "img" ? imgTree(d, click) :
 				tableTree((d as any)[top], top, click)
 			const open = top == "lvl" || top == "img"
@@ -84,9 +86,9 @@ function tableTree(list:any[], top:string, click:TopClick):HTMLElement {
 	}))
 }
 
-function imgTree(data:WorldData, click:TopClick):HTMLElement {
-	return h('ul', data.img.map((img:Img) => {
-		const clips = data.clip.filter(c => c.img == img.id)
+function imgTree(d:WorldData, click:TopClick):HTMLElement {
+	return h('ul', d.img.fmap((img:Img) => {
+		const clips = d.clip.all(c => c.img == img.id)
 		const onctx = (e:any) => {
 			e.preventDefault()
 			click("img", img)

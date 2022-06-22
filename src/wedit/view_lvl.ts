@@ -15,8 +15,8 @@ export class LvlView {
 
 	constructor(public wd:WorldData, dock:Layout) {
 		const grid = wd.grid!
-		const lvl = this.lvl = wd.lvl.find(l => l.grid == grid.id)!
-		this.tset = wd.tset.find(t => t.id == lvl!.tset)!
+		const lvl = this.lvl = wd.lvl.one(l => l.grid == grid.id)!
+		this.tset = wd.tset.get(lvl.tset)!
 		const ed = this.ed = gridEditor(lvl, t => tileColor(this.tset, t), edit => {
 			app.send("grid.edit", {
 				...edit,
@@ -27,7 +27,7 @@ export class LvlView {
 		ed.c.setStage({x:8, y:8, w:lvl.w, h:lvl.h, zoom:10, bg:ed.color(0)})
 		ed.update(grid)
 		h.repl(dock.main, ed.c.el)
-		dock.add(this.tsetv = new TsetView(wd, this), 1)
+		dock.add(this.tsetv = new TsetView(this), 1)
 	}
 	writeHash():string {
 		const {wd, lvl} = this

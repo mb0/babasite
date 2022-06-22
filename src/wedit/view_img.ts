@@ -5,7 +5,6 @@ import {Pal, Img, Clip, Pic, palColor} from 'game/pix'
 import app from 'app'
 import {WorldData} from './world'
 import {kindSelect, nameInput, dimInput, namedListSelect, simpleForm} from './form'
-import {ToolView, toolView} from 'game/tool'
 import {PalView} from './view_pal'
 import {ClipView} from './view_clip'
 import {gridEach, gridSel} from 'game/grid'
@@ -24,9 +23,9 @@ export class ImgView {
 	clip?:Clip
 	palv:PalView
 	constructor(public wd:WorldData, dock:Layout, id:number) {
-		this.img = wd.img.find(i => i.id == id)!
-		this.pal = wd.pal.find(p => p.id == this.img.pal)!
-		this.clips = wd.clip.filter(c => c.img == id)!
+		this.img = wd.img.get(id)!
+		this.pal = wd.pal.get(this.img.pal)!
+		this.clips = wd.clip.all(c => c.img == id)
 		let d = {w:this.img.w, h:this.img.h}
 		const ed = this.ed = gridEditor(d, t => palColor(this.pal, t), edit => {
 			app.send("pic.edit", {
@@ -48,7 +47,7 @@ export class ImgView {
 		if (pic) ed.update(pic)
 		const clipv = new ClipView(wd, fst, this.pal, p => ed.update(p))
 		h.repl(dock.main, h('#img-view', clipv.el, ed.c.el))
-		dock.add(this.palv = new PalView(this, wd.pal, idx => {
+		dock.add(this.palv = new PalView(this, idx => {
 			let b = {x:0,y:0,w:0,h:0}
 			gridEach(ed.img!, (p, t) => {
 				if (idx == Math.floor(t/100) && !posIn(p, b))

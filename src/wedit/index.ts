@@ -5,7 +5,7 @@ import {Clip, Img, Pal, Pic} from 'game/pix'
 import {Grid, Lvl, Tset} from 'game/lvl'
 import {View, app, chat, menu} from 'app'
 import {Subs} from 'app/hub'
-import {WorldData} from './world'
+import {Slots, WorldData} from './world'
 import {WorldView, worldSel} from './view_world'
 import {PicData} from './view_img'
 import './wedit.css'
@@ -14,7 +14,7 @@ export interface WeditView extends View {
 	dock:Layout
 	worlds:string[]
 	w?:WorldView
-	setWorld(w?:WorldData):void
+	setWorld(wd?:WorldData):void
 }
 
 const v:WeditView = {name:"wedit", label:"World Editor",
@@ -22,11 +22,10 @@ const v:WeditView = {name:"wedit", label:"World Editor",
 	worlds:[],
 	start(app) {
 		app.on(v.subs = editorSubs(v))
-		const d = v.dock
-		h.add(d.head, h('', menu()))
+		h.add(v.dock.head, h('', menu()))
 		const chatel = chat.start(app)
-		d.add({label:'Chat', el:chatel, sel:'.dyn'})
-		return d.el
+		v.dock.add({label:'Chat', el:chatel, sel:'.dyn'})
+		return v.dock.el
 	},
 	stop(app) {
 		app.off(v.subs!)
@@ -79,41 +78,48 @@ const editorSubs = (v:WeditView):Subs => {
 		v.worlds = v.worlds.filter(w => w == res.name)
 		// exit editor if editing the world
 		// render worldSel if show
-		if (!v.w || v.w.data.name == res.name) v.setWorld()
+		if (!v.w || v.w.d.name == res.name) v.setWorld()
 	}),
-	"world.open": checkErr((res:WorldData) => {
-		v.setWorld(res)
+	"world.open": checkErr(res => {
+		const wd = res as WorldData
+		wd.pal = new Slots(res.pal)
+		wd.img = new Slots(res.img)
+		wd.clip = new Slots(res.clip)
+		wd.tset = new Slots(res.tset)
+		wd.lvl = new Slots(res.lvl)
+		v.setWorld(wd)
 		const path = location.hash?.slice(1).split('/')
 		switch (path[2]) {
 		case "lvl":
-			const lid = parseInt(path[3])
-			const lvl = res.lvl.find(l => l.id == lid)
+			const lvl = wd.lvl.get(parseInt(path[3]))
 			if (!lvl) break
 			app.send('lvl.open', {id:lvl.id})
 			return
 		case "img":
-			const id = parseInt(path[3])
-			const img = res.img.find(im => im.id == id)
+			const img = wd.img.get(parseInt(path[3]))
 			if (!img) break
-			app.send('img.open', {id})
+			app.send('img.open', {id:img.id})
 			return
 		}
 		location.hash = '#wedit/'+ res.name
 	}),
-	"pal.new": checkW(({data}, res:Pal) => {
+	"pal.new": checkW((w, res:Pal) => {
 		// add pal to world store
-		data.pal.push(res)
-		// TODO update wtree
+		w.d.pal.set(res.id, res)
+		// and update tree view
+		w.treev.update()
+		// TODO think about how to update the pal view and pal select modal
 	}),
-	"pal.del": checkW(({data}, res) => {
+	"pal.del": checkW((w, res) => {
 		// delete pal from world store
-		const idx = data.pal.findIndex(p => p.id == res.id)
-		if (idx < 0) return
-		data.pal.splice(idx, 1)
+		w.d.pal.set(res.id, null)
+		// update tree view
+		w.treev.update()
+		// we only allow deletion of unused pals
 	}),
-	"pal.edit": checkW(({data}, res) => {
-		// lookup pal and edit feature
-		let p = data.pal.find(p => p.id == res.id)
+	"pal.edit": checkW((w, res) => {
+		// lookup pal
+		let p = w.d.pal.get(res.id)
 		if (!p) return
 		if (!p.feat) p.feat = []
 		// update feature
@@ -129,22 +135,26 @@ const editorSubs = (v:WeditView):Subs => {
 		} else if (!res.idx && !res.del) {
 			f = {name:res.feat, colors:res.ins||[]}
 			p.feat.push(f)
-		} else {
-			return
-		}
+		} else return
+		// clear color cache
 		p.cache = undefined
-		// TODO repaint pal view and img editor if active pal
+		// repaint pal view and img editor if active pal
+		if (w.imgv?.pal.id == p.id) {
+			const iv = w.imgv!
+			iv.palv.update()
+			iv.ed.repaint()
+		}
 	}),
-	"img.new": checkW(({data}, res:Img) => {
+	"img.new": checkW((w, res:Img) => {
 		// add img to world store
-		data.img.push(res)
-		// TODO update wtree
+		w.d.img.set(res.id, res)
+		// update tree view
+		w.treev.update()
 	}),
-	"img.del": checkW(({data}, res) => {
+	"img.del": checkW((w, res) => {
 		// delete img from world store
-		const idx = data.img.findIndex(o => o.id == res.id)
-		if (idx < 0) return
-		data.img.splice(idx, 1)
+		w.d.img.set(res.id, null)
+		w.treev.update()
 	}),
 	"img.open": checkW((w, res:PicData) => {
 		// open clip editor
@@ -152,53 +162,58 @@ const editorSubs = (v:WeditView):Subs => {
 		w.imgOpen(res)
 	}),
 	"img.edit": checkW((w, res) => {
-		// lookup img and edit
+		// TODO lookup img and edit
 		// repaint pal view and img editor
 	}),
-	"clip.new": checkW(({data}, res:Clip) => {
-		data.clip.push(res)
-		// TODO update wtree
+	"clip.new": checkW((w, res:Clip) => {
+		w.d.clip.set(res.id, res)
+		w.treev.update()
 	}),
 	"clip.del": checkW((w, res) => {
 		// delete clip from world store
+		w.d.clip.set(res.id, null)
+		w.treev.update()
 	}),
 	"clip.edit": checkW((w, res) => {
-		// lookup img and edit
+		// TODO lookup clip and edit
 		// repaint pal view and img editor
 	}),
 	"pic.edit": checkW((w, res) => {
 		// lookup pic and edit
 		// repaint img editor if active pic
 	}),
-	"tset.new": checkW(({data}, res:Tset) => {
-		data.tset.push(res)
-		// TODO update wtree
+	"tset.new": checkW((w, res:Tset) => {
+		w.d.tset.set(res.id, res)
+		w.treev.update()
 	}),
-	"tset.del": checkErr(res => {
+	"tset.del": checkW((w, res) => {
 		// delete tset from world store
-		// think about whether to allow cascading delete or only allow dangling deletes
+		w.d.tset.set(res.id, null)
+		w.treev.update()
 	}),
 	"tile.edit": checkErr(res => {
-		// lookup tset and edit tile
+		// TODO lookup tset and edit tile
 		// repaint tset view and lvl editor if active tset
 	}),
-	"lvl.new": checkW(({data}, res:Lvl) => {
-		data.lvl.push(res)
-		// TODO update wtree
+	"lvl.new": checkW((w, res:Lvl) => {
+		w.d.lvl.set(res.id, res)
+		w.treev.update()
 	}),
-	"lvl.del": checkErr(res => {
+	"lvl.del": checkW((w, res) => {
 		// delete lvl from world store
-		// switch lvl if lvl is active in editor
+		w.d.tset.set(res.id, null)
+		w.treev.update()
+		// TODO switch lvl if lvl is active in editor
 	}),
-	"lvl.edit": checkErr(res => {
-		// lookup lvl and edit
+	"lvl.edit": checkW((w, res) => {
+		// TODO lookup lvl and edit
 		// repaint tset view and lvl editor if active lvl
 	}),
 	"lvl.open": checkW((w, res) => {
 		w.lvlOpen(gridTiles<number>(res, res.raw) as Grid)
 	}),
-	"grid.edit": checkErr(res => {
-		// lookup and edit grid
+	"grid.edit": checkW((w, res) => {
+		// TODO lookup and edit grid
 		// repaint lvl editor if active grid
 	}),
 }}

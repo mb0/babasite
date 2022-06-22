@@ -5,8 +5,10 @@ import {Pal, Feat} from 'game/pix'
 import {strInput, simpleForm} from './form'
 import {BaseDock} from 'game/dock'
 import {ToolView, toolView, ToolViewCtx} from 'game/tool'
+import {WorldData} from './world'
 
 export interface PalViewCtx {
+	wd:WorldData
 	pal:Pal
 	ed:ToolViewCtx<number>
 }
@@ -15,11 +17,11 @@ export class PalView extends BaseDock {
 	head=h('span')
 	group="img"
 	toolv:ToolView<number>
-	constructor(public ctx:PalViewCtx, public pals:Pal[], public click?:(idx:number)=>void) {
+	constructor(public ctx:PalViewCtx, public click?:(idx:number)=>void) {
 		super('.pal')
 		this.toolv = toolView(ctx.ed)
 		const act = (n:string) => {
-			if (n == 'pal.sel') mount(palSelect(pals, res => {
+			if (n == 'pal.sel') mount(palSelect(ctx.wd.pal.all(), res => {
 				console.log("TODO img.edit pal", res)
 				unmount()
 			}))
