@@ -1,4 +1,6 @@
 const path = require("path")
+const MiniCssExtractPlugin = require("mini-css-extract-plugin")
+const CssMinimizerPlugin = require("css-minimizer-webpack-plugin")
 
 module.exports = {
 	entry: {
@@ -8,6 +10,7 @@ module.exports = {
 		path: path.join(__dirname, 'dist'),
 		filename: '[name].bundle.js',
 	},
+	plugins: [new MiniCssExtractPlugin()],
 	module: {
 		rules: [{
 			test: /\.ts$/,
@@ -16,7 +19,7 @@ module.exports = {
 		}, {
 			test: /\.css$/,
 			exclude: /node_modules/,
-			use: ['style-loader', 'css-loader'],
+			use: [MiniCssExtractPlugin.loader, 'css-loader'],
 		}],
 	},
 	resolve: {
@@ -28,5 +31,8 @@ module.exports = {
 	},
 	devtool: "cheap-module-source-map",
 	stats: {assets:true, modules:false, children:false},
-	optimization: {usedExports: true},
+	optimization: {
+		usedExports: true,
+		minimizer: [new CssMinimizerPlugin()],
+	},
 }
