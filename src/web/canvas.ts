@@ -62,6 +62,7 @@ export function newZoomCanvas(id:string, width:number, height:number, bg?:string
 	return {...c,
 		clear() {
 			clear()
+			ctx.lineWidth = 4/s.zoom
 			ctx.strokeStyle = "black"
 			ctx.strokeRect(0, 0, s.w, s.h)
 			ctx.fillStyle = s.bg
