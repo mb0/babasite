@@ -111,8 +111,8 @@ export function newZoomCanvas(id:string, width:number, height:number, bg?:string
 				const y1 = (e.offsetY-s.y)/s.zoom
 				s.zoom += (e.deltaY < 0 ? 1 : -1)
 				if (s.zoom<1) s.zoom = 1
-				s.x = -x1*s.zoom+e.offsetX
-				s.y = -y1*s.zoom+e.offsetY
+				s.x = Math.round(-x1*s.zoom+e.offsetX)
+				s.y = Math.round(-y1*s.zoom+e.offsetY)
 				repaint(this)
 			})
 			el.addEventListener("pointerdown", e => {
@@ -120,8 +120,8 @@ export function newZoomCanvas(id:string, width:number, height:number, bg?:string
 				let start = {x:e.offsetX, y:e.offsetY}
 				this.startDrag(e.pointerId, e => {
 					let p = {x:e.offsetX, y:e.offsetY}
-					s.x += p.x-start.x
-					s.y += p.y-start.y
+					s.x += Math.round(p.x-start.x)
+					s.y += Math.round(p.y-start.y)
 					start = p
 					repaint(this)
 				})
