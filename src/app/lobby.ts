@@ -1,5 +1,5 @@
 import h from 'web/html'
-import {View} from 'app'
+import {View, menu} from 'app'
 
 interface Lobby extends View {
 	retry:number
@@ -28,17 +28,9 @@ export default {
 					if (idx >= 0) room = room.slice(0, idx)
 					app.send("enter", {room})
 				} else {
-					h.repl(el,
-						h('', 'babasite', h('sup', 'beta')),
-						h('.menu', app.views.filter(v =>
-							v != app.cur && v.name != 'lobby'
-						).map(v =>
-							h('', {onclick:() => {
-								app.send("enter", {room:v.name})
-							}}, v.label||v.name)
-						)),
+					h.repl(el, menu(),
 						h('hr'),
-						h('a', {href:'/baba_export.zip'}, "Export Data"),
+						h('span', {onclick: ()=> location.href = '/baba_export.zip'}, "Export Data"),
 					)
 				}
 			}

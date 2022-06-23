@@ -2,6 +2,7 @@ import {h} from 'web/html'
 import {Conn, connect, wsUrl} from 'web/socket'
 import {Hub, Subs, newHub} from 'app/hub'
 import lobby from 'app/lobby'
+import {selMenu} from 'app/menu'
 export {chat} from 'app/chat'
 export {menu} from 'app/menu'
 
@@ -40,6 +41,7 @@ export const app:App = {...newHub(),
 		app.cur = v
 		h.repl(app.cont, v.start(this))
 		if (v.name != 'lobby') {
+			selMenu(app.cont, v.name)
 			const hash = '#'+ v.name
 			if (location.hash.indexOf(hash) != 0)
 				location.hash = hash
