@@ -6,15 +6,11 @@ import (
 	"github.com/mb0/babasite/game/ids"
 )
 
-type MapPal map[Pixel]Color
-
-func (pal MapPal) Color(p Pixel) Color { return pal[p] }
-
 type Pal struct {
 	ID    ids.Pal `json:"id"`
 	Name  string  `json:"name"`
 	Kind  string  `json:"kind"`
-	Feats []*Feat `json:"feat"`
+	Feats []*Feat `json:"feats"`
 }
 
 func (pal *Pal) Color(p Pixel) Color {

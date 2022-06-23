@@ -121,9 +121,9 @@ const editorSubs = (v:WeditView):Subs => {
 		// lookup pal
 		let p = w.d.pal.get(res.id)
 		if (!p) return
-		if (!p.feat) p.feat = []
+		if (!p.feats) p.feats = []
 		// update feature
-		let f = p.feat.find(f => f.name == res.feat)
+		let f = p.feats.find(f => f.name == res.feat)
 		if (f) {
 			if (f.colors) {
 				let args:any = [res.idx||0, res.del||0]
@@ -134,7 +134,7 @@ const editorSubs = (v:WeditView):Subs => {
 			}
 		} else if (!res.idx && !res.del) {
 			f = {name:res.feat, colors:res.ins||[]}
-			p.feat.push(f)
+			p.feats.push(f)
 		} else return
 		// clear color cache
 		p.cache = undefined

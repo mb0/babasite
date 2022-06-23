@@ -45,8 +45,8 @@ export class PalView extends BaseDock {
 		this.head.innerText = 'Pal ' + pal.name
 		h.repl(this.el,
 			this.toolv.el,
-			h('', !pal.feat ? "no features" :
-				pal.feat.map((feat, f) => h('.color',
+			h('', !pal.feats ? "no features" :
+				pal.feats.map((feat, f) => h('.color',
 					h('label', {onclick() {
 						if (click) click(f)
 					}}, feat.name),

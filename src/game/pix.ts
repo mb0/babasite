@@ -14,7 +14,7 @@ export interface Pal {
 	id:number
 	name:string
 	kind:string
-	feat:Feat[]
+	feats:Feat[]
 	cache?:Map<number, string>
 }
 
@@ -50,8 +50,8 @@ export interface Pic extends Grid<number> {
 export function palGet(pal:Pal, p:number):string {
 	let c = p%100
 	let f = (p-c)/100
-	if (pal.feat?.length) {
-		let feat = pal.feat[f]
+	if (pal.feats?.length) {
+		let feat = pal.feats[f]
 		if (c < feat?.colors?.length) {
 			return feat.colors[c]
 		}
@@ -63,7 +63,7 @@ export function palColor(pal:Pal, p:number):string {
 	let c = pal.cache
 	if (!c)	{
 		c = pal.cache = new Map()
-		pal.feat.forEach((feat, fi) => {
+		pal.feats.forEach((feat, fi) => {
 			feat.colors.forEach((col, ci) => {
 				c!.set(fi*100+ci, cssColor(parseInt(col, 16)))
 			})
