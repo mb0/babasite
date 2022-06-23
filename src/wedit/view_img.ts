@@ -22,6 +22,7 @@ export class ImgView {
 	clips:Clip[]
 	clip?:Clip
 	palv:PalView
+	clipv:ClipView
 	constructor(public wd:WorldData, dock:Layout, id:number) {
 		this.img = wd.img.get(id)!
 		this.pal = wd.pal.get(this.img.pal)!
@@ -45,8 +46,8 @@ export class ImgView {
 		ed.c.setStage({x:8, y:8, w:fst.w, h:fst.h, zoom:12, bg:ed.color(0)})
 		const pic = pid && wd.pics?.get(pid) || wd.pics?.get(fst.seq[0].pic)
 		if (pic) ed.update(pic)
-		const clipv = new ClipView(wd, fst, this.pal, p => ed.update(p))
-		h.repl(dock.main, h('#img-view', clipv.el, ed.c.el))
+		this.clipv = new ClipView(wd, fst, this.pal, p => ed.update(p))
+		h.repl(dock.main, h('#img-view', this.clipv.el, ed.c.el))
 		dock.add(this.palv = new PalView(this, idx => {
 			let b = {x:0,y:0,w:0,h:0}
 			gridEach(ed.img!, (p, t) => {
@@ -64,6 +65,13 @@ export class ImgView {
 			}
 			ed.repaint()
 		}), 1)
+	}
+	updatePic(pic:Pic) {
+		const {clip, ed, clipv} = this
+		if (clip?.seq?.find(fr => fr.pic == pic.id))
+			clipv.update()
+		if (ed?.img?.id == pic.id)
+			ed.repaint()
 	}
 	readHash(h:string) {
 		const p = h.split('/')

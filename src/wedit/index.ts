@@ -1,6 +1,6 @@
 import h from 'web/html'
 import {newLayout, Layout} from 'game/dock'
-import {gridTiles} from 'game/grid'
+import {gridEach, gridSel, gridTiles} from 'game/grid'
 import {Clip, Img, Pal, Pic} from 'game/pix'
 import {Grid, Lvl, Tset} from 'game/lvl'
 import {View, app, chat, menu} from 'app'
@@ -9,6 +9,8 @@ import {Slots, WorldData} from './world'
 import {WorldView, worldSel} from './view_world'
 import {PicData} from './view_img'
 import './wedit.css'
+import {growPic} from 'chared/asset'
+import {boxIn} from 'game/geo'
 
 export interface WeditView extends View {
 	dock:Layout
@@ -180,7 +182,26 @@ const editorSubs = (v:WeditView):Subs => {
 	}),
 	"pic.edit": checkW((w, res) => {
 		// lookup pic and edit
+		const pic = w.d.pics?.get(res.pic)
+		if (!pic) return
+		if (res.repl) {
+			const {x, y, w, h} = res
+			Object.assign(pic, {x, y, w, h, raw:Array(w*h).fill(0)})
+		} else if (!boxIn(res, pic)) growPic(pic, res)
+		if (res.fill !== undefined) {
+			if (res.raw?.length) {
+				const sel = gridSel(res, res.raw)
+				gridEach(sel, p => pic.set(p, res.fill), pic, false)
+			} else {
+				gridEach(pic, p => pic.set(p, res.fill), res)
+			}
+		} else {
+			const img = gridTiles<number>(res, res.raw)
+			gridEach(img, (p, t) => pic.set(p, t), pic,
+				!res.copy ? 0 : undefined)
+		}
 		// repaint img editor if active pic
+		w.imgv?.updatePic(pic)
 	}),
 	"tset.new": checkW((w, res:Tset) => {
 		w.d.tset.set(res.id, res)
