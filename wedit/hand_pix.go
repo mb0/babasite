@@ -3,8 +3,8 @@ package wedit
 import (
 	"fmt"
 
-	"github.com/mb0/babasite/game/gamed"
 	"github.com/mb0/babasite/game/geo"
+	"github.com/mb0/babasite/game/grid"
 	"github.com/mb0/babasite/game/ids"
 	"github.com/mb0/babasite/game/pix"
 	"github.com/mb0/babasite/site"
@@ -282,7 +282,11 @@ func clipEdit(ed *ConnSubs, m *hub.Msg) (err error) {
 	return nil
 }
 func picEdit(ed *ConnSubs, m *hub.Msg) error {
-	var req gamed.EditPic
+	var req struct {
+		Img ids.Img `json:"img"`
+		Pic ids.Pic `json:"pic"`
+		grid.Edit[pix.Pixel]
+	}
 	m.Unmarshal(&req)
 	img, err := ed.Pix.Img.Get(req.Img)
 	if err != nil {
@@ -293,7 +297,7 @@ func picEdit(ed *ConnSubs, m *hub.Msg) error {
 	if sl.Empty() {
 		return ids.ErrNotFound
 	}
-	err = req.EditGrid.Apply(geo.Box{Dim: img.Dim}, &sl.Data.Pix)
+	err = req.Apply(geo.Box{Dim: img.Dim}, &sl.Data.Pix)
 	if err != nil {
 		return err
 	}

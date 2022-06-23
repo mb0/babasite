@@ -3,8 +3,8 @@ package wedit
 import (
 	"fmt"
 
-	"github.com/mb0/babasite/game/gamed"
 	"github.com/mb0/babasite/game/geo"
+	"github.com/mb0/babasite/game/grid"
 	"github.com/mb0/babasite/game/ids"
 	"github.com/mb0/babasite/game/lvl"
 	"github.com/mb0/babasite/site"
@@ -17,7 +17,9 @@ func tsetNew(ed *ConnSubs, m *hub.Msg) error {
 	if err != nil {
 		return err
 	}
-	ts.Infos = append(ts.Infos, gamed.DefaultTileset.Infos...)
+	ts.Infos = []lvl.TileInfo{
+		{Tile: 0, Name: "void", Color: 0xffffff, Block: true, Group: "basic"},
+	}
 	ed.Bcast(site.RawMsg(m.Subj, ts), 0)
 	return nil
 }
@@ -154,7 +156,10 @@ func lvlClose(ed *ConnSubs, m *hub.Msg) error {
 }
 
 func gridEdit(ed *ConnSubs, m *hub.Msg) error {
-	var req gamed.EditLevel
+	var req struct {
+		ID ids.Lvl `json:"id"`
+		grid.Edit[lvl.Tile]
+	}
 	m.Unmarshal(&req)
 	// apply edit
 	l, err := ed.Lvl.Lvl.Get(req.ID)
@@ -165,7 +170,7 @@ func gridEdit(ed *ConnSubs, m *hub.Msg) error {
 	if sl.Empty() {
 		return ids.ErrNotFound
 	}
-	err = req.EditGrid.Apply(geo.Box{Dim: l.Dim}, &sl.Data.Tiles)
+	err = req.Apply(geo.Box{Dim: l.Dim}, &sl.Data.Tiles)
 	if err != nil {
 		return err
 	}

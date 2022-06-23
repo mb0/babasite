@@ -49,9 +49,3 @@ func (p *Pic) MarshalBinary() ([]byte, error) {
 	binary.BigEndian.PutUint32(b, uint32(p.ID))
 	return append(b, data...), nil
 }
-
-// Seq is a named sequence of frames for animation.
-type Seq struct {
-	Name string    `json:"name"`
-	IDs  []ids.Pic `json:"ids,omitempty"`
-}

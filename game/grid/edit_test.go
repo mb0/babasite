@@ -1,4 +1,4 @@
-package gamed
+package grid_test
 
 import (
 	"reflect"
