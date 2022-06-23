@@ -30,7 +30,32 @@ func tsetDel(ed *ConnSubs, m *hub.Msg) error {
 	ed.Bcast(site.RawMsg(m.Subj, req), 0)
 	return nil
 }
-func tsetEdit(ed *ConnSubs, m *hub.Msg) error {
+func tsetEdit(ed *ConnSubs, m *hub.Msg) (err error) {
+	var req struct {
+		ID    ids.Tset       `json:"id"`
+		Name  *string        `json:"name,omitempty"`
+		Infos []lvl.TileInfo `json:"infos,omitempty"`
+		SliceReq[lvl.TileInfo]
+	}
+	m.Unmarshal(&req)
+	sl := ed.Lvl.Tset.Slot(req.ID)
+	if sl.Empty() {
+		return ids.ErrNotFound
+	}
+	res := &sl.Data
+	if req.Name != nil {
+		// TODO check uniqueness
+		res.Name = *req.Name
+	}
+	res.Infos, err = req.Apply(res.Infos, req.Infos)
+	if err != nil {
+		return err
+	}
+	sl.MarkMod()
+	ed.Bcast(site.RawMsg(m.Subj, req), 0)
+	return nil
+}
+func tsetTile(ed *ConnSubs, m *hub.Msg) error {
 	// edit a specific tile
 	var req struct {
 		ID   ids.Tset `json:"id"`
@@ -75,27 +100,9 @@ func tsetEdit(ed *ConnSubs, m *hub.Msg) error {
 func lvlNew(ed *ConnSubs, m *hub.Msg) error {
 	var req lvl.Lvl
 	m.Unmarshal(&req)
-	lvl, err := ed.Lvl.Lvl.New()
+	lvl, err := ed.Lvl.NewLvl(req)
 	if err != nil {
 		return err
-	}
-	g, err := ed.Lvl.Grid.New()
-	if err != nil {
-		return err
-	}
-	lvl.Name = req.Name
-	lvl.Dim = req.Dim
-	lvl.Tset = req.Tset
-	lvl.Grid = g.ID
-	if lvl.W <= 0 {
-		lvl.W = 80
-	}
-	if lvl.H <= 0 {
-		lvl.H = lvl.W
-	}
-	if lvl.Tset == 0 {
-		// TODO create default tileset?
-		lvl.Tset = 1
 	}
 	ed.Bcast(site.RawMsg(m.Subj, lvl), 0)
 	return nil
@@ -108,18 +115,6 @@ func lvlDel(ed *ConnSubs, m *hub.Msg) error {
 	if err != nil {
 		return err
 	}
-	ed.Bcast(site.RawMsg(m.Subj, req), 0)
-	return nil
-}
-func lvlEdit(ed *ConnSubs, m *hub.Msg) error {
-	var req lvl.Lvl
-	m.Unmarshal(&req)
-	sl := ed.Lvl.Lvl.Slot(req.ID)
-	if sl.Empty() {
-		return ids.ErrNotFound
-	}
-	sl.Data = req
-	sl.MarkMod()
 	ed.Bcast(site.RawMsg(m.Subj, req), 0)
 	return nil
 }
@@ -138,6 +133,18 @@ func lvlOpen(ed *ConnSubs, m *hub.Msg) error {
 	ed.UnsubKind(l.ID.Top())
 	ed.SubTop(l.ID)
 	hub.Send(m.From, site.RawMsg(m.Subj, g))
+	return nil
+}
+func lvlEdit(ed *ConnSubs, m *hub.Msg) error {
+	var req lvl.Lvl
+	m.Unmarshal(&req)
+	sl := ed.Lvl.Lvl.Slot(req.ID)
+	if sl.Empty() {
+		return ids.ErrNotFound
+	}
+	sl.Data = req
+	sl.MarkMod()
+	ed.Bcast(site.RawMsg(m.Subj, req), 0)
 	return nil
 }
 func lvlClose(ed *ConnSubs, m *hub.Msg) error {

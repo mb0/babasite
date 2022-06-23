@@ -17,11 +17,6 @@ type Sys struct {
 	Grid GridTable
 }
 
-func (s *Sys) GetTset(name string) *Tset {
-	return s.Tset.Find(func(ts *Tset) bool {
-		return ts.Name == name
-	})
-}
 func (s *Sys) NewTset(name string) (*Tset, error) {
 	err := ids.NamedUnique(&s.Tset, name)
 	if err != nil {
@@ -40,4 +35,43 @@ func (s *Sys) DelTset(id ids.Tset) error {
 		return fmt.Errorf("cannot delete %s %d used", id.Top(), id)
 	}
 	return s.Tset.Set(id, nil)
+}
+func (s *Sys) NewLvl(req Lvl) (*Lvl, error) {
+	lvl, err := s.Lvl.New()
+	if err != nil {
+		return nil, err
+	}
+	g, err := s.Grid.New()
+	if err != nil {
+		return nil, err
+	}
+	lvl.Name = req.Name
+	lvl.Dim = req.Dim
+	lvl.Tset = s.defTset(req.Tset)
+	lvl.Grid = g.ID
+	if lvl.W <= 0 {
+		lvl.W = 80
+	}
+	if lvl.H <= 0 {
+		lvl.H = lvl.W
+	}
+	return lvl, nil
+}
+
+func (s *Sys) defTset(id ids.Tset) ids.Tset {
+	p, _ := s.Tset.Get(id)
+	if p == nil {
+		p = ids.NamedFind(&s.Tset, "default")
+	}
+	if p == nil {
+		p, _ = s.NewTset("default")
+		if p == nil {
+			return 0
+		}
+		p.Infos = []TileInfo{
+			{Tile: 0, Name: "void", Color: 0xffffff, Block: true, Group: "basic"},
+			{Tile: 1, Name: "wall", Color: 0x888888, Block: true, Group: "basic"},
+		}
+	}
+	return p.ID
 }

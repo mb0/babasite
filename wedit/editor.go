@@ -5,6 +5,8 @@
 package wedit
 
 import (
+	"fmt"
+
 	"github.com/mb0/babasite/game"
 	"github.com/mb0/babasite/game/bolt"
 	"github.com/mb0/babasite/game/ids"
@@ -37,15 +39,19 @@ var editFuncs = map[string]EditFunc{
 	"tset.edit": tsetEdit,
 	"lvl.new":   lvlNew,
 	"lvl.del":   lvlDel,
-	"lvl.edit":  lvlEdit,
 	"lvl.open":  lvlOpen,
+	"lvl.edit":  lvlEdit,
 	"lvl.close": lvlClose,
 	"grid.edit": gridEdit,
+	"pal.new":   palNew,
+	"pal.del":   palDel,
+	"pal.edit":  palEdit,
+	"pal.feat":  palFeat,
 	"img.new":   imgNew,
 	"img.del":   imgDel,
-	"img.edit":  imgDel,
 	"img.open":  imgOpen,
 	"img.close": imgClose,
+	"img.edit":  imgEdit,
 	"clip.new":  clipNew,
 	"clip.del":  clipDel,
 	"clip.edit": clipEdit,
@@ -68,4 +74,24 @@ type IDReq[I ids.ID] struct {
 func ParseID[I ids.ID](m *hub.Msg) (req IDReq[I]) {
 	m.Unmarshal(&req)
 	return req
+}
+
+type SliceReq[T any] struct {
+	Idx  int  `json:"idx,omitempty"`
+	Del  int  `json:"del,omitempty"`
+	Copy bool `json:"copy,omitempty"`
+}
+
+func (r SliceReq[T]) Apply(old, new []T) ([]T, error) {
+	if len(new) == 0 && r.Del == 0 {
+		return old, nil
+	}
+	if r.Idx < 0 || r.Idx >= len(old) || r.Del < 0 || r.Idx+r.Del > len(old) {
+		return old, fmt.Errorf("invalid slice")
+	}
+	tmp := make([]T, 0, len(old)-r.Del+len(new))
+	tmp = append(tmp, old[:r.Idx]...)
+	tmp = append(tmp, new...)
+	tmp = append(tmp, old[r.Idx+r.Del:]...)
+	return tmp, nil
 }
