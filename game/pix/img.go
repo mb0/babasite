@@ -17,6 +17,7 @@ type Img struct {
 
 func (*Img) Make(id uint32) Img                  { return Img{ID: ids.Img(id)} }
 func (im *Img) UID() uint32                      { return uint32(im.ID) }
+func (im *Img) Named() string                    { return im.Name }
 func (im *Img) UnmarshalBinary(raw []byte) error { return json.Unmarshal(raw, im) }
 func (im *Img) MarshalBinary() ([]byte, error)   { return json.Marshal(im) }
 
@@ -38,5 +39,6 @@ type Frame struct {
 
 func (*Clip) Make(id uint32) Clip                { return Clip{ID: ids.Clip(id)} }
 func (c *Clip) UID() uint32                      { return uint32(c.ID) }
+func (c *Clip) Named() string                    { return c.Name }
 func (c *Clip) UnmarshalBinary(raw []byte) error { return json.Unmarshal(raw, c) }
 func (c *Clip) MarshalBinary() ([]byte, error)   { return json.Marshal(c) }

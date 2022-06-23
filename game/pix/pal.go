@@ -44,5 +44,6 @@ type Feat struct {
 
 func (*Pal) Make(id uint32) Pal                 { return Pal{ID: ids.Pal(id)} }
 func (p *Pal) UID() uint32                      { return uint32(p.ID) }
+func (p *Pal) Named() string                    { return p.Name }
 func (p *Pal) UnmarshalBinary(raw []byte) error { return json.Unmarshal(raw, p) }
 func (p *Pal) MarshalBinary() ([]byte, error)   { return json.Marshal(p) }

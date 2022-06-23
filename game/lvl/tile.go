@@ -23,5 +23,6 @@ type TileInfo struct {
 
 func (*Tset) Make(id uint32) Tset                 { return Tset{ID: ids.Tset(id)} }
 func (ts *Tset) UID() uint32                      { return uint32(ts.ID) }
+func (ts *Tset) Named() string                    { return ts.Name }
 func (ts *Tset) UnmarshalBinary(raw []byte) error { return json.Unmarshal(raw, ts) }
 func (ts *Tset) MarshalBinary() ([]byte, error)   { return json.Marshal(ts) }

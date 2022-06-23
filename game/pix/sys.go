@@ -24,11 +24,9 @@ func (s *Sys) GetPal(name string) *Pal {
 	})
 }
 func (s *Sys) NewPal(name string) (*Pal, error) {
-	if !ids.NameCheck.MatchString(name) {
-		return nil, fmt.Errorf("invalid name %s", name)
-	}
-	if old := s.GetPal(name); old != nil {
-		return nil, fmt.Errorf("pal %s already exists", name)
+	err := ids.NamedUnique(&s.Pal, name)
+	if err != nil {
+		return nil, err
 	}
 	pal, err := s.Pal.New()
 	if err != nil {
@@ -43,12 +41,11 @@ func (s *Sys) GetImg(name string) *Img {
 		return p.Name == name
 	})
 }
-func (s *Sys) NewImg(name string) (*Img, error) {
-	if !ids.NameCheck.MatchString(name) {
-		return nil, fmt.Errorf("invalid name %s", name)
-	}
-	if old := s.GetImg(name); old != nil {
-		return nil, fmt.Errorf("img %s already exists", name)
+func (s *Sys) NewImg(a Img) (*Img, error) {
+	// TODO check a kind
+	err := ids.NamedUnique(&s.Img, a.Name)
+	if err != nil {
+		return nil, err
 	}
 	img, err := s.Img.New()
 	if err != nil {

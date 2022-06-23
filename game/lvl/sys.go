@@ -23,11 +23,9 @@ func (s *Sys) GetTset(name string) *Tset {
 	})
 }
 func (s *Sys) NewTset(name string) (*Tset, error) {
-	if !ids.NameCheck.MatchString(name) {
-		return nil, fmt.Errorf("invalid name %s", name)
-	}
-	if old := s.GetTset(name); old != nil {
-		return nil, fmt.Errorf("tileset %s already exists", name)
+	err := ids.NamedUnique(&s.Tset, name)
+	if err != nil {
+		return nil, err
 	}
 	ts, err := s.Tset.New()
 	if err != nil {

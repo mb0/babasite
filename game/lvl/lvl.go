@@ -95,5 +95,6 @@ func (g *Grid) MarshalBinary() ([]byte, error) {
 
 func (*Lvl) Make(id uint32) Lvl                 { return Lvl{ID: ids.Lvl(id)} }
 func (l *Lvl) UID() uint32                      { return uint32(l.ID) }
+func (l *Lvl) Named() string                    { return l.Name }
 func (l *Lvl) UnmarshalBinary(raw []byte) error { return json.Unmarshal(raw, l) }
 func (l *Lvl) MarshalBinary() ([]byte, error)   { return json.Marshal(l) }
