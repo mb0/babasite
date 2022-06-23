@@ -57,6 +57,7 @@ class WorldTree implements Dock {
 		this.menu = {act:it=>console.log('menu', it), list:[
 			{name:'world.sel', icon:'swap', label:'Welt auswählen'},
 		]}
+		this.update()
 	}
 	update():void {
 		const {d} = this.w
