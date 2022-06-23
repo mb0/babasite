@@ -1,5 +1,5 @@
-import {Dim} from 'game/geo'
-import {Grid} from 'game/grid'
+import {Box, boxGrow, boxIn, Dim} from 'game/geo'
+import {Grid, gridEach, gridTiles} from 'game/grid'
 import {cssColor} from 'game/color'
 
 export const kind:{[kind:string]:string} = {
@@ -70,4 +70,12 @@ export function palColor(pal:Pal, p:number):string {
 		})
 	}
 	return c.get(p)!
+}
+
+export function growPic(p:Grid<number>, o:Box) {
+	if (o.w*o.h<=0||boxIn(o, p)) return
+	const b = boxGrow(p, o)
+	let tmp = gridTiles<number>(b)
+	gridEach(p, (p, t) => tmp.set(p, t))
+	Object.assign(p, tmp)
 }

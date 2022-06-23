@@ -1,7 +1,8 @@
 import h from 'web/html'
 import {newLayout, Layout} from 'game/dock'
+import {boxIn} from 'game/geo'
 import {gridEach, gridSel, gridTiles} from 'game/grid'
-import {Clip, Img, Pal, Pic} from 'game/pix'
+import {Clip, Img, Pal, Pic, growPic} from 'game/pix'
 import {Grid, Lvl, Tset} from 'game/lvl'
 import {View, app, chat, menu} from 'app'
 import {Subs} from 'app/hub'
@@ -9,8 +10,6 @@ import {Slots, WorldData} from './world'
 import {WorldView, worldSel} from './view_world'
 import {PicData} from './view_img'
 import './wedit.css'
-import {growPic} from 'chared/asset'
-import {boxIn} from 'game/geo'
 
 export interface WeditView extends View {
 	dock:Layout
