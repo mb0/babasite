@@ -1,6 +1,6 @@
 import {h} from 'web/html'
 import {Conn, connect, wsUrl} from 'web/socket'
-import {Hub, Subs, newHub} from 'app/hub'
+import {Hub, Subs} from 'app/hub'
 import lobby from 'app/lobby'
 import {selMenu} from 'app/menu'
 export {chat} from 'app/chat'
@@ -13,28 +13,21 @@ export interface View {
 	start(app:App):HTMLElement
 	stop(app:App):void
 }
-export interface App extends Hub {
-	cur:View|null
-	views:View[]
-	cont:HTMLElement
-	addView(view:View):View
-	show(name:string):void
-	start():void
-	connect():void
-	send(subj:string, data?:any):void
-}
-
-let conn:Conn|null = null
-
-export const app:App = {...newHub(),
-	cur: null,
-	views: [],
-	cont: document.querySelector("#app")!,
-	addView(view) {
-		app.views.push(view)
+export class App extends Hub {
+	cont:HTMLElement=document.querySelector("#app")!
+	views:View[]=[]
+	cur?:View
+	conn?:Conn
+	constructor() {
+		super()
+		this.addView(lobby)
+	}
+	addView(view:View):View {
+		this.views.push(view)
 		return view
-	},
-	show(name) {
+	}
+	show(name:string):void {
+		const app = this
 		const v = app.views.find(v => v.name == name)
 		if (!v) return
 		if (app.cur) app.cur.stop(app)
@@ -46,17 +39,16 @@ export const app:App = {...newHub(),
 			if (location.hash.indexOf(hash) != 0)
 				location.hash = hash
 		}
-	},
-	start() {
-		app.on({_close:() => {
+	}
+	start():void {
+		this.on({_close:() => {
 			lobby.retry++
-			app.show('lobby')
-		}, enter:(data) => app.show(data.room)})
-		app.show('lobby')
-	},
-	connect() {
-		const url = wsUrl('/hub')
-		conn = connect(url, (subj, data) => {
+			this.show('lobby')
+		}, enter:(data) => this.show(data.room)})
+		this.show('lobby')
+	}
+	connect():void {
+		this.conn = connect(wsUrl('/hub'), (subj, data) => {
 			switch (subj) {
 			case '_open':
 				lobby.retry = 0
@@ -73,19 +65,20 @@ export const app:App = {...newHub(),
 			default:
 				// console.log("got message "+subj, data)
 			}
-			app.trigger(subj, data)
+			this.trigger(subj, data)
 		})
-	},
-	send(subj, data) {
-		if (!conn || conn.ws.readyState != WebSocket.OPEN) {
+	}
+	send(subj:string, data?:any):void {
+		if (this.conn?.ws.readyState != WebSocket.OPEN) {
 			console.log("not connected. trying to send:", subj, data)
 		} else {
-			conn.send(subj, data)
+			// console.log("send message "+subj, data)
+			this.conn.send(subj, data)
 		}
 	}
 }
 
-app.addView(lobby)
+export const app = new App()
 
 export default app
 

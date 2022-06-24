@@ -2,43 +2,35 @@
 export type Sub = (data:any, subj:string)=>void
 export type Subs = {[key:string]:Sub}
 
-export interface Hub {
-	on(subj:string|Subs, func?:Sub):void
-	off(subj:string|Subs, func?:Sub):void
-	one(subj:string, func:Sub):void
-	trigger(subj:string, data?:any):void
-}
-
-export function newHub():Hub {
-	const subs:{[key:string]:Sub[]} = {}
-	const on = (subj:string|Subs, sub?:Sub) => {
+export class Hub {
+	readonly subs:{[key:string]:Sub[]} = {}
+	constructor() {}
+	on(subj:string|Subs, sub?:Sub):void {
 		if (typeof subj == "string") {
-			let list = subs[subj]
-			if (!list) subs[subj] = [sub!]
-			else list.push(sub!)
+			const ss = this.subs
+			let list = ss[subj] || (ss[subj] = [])
+			list.push(sub!)
 		} else {
-			Object.keys(subj).forEach(key => on(key, subj[key]))
+			Object.keys(subj).forEach(key => this.on(key, subj[key]))
 		}
 	}
-	const off = (subj:string|Subs, sub?:Sub) => {
+	off(subj:string|Subs, sub?:Sub):void {
 		if (typeof subj == "string") {
-			const list = subs[subj]
-			if (list) subs[subj] = list.filter(f => f != sub)
+			const ss = this.subs
+			const list = ss[subj]
+			if (list) ss[subj] = list.filter(f => f != sub)
 		} else {
-			Object.keys(subj).forEach(key => off(key, subj[key]))
+			Object.keys(subj).forEach(key => this.off(key, subj[key]))
 		}
 	}
-	return {on, off,
-		one(subj, func) {
-			const f = (data:any, subj:string) => {
-				func(data, subj)
-				off(subj, f)
-			}
-			on(subj, f)
-		},
-		trigger(subj, data) {
-			const list = subs[subj]
-			if (list) list.forEach(f => f(data, subj))
-		},
+	one(subj:string, sub:Sub):void {
+		const f = (data:any, subj:string) => {
+			sub(data, subj)
+			this.off(subj, f)
+		}
+		this.on(subj, f)
+	}
+	trigger(subj:string, data?:any):void {
+		this.subs[subj]?.forEach(f => f(data, subj))
 	}
 }
