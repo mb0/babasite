@@ -88,14 +88,20 @@ func palFeat(ed *ConnSubs, m *hub.Msg) (err error) {
 	return nil
 }
 func imgNew(ed *ConnSubs, m *hub.Msg) error {
-	var req pix.Img
+	var req struct {
+		pix.Img
+		Open bool `json:"open"`
+	}
 	m.Unmarshal(&req)
-	img, err := ed.Pix.NewImg(req)
+	img, err := ed.Pix.NewImg(req.Img)
 	if err != nil {
 		return err
 	}
 	ed.Bcast(site.RawMsg(m.Subj, img), 0)
-	return sendImgOpen(ed, img)
+	if req.Open {
+		return sendImgOpen(ed, img)
+	}
+	return nil
 }
 func imgDel(ed *ConnSubs, m *hub.Msg) error {
 	req := ParseID[ids.Img](m)
