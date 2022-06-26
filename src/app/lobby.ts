@@ -17,8 +17,10 @@ export default {
 		const stat = app.conn?.ws.readyState
 		if (stat && stat >= WebSocket.OPEN) {
 			h.repl(this.el, menu(),
-				h('hr'),
-				h('span', {onclick: ()=> location.href = '/baba_export.zip'}, "Export Data"),
+				h('hr'), h('.menu',
+				h('a', {href:'/baba_export.zip', download:true}, "Export Data"),
+				h('a', {href:'/logout'}, "Logout"),
+				),
 			)
 		} else {
 			h.repl(this.el, this.retry < 7 ? 'Verbindet'+dots.slice(6-this.retry) :

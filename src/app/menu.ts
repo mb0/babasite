@@ -2,12 +2,12 @@ import h from 'web/html'
 import app from 'app'
 
 export function menu() {
+	const {rr} = app
 	return h('header.menu',
-		h('a', {href:'/'}, 'babasite', h('sup', 'beta')),
+		rr.link('/', h('span', 'babasite', h('sup', 'beta'))),
 		app.views.map(v => v.name == 'lobby' ? null :
-			h('a', {href:'/'+v.name, 'data-room':v.name}, v.label||v.name)
+			rr.link('/'+v.name, v.label||v.name, {'data-room':v.name})
 		),
-		h('span', {onclick: () => location.href = '/logout'}, "Logout"),
 	)
 }
 

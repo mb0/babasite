@@ -1,4 +1,4 @@
-
+import {h, HData} from 'web/html'
 export type Handler = (...args:string[])=>void
 export type Routes = {[pat:string]:Handler}
 
@@ -12,7 +12,7 @@ export class Router {
 	cur:string
 	def?:(p:string)=>void
 	private onpop:(e:Event)=>void
-	private onclick:(e:MouseEvent)=>void
+	readonly onclick:(e:MouseEvent)=>void
 	constructor(public base:string, public routes:Route[]=[]) {
 		this.cur = this.rel()
 		this.onpop = e => {
@@ -24,12 +24,8 @@ export class Router {
 		this.onclick = e => {
 			if (e.button != 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.defaultPrevented)
 				return
-			const t = (e.target as HTMLElement).closest('a[href]') as HTMLAnchorElement
-			if (!t || t.target && t.target !== '_self' || t.hasAttribute('download'))
-				return
-			const l = location
-			if (t.origin != l.origin || !this.rel(l))
-				return
+			const t = e.target as HTMLAnchorElement
+			if (!t) return
 			e.preventDefault()
 			this.go(this.rel(t))
 		}
@@ -40,13 +36,11 @@ export class Router {
 	}
 	start(run?:boolean) {
 		addEventListener('popstate', this.onpop)
-		document.addEventListener('click', this.onclick)
 		if (run) go(this, this.cur)
 		return this
 	}
 	stop() {
 		removeEventListener('popstate', this.onpop)
-		document.removeEventListener('click', this.onclick)
 	}
 	rel(l:Loc=location, pure=false):string {
 		const p = l.pathname
@@ -54,8 +48,8 @@ export class Router {
 		if (!p.startsWith(b)) return ''
 		return '/' + p.slice(b.length) + (pure ? '' : l.search + l.hash)
 	}
-	nav():boolean {
-		return this.go(this.rel())
+	link(href:string, title:HData, opts?:any):HTMLElement {
+		return h('a', {...opts, href, onclick: this.onclick}, title)
 	}
 	go(p:string, repl?:boolean):boolean {
 		if (repl || this.cur != p) this.show(p, repl)
