@@ -5,6 +5,7 @@ import {gridEach, gridSel, gridTiles} from 'game/grid'
 import {Clip, Img, Pal, Pic, growPic} from 'game/pix'
 import {Grid, Lvl, Tset} from 'game/lvl'
 import {View, app, chat, menu} from 'app'
+import {Handler} from 'app/router'
 import {Subs} from 'app/hub'
 import {Slots, WorldData} from './world'
 import {WorldView, worldSel} from './view_world'
@@ -14,33 +15,98 @@ import './wedit.css'
 export interface WeditView extends View {
 	dock:Layout
 	worlds:string[]
+	a:WeditArgs
 	w?:WorldView
-	setWorld(wd?:WorldData):void
+	setArgs(a:WeditArgs):void
+}
+
+export interface WeditArgs {
+	w?:string
+	top?:string
+	id?:string
+	sub?:string
+	xtra?:string
+}
+
+const handler:Handler = (args:string)=> {
+	const [w, top, id, sub, xtra] = args?.split('/') || []
+	v.setArgs({w, top, id, sub, xtra})
 }
 
 const v:WeditView = {name:"wedit", label:"World Editor",
 	dock:newLayout("#wedit"),
-	worlds:[],
-	start(app) {
+	worlds:[], a:{},
+	routes: {
+		'/wedit': handler,
+		'/wedit/..': handler,
+	},
+	setArgs(a:WeditArgs) {
+		this.a = a
+		if (app.cur != this) {
+			app.send('enter', {room:'wedit'})
+			h.repl(v.dock.main, h('', "Lädt Editor"))
+			return
+		}
+		if (!a.w) {
+			if (v.w) v.w.stop()
+			v.w = undefined
+			// enter wedit room
+			if (!v.worlds.length) app.send('enter', {room:'wedit'})
+			// or show world select
+			else h.repl(v.dock.main, worldSel(v.worlds))
+			return
+		}
+		// check active world
+		if (v.w?.d.name != a.w) {
+			if (v.w) v.w.stop()
+			v.w = undefined
+			h.repl(v.dock.main, h('', "Lädt…"))
+			app.send('world.open', {name:a.w})
+			return
+		}
+		if (!a.top) {
+			// show world overview
+			h.repl(v.dock.main, h('', "Welt Übersicht"))
+			return
+		}
+		// check active topic
+		if (!a.id) {
+			// show topic overview
+			h.repl(v.dock.main, h('', "Topic Übersicht"))
+			return
+		}
+		// check active game object
+		if (!a.sub || !a.xtra) {
+			// show topic detail
+			const id = parseInt(a.id)
+			if (a.top == 'lvl') {
+				const lvl = v.w?.d.lvl.get(id)
+				if (lvl) app.send('lvl.open', {id})
+			} else if (a.top == 'img') {
+				const img = v.w?.d.img.get(id)
+				if (img) app.send('img.open', {id})
+			} else {
+				h.repl(v.dock.main, h('', "Topic Detail"))
+			}
+			return
+		}
+		// show sub or extra view
+		h.repl(v.dock.main, h('', "Sub oder Extra Detail"))
+	},
+	start() {
 		app.on(v.subs = editorSubs(v))
 		h.add(v.dock.head, h('', menu()))
-		const chatel = chat.start(app)
+		const chatel = chat.start()
 		v.dock.add({label:'Chat', el:chatel, sel:'.dyn'})
 		return v.dock.el
 	},
-	stop(app) {
+	stop() {
+		chat.stop()
 		app.off(v.subs!)
 		v.w = undefined
+		v.worlds = []
 		h.repl(v.dock.head)
 		v.dock.filter(() => false)
-	},
-	setWorld(wd?:WorldData) {
-		if (wd) {
-			v.w = new WorldView(wd, v.dock)
-		} else {
-			h.repl(v.dock.main, worldSel(v.worlds))
-			v.w = undefined
-		}
 	},
 }
 app.addView(v)
@@ -59,27 +125,21 @@ const editorSubs = (v:WeditView):Subs => {
 	return {
 	"wedit.init": checkErr(res => {
 		v.worlds = res.worlds||[]
-		const path = location.hash?.slice(1).split('/')
-		if (path.length > 1) {
-			h.repl(v.dock.main, h('', "Lädt…"))
-			app.send("world.open", {name:path[1]})
-		} else {
-			v.setWorld()
-		}
+		v.setArgs(v.a)
 	}),
 	"world.new": checkErr(res => {
 		// update worlds list
 		v.worlds.push(res.name)
 		v.worlds.sort()
 		// render worldSel if shown
-		if (!v.w) v.setWorld()
+		v.setArgs(v.a)
 	}),
 	"world.del": checkErr(res => {
 		// delete from worlds list
 		v.worlds = v.worlds.filter(w => w == res.name)
 		// exit editor if editing the world
 		// render worldSel if show
-		if (!v.w || v.w.d.name == res.name) v.setWorld()
+		if (!v.w || v.w.d.name == res.name) v.setArgs({})
 	}),
 	"world.open": checkErr(res => {
 		const wd = res as WorldData
@@ -88,21 +148,9 @@ const editorSubs = (v:WeditView):Subs => {
 		wd.clip = new Slots(res.clip)
 		wd.tset = new Slots(res.tset)
 		wd.lvl = new Slots(res.lvl)
-		v.setWorld(wd)
-		const path = location.hash?.slice(1).split('/')
-		switch (path[2]) {
-		case "lvl":
-			const lvl = wd.lvl.get(parseInt(path[3]))
-			if (!lvl) break
-			app.send('lvl.open', {id:lvl.id})
-			return
-		case "img":
-			const img = wd.img.get(parseInt(path[3]))
-			if (!img) break
-			app.send('img.open', {id:img.id})
-			return
-		}
-		location.hash = '#wedit/'+ res.name
+		if (v.w) v.w.stop()
+		v.w = new WorldView(wd, v.dock)
+		v.setArgs(v.a)
 	}),
 	"pal.new": checkW((w, res:Pal) => {
 		// add pal to world store

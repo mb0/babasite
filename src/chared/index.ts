@@ -22,17 +22,17 @@ const view:AssetView = {name:"chared", label:"Character Editor",
 	pals: [], infos: [],
 	dock: newLayout('#chared'),
 	sel: assetSelect(),
-	start(app) {
+	start() {
 		app.on(this.subs = assetSubs(this))
-		const chatel = chat.start(app)
+		const chatel = chat.start()
 		const d = this.dock
 		h.add(d.head, h('', menu(), this.sel.el))
 		h.add(d.el, h('style', style))
 		d.add({label:'Chat', el:chatel})
 		return d.el
 	},
-	stop(app) {
-		chat.stop(app)
+	stop() {
+		chat.stop()
 		const {ed, subs} = this
 		app.off(subs!)
 		if (ed) ed.stop()

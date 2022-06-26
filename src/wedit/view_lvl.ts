@@ -29,10 +29,6 @@ export class LvlView {
 		h.repl(dock.main, ed.c.el)
 		dock.add(this.tsetv = new TsetView(this), 1)
 	}
-	writeHash():string {
-		const {wd, lvl} = this
-		return `#wedit/${wd.name}/lvl/${lvl.id}`
-	}
 }
 
 export function lvlForm(wd:WorldData, s:Partial<Lvl>, submit:(res:Partial<Lvl>)=>void) {

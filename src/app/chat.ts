@@ -1,5 +1,5 @@
 import {h, hInput} from 'web/html'
-import {View} from 'app'
+import {app, View} from 'app'
 import './chat.css'
 
 export interface ChatData {
@@ -9,7 +9,7 @@ export interface ChatData {
 
 export const chat:View = {
 	name: "chat",
-	start(app) {
+	start() {
 		const input = hInput('', {name:'chat', placeholder:'Chat', autocomplete:'off'})
 		const form = h('form#chat', input, h('button', 'Send'))
 		form.onsubmit = function(e) {
@@ -30,7 +30,7 @@ export const chat:View = {
 		})
 		return h('#chat-view', output, form)
 	},
-	stop(app) {
+	stop() {
 		app.off(this.subs!)
 		output.innerHTML = ""
 	}

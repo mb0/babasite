@@ -7,6 +7,10 @@ html, body {
 	font-family: Ubuntu, Helvetica, Arial, sans-serif;
 	color: #222;
 }
+a, a:active, a:visited {
+	color: inherit;
+	text-decoration: none;
+}
 canvas {
 	image-rendering: pixelated;
 }
@@ -14,11 +18,11 @@ canvas {
 	display: flex;
 	align-items: baseline;
 }
-.menu span {
+.menu a {
 	display: block;
 	margin: .5em 1.5em;
 }
-.menu span.sel {
+.menu a.sel {
 	text-decoration: underline;
 }
 .icon {

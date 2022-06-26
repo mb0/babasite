@@ -1,7 +1,10 @@
 
+export type Handler = (...args:string[])=>void
+export type Routes = {[pat:string]:Handler}
+
 export interface Route {
 	pat:string
-	fn:(...args:string[])=>void
+	fn:Handler
 	re?:RegExp
 }
 
@@ -19,7 +22,7 @@ export class Router {
 			go(this, p)
 		}
 		this.onclick = e => {
-			if (e.button != 1 || e.metaKey || e.ctrlKey || e.shiftKey || e.defaultPrevented)
+			if (e.button != 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.defaultPrevented)
 				return
 			const t = (e.target as HTMLElement).closest('a[href]') as HTMLAnchorElement
 			if (!t || t.target && t.target !== '_self' || t.hasAttribute('download'))
@@ -28,10 +31,6 @@ export class Router {
 			if (t.origin != l.origin || !this.rel(l))
 				return
 			e.preventDefault()
-			if (t.pathname == l.pathname && t.search == l.search) {
-				l.hash = t.hash
-				return
-			}
 			this.go(this.rel(t))
 		}
 	}
@@ -63,7 +62,8 @@ export class Router {
 		return go(this, p)
 	}
 	show(p:string, repl?:boolean):void {
-		history[repl?'replaceState':'pushState'](null, this.base + p.replace(/^[/]/, ''))
+		this.cur = p
+		history[repl?'replaceState':'pushState'](null, '', this.base + p.replace(/^[/]/, ''))
 	}
 	reroute(q:Params, exec=true, repl?:boolean):void {
 		this[exec?'go':'show'](pure(this.rel()) +"?"+ paramStr(q), repl)
@@ -108,8 +108,8 @@ function pure(p:string):string {
 }
 function match(r:Route, path:string) {
 	r.re = r.re || new RegExp('^'+
-		r.pat.replace(/\/\?/,'[/]?').replace(/\*/g, '([^/?#]+?)').replace(/\.\./, '.*')+
-		'\([?#].*\)?$'
+		r.pat.replace(/\/\?/,'[/]?').replace(/\*/g, '([^/?#]+?)').replace(/\.\./, '([^?#]*)')+
+		'(?:[?#].*)?$'
 	)
 	return path.match(r.re)
 }

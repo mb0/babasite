@@ -18,7 +18,7 @@ export interface MapedView extends View {
 const v:MapedView = {name: "maped", label: "Map Editor",
 	sets: [], infos: [],
 	sel: mapSelect(),
-	start(app) {
+	start() {
 		app.on(v.subs = {
 			"init": res => {
 				v.sets = res.tilesets||[]
@@ -94,14 +94,14 @@ const v:MapedView = {name: "maped", label: "Map Editor",
 				}
 			},
 		})
-		const chatel = chat.start(app)
+		const chatel = chat.start()
 		const dock = newLayout('#maped', h('', menu(), v.sel.el), "Wird geladen ...")
 		h.add(dock.el, h('style', style))
 		dock.add({label:'Chat', el:chatel})
 		return dock.el
 	},
-	stop(app) {
-		chat.stop(app)
+	stop() {
+		chat.stop()
 		app.off(v.subs!)
 		if (v.ed) v.ed.stop()
 	},

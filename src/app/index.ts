@@ -1,8 +1,9 @@
 import {h} from 'web/html'
 import {Conn, connect, wsUrl} from 'web/socket'
 import {Hub, Subs} from 'app/hub'
-import lobby from 'app/lobby'
+import {Router, Routes} from 'app/router'
 import {selMenu} from 'app/menu'
+import lobby from 'app/lobby'
 export {chat} from 'app/chat'
 export {menu} from 'app/menu'
 
@@ -10,34 +11,37 @@ export interface View {
 	name:string
 	label?:string
 	subs?:Subs
-	start(app:App):HTMLElement
-	stop(app:App):void
+	routes?:Routes
+	start():HTMLElement
+	stop():void
 }
 export class App extends Hub {
 	cont:HTMLElement=document.querySelector("#app")!
+	rr:Router
 	views:View[]=[]
 	cur?:View
 	conn?:Conn
 	constructor() {
 		super()
+		this.rr = new Router('/')
 		this.addView(lobby)
 	}
 	addView(view:View):View {
 		this.views.push(view)
+		if (!view.routes) this.rr.add('/'+view.name, ()=> this.send('enter', {room:view.name}))
+		else Object.keys(view.routes).forEach(pat => {
+			this.rr.add(pat, view.routes![pat])
+		})
 		return view
 	}
 	show(name:string):void {
-		const app = this
-		const v = app.views.find(v => v.name == name)
+		const v = this.views.find(v => v.name == name)
 		if (!v) return
-		if (app.cur) app.cur.stop(app)
-		app.cur = v
-		h.repl(app.cont, v.start(this))
+		if (this.cur) this.cur.stop()
+		this.cur = v
+		h.repl(this.cont, v.start())
 		if (v.name != 'lobby') {
-			selMenu(app.cont, v.name)
-			const hash = '#'+ v.name
-			if (location.hash.indexOf(hash) != 0)
-				location.hash = hash
+			selMenu(this.cont, v.name)
 		}
 	}
 	start():void {
@@ -53,6 +57,7 @@ export class App extends Hub {
 			case '_open':
 				lobby.retry = 0
 				console.log("websocket connected to "+ data)
+				this.rr.start(true)
 				break
 			case '_error':
 				console.log("websocket error", data)

@@ -1,44 +1,39 @@
 import h from 'web/html'
-import {View, menu} from 'app'
+import {app, View, menu} from 'app'
 
 interface Lobby extends View {
+	el:HTMLElement
 	retry:number
 }
 
 const dots = '......'
 
 export default {
+	el: h('#lobby-view'),
 	name: "lobby",
 	retry: 0,
-	start(app) {
-		const el = h('#lobby-view', this.retry < 7 ?
-			'Verbindet'+dots.slice(6-this.retry) :
-			h('','Verbindung fehlgeschlagen ', h('span', {onclick: () => {
-				this.retry = 0
-				h.repl(el, 'Verbindet')
-				app.connect()
-			}}, 'Erneut versuchen')),
-		)
-		app.on(this.subs = {
-			_open: () => {
-				const {hash} = location
-				if (hash?.length > 1) {
-					let room = hash.slice(1)
-					const idx = room.indexOf('/')
-					if (idx >= 0) room = room.slice(0, idx)
-					app.send("enter", {room})
-				} else {
-					h.repl(el, menu(),
-						h('hr'),
-						h('span', {onclick: ()=> location.href = '/baba_export.zip'}, "Export Data"),
-					)
-				}
-			}
-		})
-		if (this.retry < 7) app.connect()
-		return el
+	routes: {'/': ()=> app.cur?.name != 'lobby' && app.show('lobby')},
+	start() {
+		const stat = app.conn?.ws.readyState
+		if (stat && stat >= WebSocket.OPEN) {
+			h.repl(this.el, menu(),
+				h('hr'),
+				h('span', {onclick: ()=> location.href = '/baba_export.zip'}, "Export Data"),
+			)
+		} else {
+			h.repl(this.el, this.retry < 7 ? 'Verbindet'+dots.slice(6-this.retry) :
+				h('','Verbindung fehlgeschlagen ', h('span', {onclick: () => {
+					this.retry = 0
+					h.repl(this.el, 'Verbindet')
+					app.connect()
+				}}, 'Erneut versuchen')),
+			)
+			app.on(this.subs = {_open: () => this.start()})
+			if (this.retry < 7) app.connect()
+		}
+		return this.el
 	},
-	stop(app) {
-		app.off(this.subs!)
+	stop() {
+		if (this.subs) app.off(this.subs)
 	},
 } as Lobby

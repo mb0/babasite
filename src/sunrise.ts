@@ -1,4 +1,3 @@
-import h from 'web/html'
 import {Canvas, newCanvas} from 'web/canvas'
 import {app, chat, menu} from 'app'
 import {Pos, Dim} from 'game/geo'
@@ -8,7 +7,7 @@ import './sunrise.css'
 let stop = false
 app.addView({name: "simple",
 	label: "Sunrise Chat",
-	start(app) {
+	start() {
 		stop = false
 		const c = newCanvas('sunrise-canvas', 800, 600, "white")
 		c.el.addEventListener("click", onClick)
@@ -19,13 +18,13 @@ app.addView({name: "simple",
 			if (!stop) requestAnimationFrame(step)
 		}
 		requestAnimationFrame(step)
-		const chatel = chat.start(app)
+		const chatel = chat.start()
 		const dock = newLayout('#sunrise', menu(), c.el)
 		dock.add({label:'Chat', el:chatel, sel:'.dyn'})
 		return dock.el
 	},
-	stop(app) {
-		chat.stop(app)
+	stop() {
+		chat.stop()
 		stop = true
 		removeEventListener("keydown", onKey)
 		removeEventListener("keyup", onKey)

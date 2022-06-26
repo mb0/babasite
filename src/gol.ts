@@ -11,7 +11,7 @@ export interface Map extends Dim {
 let map:Map|null = null
 app.addView({name: "gol",
 	label: "Game Of Life",
-	start(app) {
+	start() {
 		const c = newZoomCanvas("gol-canvas", 800, 600)
 		c.setStage({zoom:10})
 		c.el.addEventListener("click", e => {
@@ -43,15 +43,15 @@ app.addView({name: "gol",
 			appAction("Reset", "reset"),
 			appAction("Play/Stop", "play"),
 		)
-		const chatel = chat.start(app)
+		const chatel = chat.start()
 		const dock = newLayout('#gol', menu(), c.el)
 		dock.add({label:'Kacheln', el:tools})
 		dock.add({label:'Chat', el:chatel, sel:'.dyn'})
 		c.init(paintMap)
 		return dock.el
 	},
-	stop(app) {
-		chat.stop(app)
+	stop() {
+		chat.stop()
 		app.off(this.subs!)
 	}
 })

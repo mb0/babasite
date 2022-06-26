@@ -10,9 +10,9 @@ import {ImgView, PicData} from './view_img'
 import {nameInput, simpleForm} from './form'
 
 export function worldSel(worlds:string[]):HTMLElement {
-	return h('', "Welt auswählen", h('ul', worlds.map(w => h('li', {onclick: () => {
-		app.send("world.open", {name:w})
-	}}, w))))
+	return h('', "Welt auswählen", h('ul', worlds.map(w =>
+		h('li', {onclick: ()=>app.rr.go("/wedit/"+w)}, w)
+	)))
 }
 
 export class WorldView {
@@ -29,18 +29,23 @@ export class WorldView {
 			// TODO clean up old editor
 		}
 		d.grid = g
-		dock.filter(({group}) => !group || group == "wedit")
-		const lv = this.lvlv = new LvlView(d, dock)
-		location.hash = lv.writeHash()
+		this.closeDocks()
+		this.lvlv = new LvlView(d, dock)
 	}
 	imgOpen(pd:PicData):void {
 		const {d, dock} = this
 		// TODO clean up old state
 		if (!d.pics) d.pics = new Map()
 		pd.pics.forEach(p => d.pics!.set(p.id, p))
-		dock.filter(({group}) => !group || group == "wedit")
-		const iv = this.imgv = new ImgView(d, dock, pd.id)
-		location.hash = iv.writeHash()
+		this.closeDocks()
+		this.imgv = new ImgView(d, dock, pd.id)
+	}
+	stop() {
+		this.closeDocks(true)
+	}
+	closeDocks(all?:boolean):void {
+		this.dock.filter(all ? ({group}) => !group :
+			({group}) => !group || (group == "wedit"))
 	}
 }
 
@@ -60,21 +65,19 @@ class WorldTree implements Dock {
 		this.update()
 	}
 	update():void {
-		const {d} = this.w
+		const w = this.w
 		const click = (top:string, el:any) => {
 			console.log("open "+ top, el)
-			if (top == "lvl") app.send("lvl.open", {id:el.id})
-			else if (top == "img") app.send("img.open", {id:el.id})
-			else if (top == "clip") {
-				// TODO do not reopen img
-				location.hash = `#wedit/${d.name}/img/${el.img}/${el.id}`
-				app.send("img.open", {id:el.img})
+			if (top == 'clip') {
+				app.rr.go(`/wedit/${w.d.name}/img/${el.img}/${el.id}`)
+			} else {
+				app.rr.go(`/wedit/${w.d.name}/${top}/${el.id}`)
 			}
 		}
 		h.repl(this.el, namedTables.map(({top, label}) => {
 			if (top == "clip") return null
-			const sub = top == "img" ? imgTree(d, click) :
-				tableTree((d as any)[top], top, click)
+			const sub = top == "img" ? imgTree(w.d, click) :
+				tableTree((w.d as any)[top], top, click)
 			const open = top == "lvl" || top == "img"
 			return h('li.sum', h('details', {open}, h('summary', label), sub))
 		}))
