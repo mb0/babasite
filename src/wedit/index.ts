@@ -1,9 +1,9 @@
 import h from 'web/html'
 import {newLayout, Layout} from 'game/dock'
-import {boxIn} from 'game/geo'
+import {Box, boxGrow, boxIn} from 'game/geo'
 import {gridEach, gridSel, gridTiles} from 'game/grid'
 import {Clip, Img, Pal, Pic, growPic} from 'game/pix'
-import {Grid, Lvl, Tset} from 'game/lvl'
+import {Grid, Lvl, TileInfo, Tset} from 'game/lvl'
 import {View, app, chat, menu} from 'app'
 import {Handler} from 'app/router'
 import {Subs} from 'app/hub'
@@ -131,8 +131,8 @@ const editorSubs = (v:WeditView):Subs => {
 		// update worlds list
 		v.worlds.push(res.name)
 		v.worlds.sort()
-		// render worldSel if shown
 		v.setArgs(v.a)
+		// TODO render worldSel if shown
 	}),
 	"world.del": checkErr(res => {
 		// delete from worlds list
@@ -259,9 +259,28 @@ const editorSubs = (v:WeditView):Subs => {
 		w.d.tset.set(res.id, null)
 		w.treev.update()
 	}),
-	"tile.edit": checkErr(res => {
+	"tset.edit": checkW((w, res) => {
+		// lookup tset and edit
+		const ts = w.d.tset.get(res.id)
+		if (!ts) return
+		Object.assign(ts, res)
+		if (w.lvlv?.tset.id == ts.id) {
+			// TODO update lvl view
+			// TODO if name change update treev
+		}
+	}),
+	"tset.tile": checkW((w, res) => {
 		// TODO lookup tset and edit tile
-		// repaint tset view and lvl editor if active tset
+		const ts = w.d.tset.get(res.id)
+		if (!ts) return
+		let t = ts.infos.find(t => t.tile == res.tile)
+		delete(res.id)
+		if (!t) ts.infos.push(res as TileInfo)
+		else Object.assign(t, res)
+		if (w.lvlv?.tset.id == ts.id) {
+			// TODO update lvl view
+			// TODO if name change update treev
+		}
 	}),
 	"lvl.new": checkW((w, res:Lvl) => {
 		w.d.lvl.set(res.id, res)
@@ -273,16 +292,43 @@ const editorSubs = (v:WeditView):Subs => {
 		w.treev.update()
 		// TODO switch lvl if lvl is active in editor
 	}),
-	"lvl.edit": checkW((w, res) => {
-		// TODO lookup lvl and edit
-		// repaint tset view and lvl editor if active lvl
-	}),
 	"lvl.open": checkW((w, res) => {
 		w.lvlOpen(gridTiles<number>(res, res.raw) as Grid)
 	}),
+	"lvl.edit": checkW((w, res) => {
+		// lookup lvl and edit
+		const lv = w.d.lvl.get(res.id)
+		if (!lv) return
+		Object.assign(lv, res)
+		if (w.lvlv?.lvl.id == lv.id) {
+			// TODO update lvl view
+			// TODO if name change update treev
+		}
+	}),
 	"grid.edit": checkW((w, res) => {
-		// TODO lookup and edit grid
-		// repaint lvl editor if active grid
+		// lookup lvl then grid and edit
+		const lvl = w.d.lvl.get(res.id)
+		if (!lvl) return
+		if (w.d.grid?.id != lvl.grid) return
+		const gr = w.d.grid
+		if (res.repl) {
+			const {x, y, w, h} = res
+			Object.assign(lvl, {x, y, w, h, raw:Array(w*h).fill(0)})
+		} else if (!boxIn(res, gr)) growLevel(gr, res)
+		if (res.fill !== undefined) {
+			if (res.raw?.length) {
+				const sel = gridSel(res, res.raw)
+				gridEach(sel, p => gr.set(p, res.fill), gr, false)
+			} else {
+				gridEach(gr, p => gr.set(p, res.fill), res)
+			}
+		} else {
+			const img = gridTiles<number>(res, res.raw)
+			gridEach(img, (p, t) => gr.set(p, t), gr,
+				!res.copy ? 0 : undefined)
+		}
+		// update lvl if active
+		if (w.lvlv?.lvl?.id == lvl.id) w.lvlv.ed.repaint()
 	}),
 }}
 
@@ -292,4 +338,12 @@ const checkErr = (h:handler):handler => (res, subj) => {
 		console.error("error message: "+ subj, res.err)
 		// TODO show alert dialog instead
 	} else h(res, subj)
+}
+
+function growLevel(p:Grid, o:Box) {
+	if (o.w*o.h<=0||boxIn(o, p)) return
+	const b = boxGrow(p, o)
+	const tmp = gridTiles<number>(b)
+	gridEach(p, (p, t) => tmp.set(p, t))
+	Object.assign(p, tmp)
 }
