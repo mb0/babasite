@@ -28,6 +28,7 @@ export class LvlView {
 		ed.update(grid)
 		h.repl(dock.main, ed.c.el)
 		dock.add(this.tsetv = new TsetView(this), 1)
+		ed.updateTool = () => this.tsetv.toolv.updateTool()
 	}
 }
 

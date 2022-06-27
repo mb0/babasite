@@ -21,10 +21,10 @@ export interface ToolView<T> {
 }
 
 export function toolView<T>(ctx:ToolViewCtx<T>):ToolView<T> {
-	const el = h('section.tool.inline')
+	const el = h('.tool')
 	const fgs = h('span')
 	const bgs = h('span')
-	const fl = h('')
+	const fl = h('.row')
 	h.add(el,
 		h('.row', Object.keys(tools).map(tool => h('label', h('input', {
 			type:'radio', name:'tool', value:tool,
@@ -51,28 +51,26 @@ export function toolView<T>(ctx:ToolViewCtx<T>):ToolView<T> {
 		if (ctx.float) {
 			const act = el.querySelector("input[value='"+ctx.tool.active+"']")
 			if (act) (act as HTMLInputElement).checked = true
-			h.repl(fl, "Auswahl ",
-				h('button', {type:'button', onclick:()=>{
+			h.repl(fl,
+				h('a', {onclick:()=>{
 					ctx.anchorFloat()
-				}}, 'Anwenden'),
-				h('br'), "Spiegeln ",
-				h('button', {type:'button', onclick:()=>{
+				}}, hIcon('anchor', {title:'Auswahl verankern'})),
+				h('a', {onclick:()=>{
 					gridMirrorH(ctx.float!)
 					ctx.repaint()
-				}}, 'Horizontal'),
-				h('button', {type:'button', onclick:()=>{
+				}}, hIcon('fliph', {title:'Horizontal spiegeln'})),
+				h('a', {onclick:()=>{
 					gridMirrorV(ctx.float!)
 					ctx.repaint()
-				}}, 'Vertikal'),
-				h('br'), "Drehen ",
-				h('button', {type:'button', onclick:()=>{
+				}}, hIcon('flipv', {title:'Vertikal spiegeln'})),
+				h('a', {onclick:()=>{
 					gridRot270(ctx.float!)
 					ctx.repaint()
-				}}, 'Links'),
-				h('button', {type:'button', onclick:()=>{
+				}}, hIcon('rot90', {title:'Links herum drehen'})),
+				h('a', {onclick:()=>{
 					gridRot90(ctx.float!)
 					ctx.repaint()
-				}}, 'Rechts'),
+				}}, hIcon('rot270', {title:'Rechts herum drehen'})),
 			)
 		} else {
 			h.repl(fl)

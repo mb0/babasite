@@ -82,6 +82,7 @@ export class ImgView {
 			}
 			ed.repaint()
 		}), 1)
+		ed.updateTool = () => this.palv.toolv.updateTool()
 	}
 	show(clip:Clip, pic?:Pic) {
 		this.clip = clip
