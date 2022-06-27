@@ -48,6 +48,10 @@ export class WorldView {
 	}
 }
 
+export function worldIndex(d:WorldData) {
+	return h('.windex', h('h1', "World "+ d.name))
+}
+
 type TopClick = (top:string, el:any)=>void
 
 class WorldTree implements Dock {

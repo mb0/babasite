@@ -8,9 +8,10 @@ import {View, app, chat, menu} from 'app'
 import {Handler} from 'app/router'
 import {Subs} from 'app/hub'
 import {Slots, WorldData} from './world'
-import {WorldView, worldSel} from './view_world'
+import {WorldView, worldSel, worldIndex, topicIndex} from './view_world'
 import {PicData} from './view_img'
 import './wedit.css'
+import {TopicView} from './view_top'
 
 export interface WeditView extends View {
 	dock:Layout
@@ -68,13 +69,14 @@ const v:WeditView = {name:"wedit", label:"World Editor",
 		}
 		if (!a.top) {
 			// show world overview
-			h.repl(v.dock.main, h('', "Welt Übersicht"))
+			h.repl(v.dock.main, worldIndex(v.w.d))
 			return
 		}
 		// check active topic
 		if (!a.id) {
 			// show topic overview
-			h.repl(v.dock.main, h('', "Topic Übersicht"))
+			const topv = new TopicView(v.w.d, a.top)
+			h.repl(v.dock.main, topv.el)
 			return
 		}
 		// check active game object
@@ -99,8 +101,7 @@ const v:WeditView = {name:"wedit", label:"World Editor",
 					return
 				}
 			}
-			if (!iv) return
-			if (a.sub) {
+			if (iv && a.sub) {
 				const clip = v.w?.d.clip.get(parseInt(a.sub))
 				if (!clip) return // TODO inform error
 				let pic
@@ -108,8 +109,10 @@ const v:WeditView = {name:"wedit", label:"World Editor",
 				iv.show(clip, pic)
 				return
 			}
+		} else  {
+			const topv = new TopicView(v.w.d, a.top, id)
+			h.repl(v.dock.main, topv.el)
 		}
-		// show sub or extra view
 	},
 	start() {
 		app.on(v.subs = editorSubs(v))

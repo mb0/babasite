@@ -20,6 +20,10 @@ export interface WorldData {
 	pics:Map<number,Pic>
 }
 
+export function topSlots(wd:WorldData, top:string):Slots<any> {
+	return (wd as any)[top] as Slots<any>
+}
+
 export interface PicData {
 	id:number
 	pics:Pic[]
