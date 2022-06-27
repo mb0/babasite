@@ -68,7 +68,7 @@ export function dimInput(d?:Partial<Dim>):Input {
 	const wel = uintInput(d?.w)
 	const hel = uintInput(d?.h)
 	const el = h('fieldset.dim', {id:formID()}, wel, hel)
-	const wrap = labelWrap('Größe Weite x Höhe', el)
+	const wrap = labelWrap('Größe WxH', el)
 	return {el, wrap, write: to => {
 		to.w = parseInt(wel.value)
 		to.h = parseInt(hel.value)
@@ -89,7 +89,7 @@ export function simpleForm<T>(title:string, s:Partial<T>, isnew:boolean,
 		h('header', title+ (isnew?' erstellen':' ändern')),
 		h('form', {onsubmit},
 			list.map(el => el.wrap),
-			h('button', 'Speichern')
+			h('.btns', h('button', 'Speichern')),
 		)
 	)
 }

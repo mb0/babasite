@@ -75,16 +75,35 @@ button:hover .icon svg {
 	align-items: center;
 }
 .form button {
-	margin-top: 30px;
-	line-height: 24px;
-	min-height: 30px
+	padding: 6px 12px 9px;
+	min-height: 34px;
+}
+.form fieldset {
+	border: 0;
+	padding:0;
+}
+.form fieldset input[type="text"] {
+	width: 86px;
+}
+.form fieldset input + input {
+	margin-left: 10px;
 }
 .form label {
 	min-width: 100px;
 }
+.form .btns {
+	margin-top: 18px;
+}
+.form .btns button + button {
+	margin-left: 17px;
+}
+#modal .btns {
+	margin-bottom: 8px;
+}
 .form input {
 	box-sizing: border-box;
 	background-color: inherit;
+	margin-bottom: 6px;
 }
 .form input[type="checkbox"] {
 	min-height: 22px;
