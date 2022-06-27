@@ -17,7 +17,7 @@ export interface WorldData {
 	tset:Slots<Tset>
 	lvl:Slots<Lvl>
 	grid?:Grid
-	pics?:Map<number,Pic>
+	pics:Map<number,Pic>
 }
 
 export interface PicData {

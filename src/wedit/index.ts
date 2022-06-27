@@ -112,15 +112,15 @@ const v:WeditView = {name:"wedit", label:"World Editor",
 app.addView(v)
 
 const editorSubs = (v:WeditView):Subs => {
+	type handler = (res:any,subj?:string)=>void
+	const logErr:handler = (res, subj) => {
+		console.error("message error: "+ subj, res.err)
+	}
+	const checkErr = (h:handler):handler => (res, subj) => (res?.err ? logErr : h)(res, subj)
 	const checkW = (h:(w:WorldView, res:any, subj?:string)=>void):handler => (res, subj) => {
-		if (res?.err) {
-			console.error("error message: "+ subj, res.err)
-			// TODO show alert dialog instead
-		} else if (!v.w) {
-			console.error("error message: "+ subj, "not subscribed")
-		} else {
-			h(v.w, res, subj)
-		}
+		if (res?.err) logErr(res, subj)
+		else if (!v.w) logErr({err:"not subscribed"}, subj)
+		else h(v.w, res, subj)
 	}
 	return {
 	"wedit.init": checkErr(res => {
@@ -143,6 +143,7 @@ const editorSubs = (v:WeditView):Subs => {
 	}),
 	"world.open": checkErr(res => {
 		const wd = res as WorldData
+		wd.pics = new Map()
 		wd.pal = new Slots(res.pal)
 		wd.img = new Slots(res.img)
 		wd.clip = new Slots(res.clip)
@@ -168,23 +169,35 @@ const editorSubs = (v:WeditView):Subs => {
 	}),
 	"pal.edit": checkW((w, res) => {
 		// lookup pal
-		let p = w.d.pal.get(res.id)
+		const p = w.d.pal.get(res.id)
+		if (!p) return
+		// update feature
+		if (res.name && res.name != p.name) {
+			p.name = res.name
+			w.treev.update()
+		}
+		if (res.kind) p.kind = res.kind
+		const fmod = res.del || res.feats?.length
+		if (fmod) {
+			applySlice(res, p.feats, res.feats)
+			p.cache = undefined
+		}
+		// repaint pal view and img editor if active pal
+		if (w.imgv?.pal.id == p.id) {
+			const iv = w.imgv!
+			iv.palv.update()
+			if (fmod) iv.ed.repaint()
+		}
+	}),
+	"pal.feat": checkW((w, res) => {
+		// lookup pal
+		const p = w.d.pal.get(res.id)
 		if (!p) return
 		if (!p.feats) p.feats = []
 		// update feature
 		let f = p.feats.find(f => f.name == res.feat)
-		if (f) {
-			if (f.colors) {
-				let args:any = [res.idx||0, res.del||0]
-				if (res.ins) args = args.concat(res.ins)
-				f.colors.splice.apply(f.colors, args)
-			} else {
-				f.colors = res.ins
-			}
-		} else if (!res.idx && !res.del) {
-			f = {name:res.feat, colors:res.ins||[]}
-			p.feats.push(f)
-		} else return
+		if (!f) p.feats.push(f = {name:res.feat, colors:[]})
+		applySlice(res, f.colors, res.ins)
 		// clear color cache
 		p.cache = undefined
 		// repaint pal view and img editor if active pal
@@ -211,8 +224,13 @@ const editorSubs = (v:WeditView):Subs => {
 		w.imgOpen(res)
 	}),
 	"img.edit": checkW((w, res) => {
-		// TODO lookup img and edit
-		// repaint pal view and img editor
+		// lookup img and edit
+		const img = w.d.img.get(res.id)
+		if (!img) return
+		const modn = img.name != res.name
+		Object.assign(img, res)
+		if (modn) w.treev.update()
+		// TODO update img view
 	}),
 	"clip.new": checkW((w, res:Clip) => {
 		w.d.clip.set(res.id, res)
@@ -224,8 +242,29 @@ const editorSubs = (v:WeditView):Subs => {
 		w.treev.update()
 	}),
 	"clip.edit": checkW((w, res) => {
-		// TODO lookup clip and edit
-		// repaint pal view and img editor
+		// lookup clip and edit
+		const cl = w.d.clip.get(res.id)
+		if (!cl) return
+		if (res.name && res.name != cl.name) {
+			cl.name = res.name
+			w.treev.update()
+		}
+		if (res.w && res.w != cl.w) {
+			cl.w = res.w
+		}
+		if (res.h && res.h != cl.h) {
+			cl.h = res.h
+		}
+		if (res.loop && res.loop != cl.loop) {
+			cl.loop = res.loop
+		}
+		if (res.pics) res.pics.forEach((p:Pic) => {
+			w.d.pics.set(p.id, gridTiles<number>(p, p.raw) as Pic)
+		})
+		applySlice(res, res.seq, res.seq)
+		if (w.imgv?.clip?.id == cl.id) {
+			// TODO update clip view
+		}
 	}),
 	"pic.edit": checkW((w, res) => {
 		// lookup pic and edit
@@ -299,7 +338,9 @@ const editorSubs = (v:WeditView):Subs => {
 		// lookup lvl and edit
 		const lv = w.d.lvl.get(res.id)
 		if (!lv) return
+		const modn = lv.name != res.name
 		Object.assign(lv, res)
+		if (modn) w.treev.update()
 		if (w.lvlv?.lvl.id == lv.id) {
 			// TODO update lvl view
 			// TODO if name change update treev
@@ -331,13 +372,14 @@ const editorSubs = (v:WeditView):Subs => {
 		if (w.lvlv?.lvl?.id == lvl.id) w.lvlv.ed.repaint()
 	}),
 }}
-
-type handler = (res:any,subj?:string)=>void
-const checkErr = (h:handler):handler => (res, subj) => {
-	if (res?.err) {
-		console.error("error message: "+ subj, res.err)
-		// TODO show alert dialog instead
-	} else h(res, subj)
+interface SliceReq {
+	idx?:number
+	del?:number
+}
+function applySlice<T>(req:SliceReq, old:T[], ins?:T[]) {
+	let args:any = [req.idx||0, req.del||0]
+	if (ins) args = args.concat(ins)
+	old.splice.apply(old, args)
 }
 
 function growLevel(p:Grid, o:Box) {
