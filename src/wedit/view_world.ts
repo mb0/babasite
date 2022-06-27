@@ -25,26 +25,30 @@ export class WorldView {
 	}
 	lvlOpen(g:Grid):void {
 		const {d, dock} = this
-		// TODO clean up old editor
-		this.imgv = undefined
+		this.clean()
 		d.grid = g
-		this.closeDocks()
 		this.lvlv = new LvlView(d, dock)
 	}
 	imgOpen(pd:PicData):void {
 		const {d, dock} = this
-		// TODO clean up old state
-		this.lvlv = undefined
+		this.clean()
 		pd.pics.forEach(p => d.pics.set(p.id, p))
-		this.closeDocks()
 		this.imgv = new ImgView(d, dock, pd.id)
 	}
 	stop() {
-		this.closeDocks(true)
+		this.clean()
+		this.dock.filter(({group}) => !group)
 	}
-	closeDocks(all?:boolean):void {
-		this.dock.filter(all ? ({group}) => !group :
-			({group}) => !group || (group == "wedit"))
+	clean() {
+		this.dock.filter(({group}) => !group || (group == "wedit"))
+		if (this.lvlv) {
+			this.lvlv.ed.close()
+			this.lvlv = undefined
+		}
+		if (this.imgv) {
+			this.imgv.ed.close()
+			this.imgv = undefined
+		}
 	}
 }
 
