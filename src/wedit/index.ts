@@ -33,6 +33,8 @@ const handler:Handler = (args:string)=> {
 	v.setArgs({w, top, id, sub, xtra})
 }
 
+const loading = h('', "Lädt Editor")
+
 const v:WeditView = {name:"wedit", label:"World Editor",
 	dock:newLayout("#wedit"),
 	worlds:[], a:{},
@@ -44,7 +46,7 @@ const v:WeditView = {name:"wedit", label:"World Editor",
 		this.a = a
 		if (app.cur != this) {
 			app.send('enter', {room:'wedit'})
-			h.repl(v.dock.main, h('', "Lädt Editor"))
+			h.repl(v.dock.main, loading)
 			return
 		}
 		if (!a.w) {
@@ -60,7 +62,7 @@ const v:WeditView = {name:"wedit", label:"World Editor",
 		if (v.w?.d.name != a.w) {
 			if (v.w) v.w.stop()
 			v.w = undefined
-			h.repl(v.dock.main, h('', "Lädt…"))
+			h.repl(v.dock.main, loading)
 			app.send('world.open', {name:a.w})
 			return
 		}
@@ -76,22 +78,38 @@ const v:WeditView = {name:"wedit", label:"World Editor",
 			return
 		}
 		// check active game object
-		if (!a.sub || !a.xtra) {
-			// show topic detail
-			const id = parseInt(a.id)
-			if (a.top == 'lvl') {
+		const id = parseInt(a.id)
+		// show topic detail
+		if (a.top == 'lvl') {
+			if (v.w?.lvlv?.lvl.id != id) {
 				const lvl = v.w?.d.lvl.get(id)
-				if (lvl) app.send('lvl.open', {id})
-			} else if (a.top == 'img') {
-				const img = v.w?.d.img.get(id)
-				if (img) app.send('img.open', {id})
-			} else {
-				h.repl(v.dock.main, h('', "Topic Detail"))
+				if (lvl) {
+					h.repl(v.dock.main, loading)
+					app.send('lvl.open', {id})
+					return
+				}
 			}
-			return
+		} else if (a.top == 'img') {
+			const iv = v.w?.imgv
+			if (iv?.img.id != id) {
+				const img = v.w?.d.img.get(id)
+				if (img) {
+					h.repl(v.dock.main, loading)
+					app.send('img.open', {id})
+					return
+				}
+			}
+			if (!iv) return
+			if (a.sub) {
+				const clip = v.w?.d.clip.get(parseInt(a.sub))
+				if (!clip) return // TODO inform error
+				let pic
+				if (a.xtra) pic = v.w?.d.pics.get(parseInt(a.xtra))
+				iv.show(clip, pic)
+				return
+			}
 		}
 		// show sub or extra view
-		h.repl(v.dock.main, h('', "Sub oder Extra Detail"))
 	},
 	start() {
 		app.on(v.subs = editorSubs(v))
@@ -222,6 +240,7 @@ const editorSubs = (v:WeditView):Subs => {
 		// open clip editor
 		res.pics = res.pics.map(pic => gridTiles<number>(pic, pic.raw) as Pic)
 		w.imgOpen(res)
+		v.setArgs(v.a)
 	}),
 	"img.edit": checkW((w, res) => {
 		// lookup img and edit
@@ -230,7 +249,7 @@ const editorSubs = (v:WeditView):Subs => {
 		const modn = img.name != res.name
 		Object.assign(img, res)
 		if (modn) w.treev.update()
-		// TODO update img view
+		// TODO update img view specifically pal view
 	}),
 	"clip.new": checkW((w, res:Clip) => {
 		w.d.clip.set(res.id, res)
@@ -261,9 +280,9 @@ const editorSubs = (v:WeditView):Subs => {
 		if (res.pics) res.pics.forEach((p:Pic) => {
 			w.d.pics.set(p.id, gridTiles<number>(p, p.raw) as Pic)
 		})
-		applySlice(res, res.seq, res.seq)
+		applySlice(res, cl.seq, res.seq)
 		if (w.imgv?.clip?.id == cl.id) {
-			// TODO update clip view
+			w.imgv.clipv?.update()
 		}
 	}),
 	"pic.edit": checkW((w, res) => {
@@ -302,10 +321,11 @@ const editorSubs = (v:WeditView):Subs => {
 		// lookup tset and edit
 		const ts = w.d.tset.get(res.id)
 		if (!ts) return
+		const modn = ts.name != res.name
 		Object.assign(ts, res)
+		if (modn) w.treev.update()
 		if (w.lvlv?.tset.id == ts.id) {
 			// TODO update lvl view
-			// TODO if name change update treev
 		}
 	}),
 	"tset.tile": checkW((w, res) => {
@@ -318,7 +338,6 @@ const editorSubs = (v:WeditView):Subs => {
 		else Object.assign(t, res)
 		if (w.lvlv?.tset.id == ts.id) {
 			// TODO update lvl view
-			// TODO if name change update treev
 		}
 	}),
 	"lvl.new": checkW((w, res:Lvl) => {

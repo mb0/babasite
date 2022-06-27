@@ -86,7 +86,7 @@ func (r SliceReq[T]) Apply(old, new []T) ([]T, error) {
 	if len(new) == 0 && r.Del == 0 {
 		return old, nil
 	}
-	if r.Idx < 0 || r.Idx >= len(old) || r.Del < 0 || r.Idx+r.Del > len(old) {
+	if r.Idx < 0 || r.Idx > len(old) || r.Del < 0 || r.Idx+r.Del > len(old) {
 		return old, fmt.Errorf("invalid slice")
 	}
 	tmp := make([]T, 0, len(old)-r.Del+len(new))

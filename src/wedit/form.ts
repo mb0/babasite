@@ -2,7 +2,7 @@ import {Dim} from 'game/geo'
 import {cssColor} from 'game/color'
 import {formID, h, hInput} from 'web/html'
 import {kinds} from 'game/pix'
-import {Slots, Top, WorldData} from './world'
+import {Slots, Top} from './world'
 
 export interface Input {
 	el:HTMLElement
@@ -82,8 +82,9 @@ export function simpleForm<T>(title:string, s:Partial<T>, isnew:boolean,
 		submit:(res:Partial<T>)=>void, list:Input[]):HTMLElement {
 	let onsubmit = (e:Event) => {
 		e.preventDefault()
-		list.forEach(f => f.write(s))
-		submit(s)
+		const res = Object.assign({}, s)
+		list.forEach(f => f.write(res))
+		submit(res)
 	}
 	return h('.form',
 		h('header', title+ (isnew?' erstellen':' ändern')),

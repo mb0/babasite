@@ -25,9 +25,8 @@ export class WorldView {
 	}
 	lvlOpen(g:Grid):void {
 		const {d, dock} = this
-		if (d.grid) {
-			// TODO clean up old editor
-		}
+		// TODO clean up old editor
+		this.imgv = undefined
 		d.grid = g
 		this.closeDocks()
 		this.lvlv = new LvlView(d, dock)
@@ -35,8 +34,8 @@ export class WorldView {
 	imgOpen(pd:PicData):void {
 		const {d, dock} = this
 		// TODO clean up old state
-		if (!d.pics) d.pics = new Map()
-		pd.pics.forEach(p => d.pics!.set(p.id, p))
+		this.lvlv = undefined
+		pd.pics.forEach(p => d.pics.set(p.id, p))
 		this.closeDocks()
 		this.imgv = new ImgView(d, dock, pd.id)
 	}
