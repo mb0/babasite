@@ -1,7 +1,7 @@
 import h from 'web/html'
 import {mount, unmount} from 'web/modal'
 import {cssColor} from 'game/color'
-import {Tset, TileInfo} from 'game/lvl'
+import {Tset, TileInfo, Lvl} from 'game/lvl'
 import app from 'app'
 import {boolInput, strInput, nameInput, colorInput, simpleForm} from './form'
 import {BaseDock} from 'game/dock'
@@ -12,6 +12,7 @@ export interface TsetViewCtx {
 	wd:WorldData
 	tset:Tset
 	ed:ToolViewCtx<number>
+	lvl:Lvl
 }
 
 export class TsetView extends BaseDock {
@@ -23,15 +24,12 @@ export class TsetView extends BaseDock {
 		this.toolv = toolView(ctx.ed)
 		const act = (n:string) => {
 			if (n == 'tset.sel') mount(tsetSelect(ctx.wd.tset.all(), res => {
-				console.log("TODO test.sel", res)
+				if (ctx.lvl.tset != res.id)
+					app.send("lvl.edit", {...ctx.lvl, tset:res.id})
 				unmount()
 			}))
 			else if (n == 'tile.new') mount(tileForm({}, res => {
-				app.send("tile.edit", {
-					tileset:ctx.tset.name,
-					tile:-1,
-					...res,
-				})
+				app.send("tset.tile", {...res, id:ctx.tset.id, tile:-1})
 				unmount()
 			}))
 		}
@@ -43,55 +41,52 @@ export class TsetView extends BaseDock {
 	}
 	update():void {
 		const {el, ctx:{tset, ed}, toolv} = this
-		if (!tset) {
-			h.repl(el, "Kein Tileset")
-			return
-		}
+		toolv.updateColor()
 		this.head.innerText = 'Tset ' + tset.name
-		h.repl(el,
-			toolv.el,
-			tset.infos.map(info => {
-				return h('.color', {
-					onclick: () => {
-						if (ed.tool.fg != info.tile) {
-							ed.tool.fg = info.tile
-							toolv.updateColor()
-						}
-					},
-					oncontextmenu: e => {
-						e.preventDefault()
-						if (ed.tool.bg != info.tile) {
-							ed.tool.bg = info.tile
-							toolv.updateColor()
-						}
-					},
-					ondblclick: () => {
-						mount(tileForm(info, res => {
-							app.send("tile.edit", {tileset:tset.name,
-								tile:info.tile,	...res,
-							})
-							unmount()
-						}))
-					}},
-					h('span', {style:"background-color:"+cssColor(info.color)}),
-					h('', info.name),
-				)
-			}),
-		)
+		h.repl(el, toolv.el, tset.infos.map(info => h('.color', {
+			onclick: () => {
+				if (ed.tool.fg != info.tile) {
+					ed.tool.fg = info.tile
+					toolv.updateColor()
+				}
+			},
+			oncontextmenu: e => {
+				e.preventDefault()
+				if (ed.tool.bg != info.tile) {
+					ed.tool.bg = info.tile
+					toolv.updateColor()
+				}
+			},
+			ondblclick: () => {
+				mount(tileForm(info, res => {
+					app.send("tset.tile", {...res, id:tset.id})
+					unmount()
+				}))
+			}},
+			h('span', {style:"background-color:"+cssColor(info.color)}),
+			h('', info.name),
+		)))
 	}
 }
 
 function tsetSelect(tsets:Tset[], submit:(ts:Tset)=>void) {
-	return h('section.form',
+	const el = h('.form',
 		h('header', 'Tileset auswählen'),
-		h('span', {onclick() {
-			mount(tsetForm({}, res => {
-				app.send("tset.new", res)
-				unmount()
-			}))
-		}}, '[new]'),
-		h('ul', tsets.map(ts => h('li', {onclick:()=> submit(ts)}, ts.name))),
+		h('ul',
+			tsets.map(ts => h('li', {onclick:()=> submit(ts)}, ts.name)),
+			h('li', {onclick() {
+				mount(tsetForm({}, res => {
+					app.send("tset.new", res)
+					unmount()
+				}))
+			}}, 'Neues Tileset'),
+		)
 	)
+	app.on("tset.new", submit)
+	el.addEventListener('unmount', () => {
+		app.off("tset.net", submit)
+	})
+	return el
 }
 
 export function tsetForm(s:Partial<Tset>, submit:(res:Partial<Tset>)=>void) {

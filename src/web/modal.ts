@@ -35,6 +35,7 @@ export function unmount() {
 	let layer = stack.pop()
 	if (!layer) return
 	cont.removeChild(layer.el)
+	layer.el.dispatchEvent(new Event('unmount'))
 	if (!stack.length) {
 		stop()
 	} else {

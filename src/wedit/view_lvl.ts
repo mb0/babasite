@@ -30,6 +30,16 @@ export class LvlView {
 		dock.add(this.tsetv = new TsetView(this), 1)
 		ed.updateTool = () => this.tsetv.toolv.updateTool()
 	}
+	editTset() {
+		this.tset = this.wd.tset.get(this.lvl.tset)!
+		this.tsetv.update()
+		this.ed.repaint()
+	}
+	updateTset(ts:Tset) {
+		if (this.tset.id != ts.id) return
+		this.tsetv.update()
+		this.ed.repaint()
+	}
 }
 
 export function lvlForm(wd:WorldData, s:Partial<Lvl>, submit:(res:Partial<Lvl>)=>void) {

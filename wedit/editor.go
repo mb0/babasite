@@ -37,6 +37,7 @@ var editFuncs = map[string]EditFunc{
 	"tset.new":  tsetNew,
 	"tset.del":  tsetDel,
 	"tset.edit": tsetEdit,
+	"tset.tile": tsetTile,
 	"lvl.new":   lvlNew,
 	"lvl.del":   lvlDel,
 	"lvl.open":  lvlOpen,

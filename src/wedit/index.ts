@@ -326,22 +326,20 @@ const editorSubs = (v:WeditView):Subs => {
 		if (!ts) return
 		const modn = ts.name != res.name
 		Object.assign(ts, res)
+		ts.cache = undefined
 		if (modn) w.treev.update()
-		if (w.lvlv?.tset.id == ts.id) {
-			// TODO update lvl view
-		}
+		w.lvlv?.updateTset(ts)
 	}),
 	"tset.tile": checkW((w, res) => {
-		// TODO lookup tset and edit tile
+		// lookup tset and edit tile
 		const ts = w.d.tset.get(res.id)
 		if (!ts) return
 		let t = ts.infos.find(t => t.tile == res.tile)
 		delete(res.id)
 		if (!t) ts.infos.push(res as TileInfo)
 		else Object.assign(t, res)
-		if (w.lvlv?.tset.id == ts.id) {
-			// TODO update lvl view
-		}
+		ts.cache = undefined
+		w.lvlv?.updateTset(ts)
 	}),
 	"lvl.new": checkW((w, res:Lvl) => {
 		w.d.lvl.set(res.id, res)
@@ -361,11 +359,11 @@ const editorSubs = (v:WeditView):Subs => {
 		const lv = w.d.lvl.get(res.id)
 		if (!lv) return
 		const modn = lv.name != res.name
+		const modts = lv.tset != res.tset
 		Object.assign(lv, res)
 		if (modn) w.treev.update()
-		if (w.lvlv?.lvl.id == lv.id) {
-			// TODO update lvl view
-			// TODO if name change update treev
+		if (modts && w.lvlv?.lvl.id == lv.id) {
+			w.lvlv.editTset()
 		}
 	}),
 	"grid.edit": checkW((w, res) => {
