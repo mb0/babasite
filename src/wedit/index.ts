@@ -203,12 +203,7 @@ const editorSubs = (v:WeditView):Subs => {
 			applySlice(res, p.feats, res.feats)
 			p.cache = undefined
 		}
-		// repaint pal view and img editor if active pal
-		if (w.imgv?.pal.id == p.id) {
-			const iv = w.imgv!
-			iv.palv.update()
-			if (fmod) iv.ed.repaint()
-		}
+		w.imgv?.updatePal(p)
 	}),
 	"pal.feat": checkW((w, res) => {
 		// lookup pal
@@ -219,14 +214,8 @@ const editorSubs = (v:WeditView):Subs => {
 		let f = p.feats.find(f => f.name == res.feat)
 		if (!f) p.feats.push(f = {name:res.feat, colors:[]})
 		applySlice(res, f.colors, res.ins)
-		// clear color cache
 		p.cache = undefined
-		// repaint pal view and img editor if active pal
-		if (w.imgv?.pal.id == p.id) {
-			const iv = w.imgv!
-			iv.palv.update()
-			iv.ed.repaint()
-		}
+		w.imgv?.updatePal(p)
 	}),
 	"img.new": checkW((w, res:Img) => {
 		// add img to world store
@@ -250,9 +239,12 @@ const editorSubs = (v:WeditView):Subs => {
 		const img = w.d.img.get(res.id)
 		if (!img) return
 		const modn = img.name != res.name
+		const modp = img.pal != res.pal
 		Object.assign(img, res)
 		if (modn) w.treev.update()
-		// TODO update img view specifically pal view
+		if (modp && w.imgv?.img.id == res.id) {
+			w.imgv?.editPal()
+		}
 	}),
 	"clip.new": checkW((w, res:Clip) => {
 		w.d.clip.set(res.id, res)
