@@ -83,6 +83,7 @@ export interface ClipCtx {
 }
 
 export class ClipPreview extends BaseDock {
+	label="Preview"
 	group="img"
 	c:Canvas
 	totals:number[]=[]
@@ -99,7 +100,7 @@ export class ClipPreview extends BaseDock {
 			const ts = this.totals
 			const fr = ctx.clip.seq
 			if (!fr?.length || ts.length != fr.length) this.update()
-			const at = fn%(ts[ts.length-1]||1)
+			const at = fn%((ts[ts.length-1]||0)+1)
 			const idx = ts.findIndex(t => t >= at)
 			const pic = wd.pics.get(fr[idx].pic)
 			if (pic) paintPic(c, ctx.clip, pal, pic)
