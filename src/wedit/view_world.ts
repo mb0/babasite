@@ -16,11 +16,11 @@ export function worldSel(worlds:string[]):HTMLElement {
 }
 
 export class WorldView {
-	treev:WorldTree
+	treev:TreeView
 	lvlv?:LvlView
 	imgv?:ImgView
 	constructor(readonly d:WorldData, readonly dock:Layout) {
-		dock.add(this.treev = new WorldTree(this), 0)
+		dock.add(this.treev = new TreeView(d), 0)
 		h.repl(dock.main, "")
 	}
 	lvlOpen(g:Grid):void {
@@ -58,33 +58,33 @@ export function worldIndex(d:WorldData) {
 
 type TopClick = (top:string, el:any)=>void
 
-class WorldTree implements Dock {
+class TreeView implements Dock {
 	el = h('ul.wtree')
 	label:string
 	group = "wedit"
 	cont?:HTMLElement
 	menu:Menu
-	constructor(public w:WorldView) {
-		this.label = "World "+ w.d.name
+	constructor(public d:WorldData) {
+		this.label = "World "+ d.name
 		this.menu = {act:it=>console.log('menu', it), list:[
 			{name:'world.sel', icon:'swap', label:'Welt auswählen'},
 		]}
 		this.update()
 	}
 	update():void {
-		const w = this.w
+		const {d} = this
 		const click = (top:string, el:any) => {
 			console.log("open "+ top, el)
 			if (top == 'clip') {
-				app.rr.go(`/wedit/${w.d.name}/img/${el.img}/${el.id}`)
+				app.rr.go(`/wedit/${d.name}/img/${el.img}/${el.id}`)
 			} else {
-				app.rr.go(`/wedit/${w.d.name}/${top}/${el.id}`)
+				app.rr.go(`/wedit/${d.name}/${top}/${el.id}`)
 			}
 		}
 		h.repl(this.el, namedTables.map(({top, label}) => {
 			if (top == "clip") return null
-			const sub = top == "img" ? imgTree(w.d, click) :
-				tableTree((w.d as any)[top], top, click)
+			const sub = top == "img" ? imgTree(d, click) :
+				tableTree((d as any)[top], top, click)
 			const open = top == "lvl" || top == "img"
 			return h('li.sum', h('details', {open}, h('summary', label), sub))
 		}))

@@ -1,25 +1,17 @@
 import h from 'web/html'
-import {newLayout, Layout} from 'game/dock'
+import {newLayout} from 'game/dock'
 import {Box, boxGrow, boxIn} from 'game/geo'
 import {gridEach, gridSel, gridTiles} from 'game/grid'
 import {Clip, Img, Pal, Pic, growPic} from 'game/pix'
 import {Grid, Lvl, TileInfo, Tset} from 'game/lvl'
 import {View, app, chat, menu} from 'app'
-import {Handler} from 'app/router'
+import {Handler, Routes} from 'app/router'
 import {Subs} from 'app/hub'
 import {Slots, WorldData} from './world'
 import {WorldView, worldSel, worldIndex} from './view_world'
 import {PicData} from './view_img'
 import './wedit.css'
 import {TopicView} from './view_top'
-
-export interface WeditView extends View {
-	dock:Layout
-	worlds:string[]
-	a:WeditArgs
-	w?:WorldView
-	setArgs(a:WeditArgs):void
-}
 
 export interface WeditArgs {
 	w?:string
@@ -29,108 +21,115 @@ export interface WeditArgs {
 	xtra?:string
 }
 
-const handler:Handler = (args:string)=> {
-	const [w, top, id, sub, xtra] = args?.split('/') || []
-	v.setArgs({w, top, id, sub, xtra})
-}
-
 const loading = h('', "Lädt Editor")
+export class WeditView implements View {
+	name="wedit"
+	label="World Editor"
+	subs?:Subs
+	routes:Routes
 
-const v:WeditView = {name:"wedit", label:"World Editor",
-	dock:newLayout("#wedit"),
-	worlds:[], a:{},
-	routes: {
-		'/wedit': handler,
-		'/wedit/..': handler,
-	},
-	setArgs(a:WeditArgs) {
+	a:WeditArgs = {}
+	dock=newLayout("#wedit")
+
+	worlds:string[] = []
+	w?:WorldView
+
+	constructor() {
+		const handler:Handler = (args:string)=> {
+			const [w, top, id, sub, xtra] = args?.split('/') || []
+			this.setArgs({w, top, id, sub, xtra})
+		}
+		this.routes = {
+			'/wedit': handler,
+			'/wedit/..': handler,
+		}
+	}
+	start() {
+		app.on(this.subs = editorSubs(this))
+		h.add(this.dock.head, h('', menu()))
+		const chatel = chat.start()
+		this.dock.add({label:'Chat', el:chatel, sel:'.dyn'})
+		return this.dock.el
+	}
+	stop() {
+		chat.stop()
+		app.off(this.subs!)
+		this.w = undefined
+		this.worlds = []
+		h.repl(this.dock.head)
+		this.dock.filter(() => false)
+	}
+	setArgs(a:WeditArgs):void {
 		this.a = a
+		const {worlds, w, dock} = this
 		if (app.cur != this) {
 			app.send('enter', {room:'wedit'})
-			h.repl(v.dock.main, loading)
+			h.repl(dock.main, loading)
 			return
 		}
-		if (!a.w) {
-			if (v.w) v.w.stop()
-			v.w = undefined
-			// enter wedit room
-			if (!v.worlds.length) app.send('enter', {room:'wedit'})
-			// or show world select
-			else h.repl(v.dock.main, worldSel(v.worlds))
-			return
-		}
-		// check active world
-		if (v.w?.d.name != a.w) {
-			if (v.w) v.w.stop()
-			v.w = undefined
-			h.repl(v.dock.main, loading)
-			app.send('world.open', {name:a.w})
+		if (!a.w || w?.d.name != a.w) {
+			if (w) w.stop()
+			this.w = undefined
+			if (!a.w) {
+				// enter wedit room
+				if (!worlds.length) app.send('enter', {room:'wedit'})
+				// or show world select
+				else h.repl(dock.main, worldSel(worlds))
+			} else {
+				h.repl(dock.main, loading)
+				app.send('world.open', {name:a.w})
+			}
 			return
 		}
 		if (!a.top) {
 			// show world overview
-			h.repl(v.dock.main, worldIndex(v.w.d))
+			h.repl(dock.main, worldIndex(w.d))
 			return
 		}
 		// check active topic
 		if (!a.id) {
 			// show topic overview
-			const topv = new TopicView(v.w.d, a.top)
-			h.repl(v.dock.main, topv.el)
+			const topv = new TopicView(w.d, a.top)
+			h.repl(dock.main, topv.el)
 			return
 		}
 		// check active game object
 		const id = parseInt(a.id)
 		// show topic detail
 		if (a.top == 'lvl') {
-			if (v.w?.lvlv?.lvl.id != id) {
-				const lvl = v.w?.d.lvl.get(id)
+			if (w?.lvlv?.lvl.id != id) {
+				const lvl = w?.d.lvl.get(id)
 				if (lvl) {
-					h.repl(v.dock.main, loading)
+					h.repl(dock.main, loading)
 					app.send('lvl.open', {id})
 					return
 				}
 			}
 		} else if (a.top == 'img') {
-			const iv = v.w?.imgv
+			const iv = w?.imgv
 			if (iv?.img.id != id) {
-				const img = v.w?.d.img.get(id)
+				const img = w?.d.img.get(id)
 				if (img) {
-					h.repl(v.dock.main, loading)
+					h.repl(dock.main, loading)
 					app.send('img.open', {id})
 					return
 				}
 			}
 			if (iv && a.sub) {
-				const clip = v.w?.d.clip.get(parseInt(a.sub))
+				const clip = w?.d.clip.get(parseInt(a.sub))
 				if (!clip) return // TODO inform error
 				let pic
-				if (a.xtra) pic = v.w?.d.pics.get(parseInt(a.xtra))
+				if (a.xtra) pic = w?.d.pics.get(parseInt(a.xtra))
 				iv.show(clip, pic)
 				return
 			}
 		} else  {
-			const topv = new TopicView(v.w.d, a.top, id)
-			h.repl(v.dock.main, topv.el)
+			const topv = new TopicView(w.d, a.top, id)
+			h.repl(dock.main, topv.el)
 		}
-	},
-	start() {
-		app.on(v.subs = editorSubs(v))
-		h.add(v.dock.head, h('', menu()))
-		const chatel = chat.start()
-		v.dock.add({label:'Chat', el:chatel, sel:'.dyn'})
-		return v.dock.el
-	},
-	stop() {
-		chat.stop()
-		app.off(v.subs!)
-		v.w = undefined
-		v.worlds = []
-		h.repl(v.dock.head)
-		v.dock.filter(() => false)
-	},
+	}
 }
-app.addView(v)
+app.addView(new WeditView())
 
 const editorSubs = (v:WeditView):Subs => {
 	type handler = (res:any,subj?:string)=>void

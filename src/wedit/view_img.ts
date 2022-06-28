@@ -66,7 +66,7 @@ export class ImgView {
 		ed.c.setStage({x:8, y:8, w:fst.w, h:fst.h, zoom:12, bg:ed.color(0)})
 		const pic = wd.pics.get(fst.seq[0].pic)
 		if (pic) ed.update(pic)
-		this.clipv = new ClipView(wd, fst, this.pal)
+		this.clipv = new ClipView(this as ClipCtx)
 		h.repl(dock.main, h('#img-view', this.clipv.el, ed.c.el))
 		dock.add(this.palv = new PalView(this, idx => {
 			let b = {x:0,y:0,w:0,h:0}
@@ -90,7 +90,6 @@ export class ImgView {
 	}
 	show(clip:Clip, pic?:Pic) {
 		this.clip = clip
-		this.clipv.setClip(clip)
 		const {ed, wd, clipv, prev} = this
 		if (!pic) {
 			const fr = clip.seq[0]

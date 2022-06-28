@@ -1,4 +1,4 @@
-import h, {hIcon} from 'web/html'
+import {h, hIcon} from 'web/html'
 import {mount, unmount} from 'web/modal'
 import {Clip, Frame, Pic, Pal, palColor} from 'game/pix'
 import {WorldData} from './world'
@@ -10,38 +10,41 @@ import app from 'app'
 import {Animator} from 'web/animate'
 import {BaseDock} from 'game/dock'
 
+export interface ClipCtx {
+	wd:WorldData
+	pal:Pal
+	clip:Clip
+	ator:Animator
+}
+
 export class ClipView {
 	el = h('#clip-view')
-	constructor(public wd:WorldData, public clip:Clip, public pal:Pal) {
-		this.update()
-	}
-	setClip(c:Clip) {
-		this.clip = c
+	constructor(public ctx:ClipCtx) {
 		this.update()
 	}
 	update():void {
-		const {wd, clip, pal} = this
+		const {wd, clip, pal} = this.ctx
 		h.repl(this.el, h('.row',
 			h('', {onclick: e => {
 				e.preventDefault()
-				mount(clipForm(this.clip, res => {
+				mount(clipForm(clip, res => {
 					const {id, name, w, h, loop} = res
 					app.send('clip.edit', {id, name, w, h, loop})
 					unmount()
 				}))
 
 			}}, clip.name, h('', clip.w +'x'+clip.h)),
-			framesView(wd, pal, clip),
+			renderFrames(wd, pal, clip),
 			h('a', {onclick: e => {
 				e.preventDefault()
-				const {id, seq} = this.clip
+				const {id, seq} = clip
 				app.send('clip.edit', {id, idx:seq.length, seq:[{}]})
 			}}, hIcon('plus')),
 		))
 	}
 }
 
-export function framesView(wd:WorldData, pal:Pal, clip:Clip):HTMLElement {
+export function renderFrames(wd:WorldData, pal:Pal, clip:Clip):HTMLElement {
 	const sel = (e:Event, p:Pic) => {
 		e.preventDefault()
 		app.rr.go(`/wedit/${wd.name}/img/${clip.img}/${clip.id}/${p.id}`)
@@ -73,13 +76,6 @@ export function framesView(wd:WorldData, pal:Pal, clip:Clip):HTMLElement {
 		}
 		return c.el
 	}))
-}
-
-export interface ClipCtx {
-	wd:WorldData
-	pal:Pal
-	clip:Clip
-	ator:Animator
 }
 
 export class ClipPreview extends BaseDock {
