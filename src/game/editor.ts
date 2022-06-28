@@ -1,4 +1,4 @@
-import {ZoomCanvas, newZoomCanvas} from 'web/canvas'
+import {ZoomCanvas} from 'web/canvas'
 import {Pos, Dim, Box, posEq, posIn, posAdd, posSub, dimBox, boxIn, boxCrop, boxGrow} from 'game/geo'
 import {Grid, GridSel, GridData, gridTiles, gridSel, gridEach} from 'game/grid'
 import {spanFill} from './fill'
@@ -11,20 +11,77 @@ export interface Float<T> extends Grid<T> {
 	mode:'img'|'paste'
 }
 
-export interface GridEditor<T> {
+let selPat:CanvasPattern|null = null
+
+export class GridEditor<T extends number> {
 	c:ZoomCanvas
-	img:Image<T>|null
-	sel:GridSel|null
-	float:Float<T>|null
+	img?:Image<T>
+	sel?:GridSel
+	float?:Float<T>
 	tmp:Tmp<T>
-	color(t:T):string
-	onedit(e:Edit<T>):void
-	tool:ToolCtx<T>
-	repaint():void
-	update(img:Image<T>|null):void
-	close():void
+	tool:ToolCtx<T> = {active:'pen', mirror:false, grid:true, fg:1 as T, bg:0 as T}
+	handleCb = (e:Event):void => handleClipboard(this, e as ClipboardEvent)
 	updateTool?:()=>void
-	anchorFloat():void
+
+	constructor(public dim:Dim, public color:(t:T)=>string, public onedit:(e:Edit<T>)=>void) {
+		const c = this.c = new ZoomCanvas("editor-canvas", 800, 600)
+		if (!selPat) selPattern(c).then(pat => selPat = pat)
+		this.tmp = tmpGrid<T>(dim.w, dim.h)
+		c.el.oncontextmenu = e => e.preventDefault()
+		c.el.addEventListener("pointerdown", e => {
+			if (!this.img) return
+			if (e.button != 2 && e.button != 5 && e.button != 0) return
+			const tool = tools[this.tool.active]
+			if (tool) tool(this, e)
+		})
+		c.init(()=>this.repaint())
+		cbEvents.forEach(typ => addEventListener(typ, this.handleCb))
+	}
+	repaint():void {
+		const {c, dim, tool, tmp, sel, img, float, color} = this
+		c.clear()
+		if (!img) return
+		if (tool.grid) c.grid(8, 16)
+		for (let pos = {x:0, y:0}; pos.y < dim.h; pos.y++) {
+			for (pos.x = 0; pos.x < dim.w; pos.x++) {
+				let t:T|undefined
+				if (!float) {
+					t = tmp.img.get(pos)
+				} else {
+					if (posIn(pos, float))
+						t = float.get(pos)
+					if (!t && float.mode == 'img')
+						continue
+				}
+				if (!t && posIn(pos, img)) {
+					t = img.get(pos)
+				}
+				if (t) c.paintPixel(pos, color(t))
+			}
+		}
+		if (sel) paintSel(c, sel, selPat)
+	}
+	update(img:Image<T>|null):void {
+		this.float = undefined
+		this.img = img || undefined
+		this.tmp.reset()
+		if (this.updateTool) this.updateTool()
+		this.repaint()
+
+	}
+	close():void {
+		cbEvents.forEach(typ => window.removeEventListener(typ, this.handleCb))
+	}
+	anchorFloat():void {
+		const {float, tmp} = this
+		if (!float) return
+		// copy into tmp img
+		gridEach(float, (p, t) => tmp.paint(p, t), tmp.img)
+		this.onedit({...tmp.getGrid(), repl:float.mode == 'img'})
+		this.float = undefined
+		tmp.reset()
+		if (this.updateTool) this.updateTool()
+	}
 }
 
 export interface ToolCtx<T> {
@@ -41,66 +98,7 @@ export interface Edit<T> extends GridData {
 }
 
 export function gridEditor<T extends number>(d:Dim, color:(t:T)=>string, onedit:(e:Edit<T>)=>void):GridEditor<T> {
-	const c = newZoomCanvas("editor-canvas", 800, 600)
-	let selPat:CanvasPattern|null = null
-	selPattern(c).then(pat => selPat = pat)
-	const handleCb = (e:Event) => handleClipboard(ed, e as ClipboardEvent)
-	const ed:GridEditor<T> = {c, img:null, sel:null, float: null,
-		tmp:tmpGrid<T>(d.w, d.h), color, onedit,
-		tool:{active:'pen', mirror:false, grid:true, fg:1 as T, bg:0 as T},
-		repaint: () => {
-			c.clear()
-			if (!ed.img) return
-			if (ed.tool.grid) c.grid(8, 16)
-			for (let pos = {x:0, y:0}; pos.y < d.h; pos.y++) {
-				for (pos.x = 0; pos.x < d.w; pos.x++) {
-					let t:T|undefined
-					if (!ed.float) {
-						t = ed.tmp.img.get(pos)
-					} else {
-						if (posIn(pos, ed.float))
-							t = ed.float.get(pos)
-						if (!t && ed.float.mode == 'img')
-							continue
-					}
-					if (!t && posIn(pos, ed.img)) {
-						t = ed.img.get(pos)
-					}
-					if (t) c.paintPixel(pos, color(t))
-				}
-			}
-			if (ed.sel) paintSel(c, ed.sel, selPat)
-		},
-		update(img) {
-			ed.float = null
-			ed.img = img
-			ed.tmp.reset()
-			if (ed.updateTool) ed.updateTool()
-			ed.repaint()
-		},
-		close() {
-			cbEvents.forEach(typ => window.removeEventListener(typ, handleCb))
-		},
-		anchorFloat() {
-			if (!ed.float) return
-			// copy into tmp img
-			gridEach(ed.float!, (p, t) => ed.tmp.paint(p, t), ed.tmp.img)
-			ed.onedit({...ed.tmp.getGrid(), repl:ed.float.mode == 'img'})
-			ed.tmp.reset()
-			ed.float = null
-			if (ed.updateTool) ed.updateTool()
-		},
-	}
-	c.el.oncontextmenu = e => e.preventDefault()
-	c.el.addEventListener("pointerdown", e => {
-		if (!ed.img) return
-		if (e.button != 2 && e.button != 5 && e.button != 0) return
-		const tool = tools[ed.tool.active]
-		if (tool) tool(ed, e)
-	})
-	c.init(ed.repaint)
-	cbEvents.forEach(typ => window.addEventListener(typ, handleCb))
-	return ed
+	return new GridEditor<T>(d, color, onedit)
 }
 
 const cbEvents = ["copy", "cut", "paste"]
@@ -119,7 +117,7 @@ export function handleClipboard<T extends number>(ed:GridEditor<T>, e:ClipboardE
 			}, img, false)
 			clips.setClip(copy)
 			if (e.type == "cut") ed.onedit({...ed.sel, fill:0 as T})
-			ed.sel = null
+			ed.sel = undefined
 		} else {
 			const copy = gridTiles(img)
 			gridEach(img, (p, t) => copy.set(p, t))
@@ -231,7 +229,7 @@ TODO dither tool: maybe reuse brush with different brush types?
 TODO transformation view for selection or the whole pic for move, rotate and mirror
  */
 
-export type Tool<T> = (ed:GridEditor<T>, e:PointerEvent)=>void
+export type Tool<T extends number> = (ed:GridEditor<T>, e:PointerEvent)=>void
 
 export const tools:{[name:string]:Tool<any>} = {
 	pen: startDraw(drawPen),
@@ -242,17 +240,17 @@ export const tools:{[name:string]:Tool<any>} = {
 	wand: doWand,
 }
 
-function drawPen<T>(ed:GridEditor<T>, _:PointerEvent, p:Pos, t:T) {
+function drawPen<T extends number>(ed:GridEditor<T>, _:PointerEvent, p:Pos, t:T) {
 	ed.tmp.paint(p, t)
 	ed.c.paintPixel(p, ed.color(t))
 }
-function drawBrush<T>(ed:GridEditor<T>, e:PointerEvent, p:Pos, t:T) {
+function drawBrush<T extends number>(ed:GridEditor<T>, e:PointerEvent, p:Pos, t:T) {
 	const s = e.pressure == 0.5 ? 1 : Math.floor((e.pressure*e.pressure)*5)
 	const r = {x:p.x-s, y:p.y-s, w:1+2*s, h:1+2*s}
 	ed.tmp.rect(r, t)
 	ed.c.paintRect(r, ed.color(t))
 }
-function startDraw<T>(draw:(ed:GridEditor<T>, e:PointerEvent, p:Pos, t:T)=>void):Tool<T> {
+function startDraw<T extends number>(draw:(ed:GridEditor<T>, e:PointerEvent, p:Pos, t:T)=>void):Tool<T> {
 	return (ed, e) => {
 		const {mirror, fg, bg} = ed.tool
 		const t = e.button != 0 ? bg : fg
@@ -274,9 +272,9 @@ function startDraw<T>(draw:(ed:GridEditor<T>, e:PointerEvent, p:Pos, t:T)=>void)
 	}
 }
 
-function startSel<T>(ed:GridEditor<T>, e:PointerEvent) {
+function startSel<T extends number>(ed:GridEditor<T>, e:PointerEvent) {
 	if (e.button != 0) {
-		ed.sel = null
+		ed.sel = undefined
 		ed.repaint()
 		return
 	}
@@ -317,7 +315,7 @@ function startSel<T>(ed:GridEditor<T>, e:PointerEvent) {
 			}
 			gridEach(sel, p => ed.sel!.set(p, true), ed.sel, false)
 		} else {
-			ed.sel = sel
+			ed.sel = sel || undefined
 		}
 		ed.repaint()
 	})
@@ -347,7 +345,7 @@ function startMove<T extends number>(ed:GridEditor<T>, e:PointerEvent) {
 					copy.set(p, img.get(p))
 					img.set(p, 0 as T)
 				}, img, false)
-				ed.sel = null
+				ed.sel = undefined
 				ed.float = {...copy, mode:'paste'}
 			}
 			if (ed.updateTool) ed.updateTool()
@@ -362,7 +360,7 @@ function startMove<T extends number>(ed:GridEditor<T>, e:PointerEvent) {
 	})
 }
 
-function doFill<T>(ed:GridEditor<T>, e:PointerEvent) {
+function doFill<T extends number>(ed:GridEditor<T>, e:PointerEvent) {
 	// do a wand selection if we have nothing selected
 	const selEmpty = !ed.sel || !ed.sel.raw.find(n => n > 0)
 	if (selEmpty) wandSel(ed, e)
@@ -372,20 +370,20 @@ function doFill<T>(ed:GridEditor<T>, e:PointerEvent) {
 	// fill the selection
 	ed.onedit(Object.assign({}, ed.sel, {fill:t}))
 	// reset if we originally had an empty selection
-	if (selEmpty) ed.sel = null
+	if (selEmpty) ed.sel = undefined
 }
 
 
-function doWand<T>(ed:GridEditor<T>, e:PointerEvent) {
+function doWand<T extends number>(ed:GridEditor<T>, e:PointerEvent) {
 	if (e.button != 0) {
 		// other button clicks clear the selection
-		ed.sel = null
+		ed.sel = undefined
 		ed.repaint()
 		return
 	}
 	wandSel(ed, e)
 }
-function wandSel<T>(ed:GridEditor<T>, e:PointerEvent) {
+function wandSel<T extends number>(ed:GridEditor<T>, e:PointerEvent) {
 	if (!ed.img) return
 	// copy ed.sel over to tmp.sel
 	const pos = ed.c.stagePos(e)

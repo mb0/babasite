@@ -1,13 +1,13 @@
 import {h, hIcon} from 'web/html'
-import {ToolCtx, tools} from 'game/editor'
-import {Grid, gridMirrorH, gridMirrorV, gridRot270, gridRot90} from 'game/grid'
+import {Float, ToolCtx, tools} from 'game/editor'
+import {gridMirrorH, gridMirrorV, gridRot270, gridRot90} from 'game/grid'
 
 
 const opts = ['mirror', 'grid']
 
 export interface ToolViewCtx<T> {
 	tool:ToolCtx<T>
-	float:Grid<T>|null
+	float?:Float<T>
 	color(t:T):string
 	repaint():void
 	anchorFloat():void

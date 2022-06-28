@@ -5,7 +5,7 @@ import {GridEditor} from './editor'
 
 // the simple version works well enough for our usecase, but will fail on larger images
 // with a recursion exception
-export function floodFill<T>(ed:GridEditor<T>, p:Pos, t:T) {
+export function floodFill<T extends number>(ed:GridEditor<T>, p:Pos, t:T) {
 	if (!(posIn(p, ed.img!) && !ed.tmp.sel.get(p) && ed.img!.get(p) == t)) return
 	ed.tmp.paint(p, t)
 	floodFill(ed, {x:p.x, y:p.y+1}, t)
@@ -15,7 +15,7 @@ export function floodFill<T>(ed:GridEditor<T>, p:Pos, t:T) {
 }
 
 // the scan fill version uses a stack of candidate rows to scan and works for large images
-export function spanFill<T>(ed:GridEditor<T>, p:Pos, t:T) {
+export function spanFill<T extends number>(ed:GridEditor<T>, p:Pos, t:T) {
 	const inside = (p:Pos) => posIn(p, ed.img!) && !ed.tmp.sel.get(p) && ed.img!.get(p) == t
 	if (!inside(p)) return
 	const {x, y} = p

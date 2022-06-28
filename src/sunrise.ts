@@ -1,4 +1,4 @@
-import {Canvas, newCanvas} from 'web/canvas'
+import {Canvas} from 'web/canvas'
 import {app, chat, menu} from 'app'
 import {Pos, Dim} from 'game/geo'
 import {newLayout} from 'game/dock'
@@ -9,7 +9,7 @@ app.addView({name: "simple",
 	label: "Sunrise Chat",
 	start() {
 		stop = false
-		const c = newCanvas('sunrise-canvas', 800, 600, "white")
+		const c = new Canvas('sunrise-canvas', 800, 600, "white")
 		c.el.addEventListener("click", onClick)
 		addEventListener("keydown", onKey)
 		addEventListener("keyup", onKey)

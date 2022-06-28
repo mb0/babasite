@@ -5,7 +5,7 @@ import {WorldData} from './world'
 import {strInput, dimInput, simpleForm, boolInput, numInput} from './form'
 import {gridEach} from 'game/grid'
 import {dimBox} from 'game/geo'
-import {Canvas, newCanvas} from 'web/canvas'
+import {Canvas} from 'web/canvas'
 import app from 'app'
 import {Animator} from 'web/animate'
 import {BaseDock} from 'game/dock'
@@ -52,7 +52,7 @@ export function renderFrames(wd:WorldData, pal:Pal, clip:Clip):HTMLElement {
 	const bg = palColor(pal, 0)
 	return h('', clip.seq.map((fr, idx) => {
 		const id = 'frame_'+ clip.name +'_' + idx
-		const c = newCanvas(id, clip.w, clip.h, bg)
+		const c = new Canvas(id, clip.w, clip.h, bg)
 		c.clear()
 		c.el.draggable = true
 		c.el.ondragstart = (ev:DragEvent) => {
@@ -88,7 +88,7 @@ export class ClipPreview extends BaseDock {
 		super('.preview')
 		const {wd, pal, clip:{w:cw, h:ch}} = ctx
 		const zoom = 3
-		const c = this.c = newCanvas("clip-preview", cw*zoom, ch*zoom, palColor(pal, 0))
+		const c = this.c = new Canvas("clip-preview", cw*zoom, ch*zoom, palColor(pal, 0))
 		h.repl(this.el, c.el)
 		c.setStage({zoom})
 		this.paint = (fn:number) => {

@@ -1,6 +1,6 @@
 import h from 'web/html'
 import {Layout} from 'game/dock'
-import {GridEditor, gridEditor} from 'game/editor'
+import {GridEditor} from 'game/editor'
 import {Lvl, Tset, tileColor} from 'game/lvl'
 import app from 'app'
 import {WorldData} from './world'
@@ -17,7 +17,7 @@ export class LvlView {
 		const grid = wd.grid!
 		const lvl = this.lvl = wd.lvl.one(l => l.grid == grid.id)!
 		this.tset = wd.tset.get(lvl.tset)!
-		const ed = this.ed = gridEditor(lvl, t => tileColor(this.tset, t), edit => {
+		const ed = this.ed = new GridEditor(lvl, t => tileColor(this.tset, t), edit => {
 			app.send("grid.edit", {
 				...edit,
 				id:lvl.id,

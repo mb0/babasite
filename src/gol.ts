@@ -1,5 +1,5 @@
 import h from 'web/html'
-import {Canvas, newZoomCanvas} from 'web/canvas'
+import {Canvas, ZoomCanvas} from 'web/canvas'
 import {Dim} from 'game/geo'
 import {newLayout} from 'game/dock'
 import {app, chat, menu} from 'app'
@@ -12,7 +12,7 @@ let map:Map|null = null
 app.addView({name: "gol",
 	label: "Game Of Life",
 	start() {
-		const c = newZoomCanvas("gol-canvas", 800, 600)
+		const c = new ZoomCanvas("gol-canvas", 800, 600)
 		c.setStage({zoom:10})
 		c.el.addEventListener("click", e => {
 			const p = c.stagePos(e)

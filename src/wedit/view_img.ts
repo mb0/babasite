@@ -81,7 +81,7 @@ export class ImgView {
 				}, b)
 				ed.sel = sel
 			} else {
-				ed.sel = null
+				ed.sel = undefined
 			}
 			ed.repaint()
 		}), 1)
