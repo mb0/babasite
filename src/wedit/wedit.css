@@ -52,3 +52,8 @@ span.color {
 .pal, .tset {
 	padding: 4px;
 }
+.preview {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+}

@@ -7,6 +7,8 @@ import {gridEach} from 'game/grid'
 import {dimBox} from 'game/geo'
 import {Canvas, newCanvas} from 'web/canvas'
 import app from 'app'
+import {Animator} from 'web/animate'
+import {BaseDock} from 'game/dock'
 
 export class ClipView {
 	el = h('#clip-view')
@@ -71,6 +73,49 @@ export function framesView(wd:WorldData, pal:Pal, clip:Clip):HTMLElement {
 		}
 		return c.el
 	}))
+}
+
+export interface ClipCtx {
+	wd:WorldData
+	pal:Pal
+	clip:Clip
+	ator:Animator
+}
+
+export class ClipPreview extends BaseDock {
+	group="img"
+	c:Canvas
+	totals:number[]=[]
+	paint:(fn:number)=>void
+	constructor(public ctx:ClipCtx) {
+		super('.preview')
+		const {wd, pal, clip:{w:cw, h:ch}} = ctx
+		const zoom = 3
+		const c = this.c = newCanvas("clip-preview", cw*zoom, ch*zoom, palColor(pal, 0))
+		h.repl(this.el, c.el)
+		c.setStage({zoom})
+		this.paint = (fn:number) => {
+			c.clear()
+			const ts = this.totals
+			const fr = ctx.clip.seq
+			if (!fr?.length || ts.length != fr.length) this.update()
+			const at = fn%(ts[ts.length-1]||1)
+			const idx = ts.findIndex(t => t >= at)
+			const pic = wd.pics.get(fr[idx].pic)
+			if (pic) paintPic(c, ctx.clip, pal, pic)
+		}
+		const ani = ctx.ator.animate(100, this.paint, 0, true)
+		c.el.onclick = () => ani.toggle()
+		this.update()
+	}
+	update() {
+		this.c.el.style.backgroundColor = palColor(this.ctx.pal, 0)
+		this.totals = this.ctx.clip.seq.reduce((a, fr)=> {
+			a.push((a.length?a[a.length-1]:0)+1+(fr.dur||0))
+			return a
+		}, [] as number[])
+		this.paint(0)
+	}
 }
 
 function paintPic(c:Canvas, clip:Clip, pal:Pal, pic:Pic) {

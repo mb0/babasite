@@ -42,11 +42,11 @@ export class WorldView {
 	clean() {
 		this.dock.filter(({group}) => !group || (group == "wedit"))
 		if (this.lvlv) {
-			this.lvlv.ed.close()
+			this.lvlv.close()
 			this.lvlv = undefined
 		}
 		if (this.imgv) {
-			this.imgv.ed.close()
+			this.imgv.close()
 			this.imgv = undefined
 		}
 	}

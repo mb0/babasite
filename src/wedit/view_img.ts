@@ -6,9 +6,10 @@ import app from 'app'
 import {WorldData} from './world'
 import {kindSelect, nameInput, dimInput, namedListSelect, simpleForm} from './form'
 import {PalView} from './view_pal'
-import {ClipView} from './view_clip'
+import {ClipCtx, ClipPreview, ClipView} from './view_clip'
 import {gridEach, gridSel} from 'game/grid'
 import {boxGrow, posIn} from 'game/geo'
+import {newAnimator} from 'web/animate'
 
 export interface PicData {
 	id:number
@@ -17,12 +18,14 @@ export interface PicData {
 
 export class ImgView {
 	ed:GridEditor<number>
+	ator=newAnimator()
 	img:Img
 	pal:Pal
 	clips:Clip[]
 	clip?:Clip
 	palv:PalView
 	clipv:ClipView
+	prev:ClipPreview
 	constructor(public wd:WorldData, dock:Layout, id:number) {
 		this.img = wd.img.get(id)!
 		this.pal = wd.pal.get(this.img.pal)!
@@ -82,17 +85,19 @@ export class ImgView {
 			}
 			ed.repaint()
 		}), 1)
+		dock.add(this.prev = new ClipPreview(this as ClipCtx), 2)
 		ed.updateTool = () => this.palv.toolv.updateTool()
 	}
 	show(clip:Clip, pic?:Pic) {
 		this.clip = clip
 		this.clipv.setClip(clip)
-		const {ed, wd, clipv} = this
+		const {ed, wd, clipv, prev} = this
 		if (!pic) {
 			const fr = clip.seq[0]
 			if (fr) pic = wd.pics.get(fr.pic)
 		}
 		clipv.update()
+		prev.update()
 		if (pic) ed.update(pic)
 		else ed.c.clear()
 	}
@@ -107,9 +112,11 @@ export class ImgView {
 		this.ed.repaint()
 	}
 	updateClip(clip:Clip) {
-		const {clip:old, clipv} = this
-		if (old?.id == clip.id)
+		const {clip:old, clipv, prev} = this
+		if (old?.id == clip.id) {
 			clipv.update()
+			prev.update()
+		}
 	}
 	updatePic(pic:Pic) {
 		const {clip, ed, clipv} = this
@@ -117,6 +124,10 @@ export class ImgView {
 			clipv.update()
 		if (ed?.img?.id == pic.id)
 			ed.repaint()
+	}
+	close() {
+		this.ed.close()
+		this.ator.close()
 	}
 }
 

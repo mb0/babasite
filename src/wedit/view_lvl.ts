@@ -40,6 +40,9 @@ export class LvlView {
 		this.tsetv.update()
 		this.ed.repaint()
 	}
+	close() {
+		this.ed.close()
+	}
 }
 
 export function lvlForm(wd:WorldData, s:Partial<Lvl>, submit:(res:Partial<Lvl>)=>void) {
