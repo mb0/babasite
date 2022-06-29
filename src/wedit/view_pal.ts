@@ -49,7 +49,7 @@ export class PalView extends BaseDock {
 			h('label', {onclick: ()=> {
 				if (click) click(f)
 			}}, feat.name),
-			feat.colors.map((_, c) => {
+			feat.colors?.map((_, c) => {
 				const pix = f*100+c
 				const css = ed.color(pix)
 				return h('span', {
@@ -76,7 +76,7 @@ export class PalView extends BaseDock {
 				pickColor('#7f7575', res => {
 					app.send("pal.feat", {
 						id:pal.id, feat:feat.name,
-						idx:feat.colors.length, ins:[res],
+						idx:feat.colors?.length, ins:[res],
 					})
 				})
 			}}, hIcon('plus'))
