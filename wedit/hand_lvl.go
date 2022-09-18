@@ -100,13 +100,19 @@ func tsetTile(ed *ConnSubs, m *hub.Msg) error {
 }
 
 func lvlNew(ed *ConnSubs, m *hub.Msg) error {
-	var req lvl.Lvl
+	var req struct {
+		lvl.Lvl
+		Open bool `json:"open,omitempty"`
+	}
 	m.Unmarshal(&req)
-	lvl, err := ed.Lvl.NewLvl(req)
+	lvl, err := ed.Lvl.NewLvl(req.Lvl)
 	if err != nil {
 		return err
 	}
 	ed.Bcast(site.RawMsg(m.Subj, lvl), 0)
+	if req.Open {
+		return sendLvlOpen(ed, lvl)
+	}
 	return nil
 }
 func lvlDel(ed *ConnSubs, m *hub.Msg) error {
@@ -127,6 +133,9 @@ func lvlOpen(ed *ConnSubs, m *hub.Msg) error {
 	if err != nil {
 		return err
 	}
+	return sendLvlOpen(ed, l)
+}
+func sendLvlOpen(ed *ConnSubs, l *lvl.Lvl) error {
 	g, err := ed.Lvl.Grid.Get(l.Grid)
 	if err != nil {
 		return err
@@ -134,7 +143,7 @@ func lvlOpen(ed *ConnSubs, m *hub.Msg) error {
 	// can only be subscribed to one lvl at a time
 	ed.UnsubKind(l.ID.Top())
 	ed.SubTop(l.ID)
-	hub.Send(m.From, site.RawMsg(m.Subj, g))
+	hub.Send(ed.Conn, site.RawMsg("lvl.open", g))
 	return nil
 }
 func lvlEdit(ed *ConnSubs, m *hub.Msg) error {

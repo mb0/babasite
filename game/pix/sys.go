@@ -29,6 +29,19 @@ func (s *Sys) NewPal(name string) (*Pal, error) {
 		return nil, err
 	}
 	pal.Name = name
+	pal.Feats = []*Feat{
+		{Name: "basic", Colors: []Color{0xffffff, 0x000000}},
+	}
+	if name == "default" {
+		pal.Feats = append(pal.Feats, []*Feat{
+			{Name: "skin", Colors: []Color{0xffcbb8, 0xfca99a, 0xc58e81, 0x190605}},
+			{Name: "eyes", Colors: []Color{0xfffff0, 0x1a5779, 0x110100}},
+			{Name: "hair", Colors: []Color{0xf1ba60, 0xc47e31, 0x604523, 0x090100}},
+			{Name: "shirt", Colors: []Color{0xa9cc86, 0x6e8e52, 0x51683b, 0x040000}},
+			{Name: "pants", Colors: []Color{0x484a49, 0x303030, 0x282224, 0x170406}},
+			{Name: "shoes", Colors: []Color{0xb16f4b, 0x82503e, 0x3f1f15, 0x030000}},
+		}...)
+	}
 	return pal, nil
 }
 
@@ -46,6 +59,18 @@ func (s *Sys) NewImg(a Img) (*Img, error) {
 	img.Kind = a.Kind
 	img.Dim = s.defDim(a.Kind, a.Dim)
 	img.Pal = s.defPal(a.Pal)
+
+	clip, err := s.Clip.New()
+	if err != nil {
+		return nil, err
+	}
+	clip.Img = img.ID
+	clip.Dim = img.Dim
+	p, err := s.Pic.New()
+	if err != nil {
+		return nil, err
+	}
+	clip.Seq = []Frame{{Pic: p.ID}}
 	return img, nil
 }
 
@@ -71,7 +96,14 @@ func (s *Sys) NewClip(req Clip) (*Clip, error) {
 	clip.Dim = req.Dim
 	clip.Seq = req.Seq
 	clip.Loop = req.Loop
-	// TODO check seq and add frame with blank pic if empty
+	// check seq and add frame with blank pic if empty
+	if len(clip.Seq) == 0 {
+		p, err := s.Pic.New()
+		if err != nil {
+			return nil, err
+		}
+		clip.Seq = []Frame{{Pic: p.ID}}
+	}
 	return clip, nil
 }
 
@@ -116,15 +148,6 @@ func (s *Sys) defPal(id ids.Pal) ids.Pal {
 		p, _ = s.NewPal("default")
 		if p == nil {
 			return 0
-		}
-		p.Feats = []*Feat{
-			{Name: "basic", Colors: []Color{0xffffff, 0x000000}},
-			{Name: "skin", Colors: []Color{0xffcbb8, 0xfca99a, 0xc58e81, 0x190605}},
-			{Name: "eyes", Colors: []Color{0xfffff0, 0x1a5779, 0x110100}},
-			{Name: "hair", Colors: []Color{0xf1ba60, 0xc47e31, 0x604523, 0x090100}},
-			{Name: "shirt", Colors: []Color{0xa9cc86, 0x6e8e52, 0x51683b, 0x040000}},
-			{Name: "pants", Colors: []Color{0x484a49, 0x303030, 0x282224, 0x170406}},
-			{Name: "shoes", Colors: []Color{0xb16f4b, 0x82503e, 0x3f1f15, 0x030000}},
 		}
 	}
 	return p.ID

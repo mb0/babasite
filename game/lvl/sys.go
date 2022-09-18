@@ -27,6 +27,10 @@ func (s *Sys) NewTset(name string) (*Tset, error) {
 		return nil, err
 	}
 	ts.Name = name
+	ts.Infos = []TileInfo{
+		{Tile: 0, Name: "void", Color: 0x888888, Block: true, Group: "basic"},
+		{Tile: 1, Name: "floor", Color: 0xffffff, Block: false, Group: "basic"},
+	}
 	return ts, nil
 }
 func (s *Sys) DelTset(id ids.Tset) error {
@@ -67,10 +71,6 @@ func (s *Sys) defTset(id ids.Tset) ids.Tset {
 		p, _ = s.NewTset("default")
 		if p == nil {
 			return 0
-		}
-		p.Infos = []TileInfo{
-			{Tile: 0, Name: "void", Color: 0xffffff, Block: true, Group: "basic"},
-			{Tile: 1, Name: "wall", Color: 0x888888, Block: true, Group: "basic"},
 		}
 	}
 	return p.ID
