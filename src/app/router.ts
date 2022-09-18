@@ -43,7 +43,7 @@ export class Router {
 		removeEventListener('popstate', this.onpop)
 	}
 	rel(l:Loc=location, pure=false):string {
-		const p = l.pathname
+		const p = l.pathname || ''
 		const b = this.base
 		if (!p.startsWith(b)) return ''
 		return '/' + p.slice(b.length) + (pure ? '' : l.search + l.hash)

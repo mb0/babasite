@@ -63,7 +63,7 @@ export function palColor(pal:Pal, p:number):string {
 	let c = pal.cache
 	if (!c)	{
 		c = pal.cache = new Map()
-		pal.feats.forEach((feat, fi) => {
+		pal.feats?.forEach((feat, fi) => {
 			feat.colors?.forEach((col, ci) => {
 				c!.set(fi*100+ci, cssColor(parseInt(col, 16)))
 			})

@@ -74,7 +74,7 @@ function tsetSelect(tsets:Tset[], submit:(ts:Tset)=>void) {
 		h('header', 'Tileset auswählen'),
 		h('ul',
 			tsets.map(ts => h('li', {onclick:()=> submit(ts)}, ts.name)),
-			h('li', {onclick() {
+			h('li', {onclick: () => {
 				mount(tsetForm({}, res => {
 					app.send("tset.new", res)
 					unmount()

@@ -12,7 +12,7 @@ export function h(sel:string, args?:HArg|HData, ...data:HData[]):HTMLElement {
 	if (args && !addChild(el, args)) {
 		Object.keys(args).forEach(key => {
 			const v = args[key]
-			if (key == 'list' || key == 'for') {
+			if (key == 'list' || key == 'for' || key == 'type') {
 				el.setAttribute(key, v)
 			} else if (!key.indexOf("data-")) {
 				el.dataset[key.slice(5)] = v

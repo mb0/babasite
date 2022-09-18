@@ -45,7 +45,7 @@ export class PalView extends BaseDock {
 		const {ctx:{ed, pal}, click} = this
 		this.head.innerText = 'Pal ' + pal.name
 		this.toolv.updateColor()
-		h.repl(this.el, this.toolv.el, h('', pal.feats.map((feat, f) => h('.color',
+		h.repl(this.el, this.toolv.el, h('', pal.feats?.map((feat, f) => h('.color',
 			h('label', {onclick: ()=> {
 				if (click) click(f)
 			}}, feat.name),

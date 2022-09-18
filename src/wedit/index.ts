@@ -124,6 +124,7 @@ export class WeditView implements View {
 				return
 			}
 		} else  {
+			w?.clean()
 			const topv = new TopicView(w.d, a.top, id)
 			h.repl(dock.main, topv.el)
 		}
