@@ -59,6 +59,9 @@ export class Router {
 		this.cur = p
 		history[repl?'replaceState':'pushState'](null, '', this.base + p.replace(/^[/]/, ''))
 	}
+	ensure(p:string):void {
+		if (this.cur != p) this.show(p)
+	}
 	reroute(q:Params, exec=true, repl?:boolean):void {
 		this[exec?'go':'show'](pure(this.rel()) +"?"+ paramStr(q), repl)
 	}

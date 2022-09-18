@@ -29,6 +29,7 @@ export class LvlView {
 		h.repl(dock.main, ed.c.el)
 		dock.add(this.tsetv = new TsetView(this), 1)
 		ed.updateTool = () => this.tsetv.toolv.updateTool()
+		app.rr.ensure(`/wedit/${wd.name}/lvl/${lvl.id}`)
 	}
 	editTset() {
 		this.tset = this.wd.tset.get(this.lvl.tset)!

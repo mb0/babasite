@@ -64,8 +64,6 @@ export class ImgView {
 		}
 		const fst = this.clip
 		ed.c.setStage({x:8, y:8, w:fst.w, h:fst.h, zoom:12, bg:ed.color(0)})
-		const pic = wd.pics.get(fst.seq[0].pic)
-		if (pic) ed.update(pic)
 		this.clipv = new ClipView(this as ClipCtx)
 		h.repl(dock.main, h('#img-view', this.clipv.el, ed.c.el))
 		dock.add(this.palv = new PalView(this, idx => {
@@ -87,6 +85,7 @@ export class ImgView {
 		}), 1)
 		dock.add(this.prev = new ClipPreview(this as ClipCtx), 2)
 		ed.updateTool = () => this.palv.toolv.updateTool()
+		this.show(this.clip)
 	}
 	show(clip:Clip, pic?:Pic) {
 		this.clip = clip
@@ -99,6 +98,7 @@ export class ImgView {
 		prev.update()
 		if (pic) ed.update(pic)
 		else ed.c.clear()
+		app.rr.ensure(`/wedit/${wd.name}/img/${clip.img}/${clip.id}`)
 	}
 	editPal() {
 		this.pal = this.wd.pal.get(this.img.pal)!
