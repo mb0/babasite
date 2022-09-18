@@ -1,6 +1,6 @@
 import {h, hIcon} from 'web/html'
 import {mount, unmount} from 'web/modal'
-import {Clip, Frame, Pic, Pal, palColor} from 'game/pix'
+import {Img, Clip, Frame, Pic, Pal, palColor} from 'game/pix'
 import {WorldData} from './world'
 import {strInput, dimInput, simpleForm, boolInput, numInput} from './form'
 import {gridEach} from 'game/grid'
@@ -13,7 +13,8 @@ import {BaseDock} from 'game/dock'
 export interface ClipCtx {
 	wd:WorldData
 	pal:Pal
-	clip:Clip
+	img:Img
+	clip?:Clip
 	ator:Animator
 }
 
@@ -24,7 +25,7 @@ export class ClipView {
 	}
 	update():void {
 		const {wd, clip, pal} = this.ctx
-		h.repl(this.el, h('.row',
+		if (clip) h.repl(this.el, h('.row',
 			h('', {onclick: e => {
 				e.preventDefault()
 				mount(clipForm(clip, res => {
@@ -86,13 +87,14 @@ export class ClipPreview extends BaseDock {
 	paint:(fn:number)=>void
 	constructor(public ctx:ClipCtx) {
 		super('.preview')
-		const {wd, pal, clip:{w:cw, h:ch}} = ctx
+		const {wd, pal, img:{w:cw, h:ch}} = ctx
 		const zoom = 3
-		const c = this.c = new Canvas("clip-preview", cw*zoom, ch*zoom, palColor(pal, 0))
+		const c = this.c = new Canvas("clip-preview", cw*zoom, ch*zoom)
 		h.repl(this.el, c.el)
 		c.setStage({zoom})
 		this.paint = (fn:number) => {
 			c.clear()
+			if (!ctx.clip) return
 			const ts = this.totals
 			const fr = ctx.clip.seq
 			if (!fr?.length || ts.length != fr.length) this.update()
@@ -106,11 +108,14 @@ export class ClipPreview extends BaseDock {
 		this.update()
 	}
 	update() {
-		this.c.el.style.backgroundColor = palColor(this.ctx.pal, 0)
-		this.totals = this.ctx.clip.seq.reduce((a, fr)=> {
-			a.push((a.length?a[a.length-1]:0)+1+(fr.dur||0))
-			return a
-		}, [] as number[])
+		const {ctx:{clip, pal}, c} = this
+		if (clip) {
+			c.setStage({w:clip.w*c.stage.zoom, h:clip.h*c.stage.zoom, bg:palColor(pal, 0)})
+			this.totals = clip.seq.reduce((a, fr)=> {
+				a.push((a.length?a[a.length-1]:0)+1+(fr.dur||0))
+				return a
+			}, [] as number[])
+		}
 		this.paint(0)
 	}
 }

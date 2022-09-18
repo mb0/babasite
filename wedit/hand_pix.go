@@ -97,6 +97,18 @@ func imgNew(ed *ConnSubs, m *hub.Msg) error {
 	if err != nil {
 		return err
 	}
+	if img.Pal == 0 {
+		p := ids.NamedFind(&ed.Pix.Pal, "default")
+		if p == nil {
+			p, err = ed.Pix.NewPal("default")
+			if err == nil {
+				ed.Bcast(site.RawMsg("pal.new", p), 0)
+			}
+		}
+		if p != nil {
+			img.Pal = p.ID
+		}
+	}
 	ed.Bcast(site.RawMsg(m.Subj, img), 0)
 	if req.Open {
 		return sendImgOpen(ed, img)
@@ -251,7 +263,7 @@ func clipEdit(ed *ConnSubs, m *hub.Msg) (err error) {
 		res.H = req.H
 	}
 	if resize {
-		// TODO resize
+		// TODO resize all clip pics?
 	}
 	if req.Loop != nil {
 		res.Loop = *req.Loop

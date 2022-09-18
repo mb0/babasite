@@ -59,18 +59,6 @@ func (s *Sys) NewImg(a Img) (*Img, error) {
 	img.Kind = a.Kind
 	img.Dim = s.defDim(a.Kind, a.Dim)
 	img.Pal = s.defPal(a.Pal)
-
-	clip, err := s.Clip.New()
-	if err != nil {
-		return nil, err
-	}
-	clip.Img = img.ID
-	clip.Dim = img.Dim
-	p, err := s.Pic.New()
-	if err != nil {
-		return nil, err
-	}
-	clip.Seq = []Frame{{Pic: p.ID}}
 	return img, nil
 }
 
@@ -141,14 +129,8 @@ func (s *Sys) defDim(kind string, d geo.Dim) geo.Dim {
 }
 func (s *Sys) defPal(id ids.Pal) ids.Pal {
 	p, _ := s.Pal.Get(id)
-	if p == nil {
-		p = ids.NamedFind(&s.Pal, "default")
+	if p != nil {
+		return p.ID
 	}
-	if p == nil {
-		p, _ = s.NewPal("default")
-		if p == nil {
-			return 0
-		}
-	}
-	return p.ID
+	return 0
 }

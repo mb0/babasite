@@ -64,14 +64,8 @@ func (s *Sys) NewLvl(req Lvl) (*Lvl, error) {
 
 func (s *Sys) defTset(id ids.Tset) ids.Tset {
 	p, _ := s.Tset.Get(id)
-	if p == nil {
-		p = ids.NamedFind(&s.Tset, "default")
+	if p != nil {
+		return p.ID
 	}
-	if p == nil {
-		p, _ = s.NewTset("default")
-		if p == nil {
-			return 0
-		}
-	}
-	return p.ID
+	return 0
 }

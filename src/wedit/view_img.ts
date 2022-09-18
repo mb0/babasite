@@ -57,13 +57,7 @@ export class ImgView {
 				copy:true,
 			})
 		}
-		//if (cid) this.clip = this.clips.find(c => c.id == cid)
-		if (!this.clip) this.clip = this.clips[0]
-		if (!this.clip) {
-			throw new Error("TODO think about img without clip or pic")
-		}
-		const fst = this.clip
-		ed.c.setStage({x:8, y:8, w:fst.w, h:fst.h, zoom:12, bg:ed.color(0)})
+		ed.c.setStage({x:8, y:8, w:this.img.w, h:this.img.h, zoom:12, bg:ed.color(0)})
 		this.clipv = new ClipView(this as ClipCtx)
 		h.repl(dock.main, h('#img-view', this.clipv.el, ed.c.el))
 		dock.add(this.palv = new PalView(this, idx => {
@@ -85,20 +79,29 @@ export class ImgView {
 		}), 1)
 		dock.add(this.prev = new ClipPreview(this as ClipCtx), 2)
 		ed.updateTool = () => this.palv.toolv.updateTool()
+		if (!this.clip && this.clips?.length) this.clip = this.clips[0]
 		this.show(this.clip)
 	}
-	show(clip:Clip, pic?:Pic) {
-		this.clip = clip
-		const {ed, wd, clipv, prev} = this
-		if (!pic) {
+	show(clip?:Clip, pic?:Pic) {
+		const {ed, wd, img, clipv, prev} = this
+		if (clip != this.clip) {
+			this.clip = clip
+			clipv.update()
+			prev.update()
+		}
+		if (clip && !pic) {
 			const fr = clip.seq[0]
 			if (fr) pic = wd.pics.get(fr.pic)
 		}
-		clipv.update()
-		prev.update()
-		if (pic) ed.update(pic)
-		else ed.c.clear()
-		app.rr.ensure(`/wedit/${wd.name}/img/${clip.img}/${clip.id}`)
+		let path = `/wedit/${wd.name}/img/${img.id}`
+		if (clip) {
+			path += '/'+ clip.id
+			if (pic) {
+				path += '/'+ pic.id
+				ed.update(pic)
+			} else ed.c.clear()
+		}
+		app.rr.ensure(path)
 	}
 	editPal() {
 		this.pal = this.wd.pal.get(this.img.pal)!
@@ -118,9 +121,11 @@ export class ImgView {
 		}
 	}
 	updatePic(pic:Pic) {
-		const {clip, ed, clipv} = this
-		if (clip?.seq?.find(fr => fr.pic == pic.id))
+		const {clip, ed, clipv, prev} = this
+		if (clip?.seq?.find(fr => fr.pic == pic.id)) {
 			clipv.update()
+			prev.update()
+		}
 		if (ed?.img?.id == pic.id)
 			ed.repaint()
 	}

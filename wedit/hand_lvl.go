@@ -17,9 +17,6 @@ func tsetNew(ed *ConnSubs, m *hub.Msg) error {
 	if err != nil {
 		return err
 	}
-	ts.Infos = []lvl.TileInfo{
-		{Tile: 0, Name: "void", Color: 0xffffff, Block: true, Group: "basic"},
-	}
 	ed.Bcast(site.RawMsg(m.Subj, ts), 0)
 	return nil
 }
@@ -108,6 +105,18 @@ func lvlNew(ed *ConnSubs, m *hub.Msg) error {
 	lvl, err := ed.Lvl.NewLvl(req.Lvl)
 	if err != nil {
 		return err
+	}
+	if lvl.Tset == 0 {
+		ts := ids.NamedFind(&ed.Lvl.Tset, "default")
+		if ts == nil {
+			ts, err = ed.Lvl.NewTset("default")
+			if err == nil {
+				ed.Bcast(site.RawMsg("tset.new", ts), 0)
+			}
+		}
+		if ts != nil {
+			lvl.Tset = ts.ID
+		}
 	}
 	ed.Bcast(site.RawMsg(m.Subj, lvl), 0)
 	if req.Open {
