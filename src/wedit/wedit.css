@@ -10,6 +10,19 @@
 .wtree > ul {
 	padding-left: 0;
 }
+.wtree summary {
+	position: relative;
+	height: 24px;
+}
+.wtree summary > a {
+	opacity: 0;
+	position: absolute;
+	top: 0;
+	right: 0;
+}
+.wtree summary:hover > a {
+	opacity: 100;
+}
 .wtree li {
 	list-style-position: inside;
 }

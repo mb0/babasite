@@ -26,6 +26,12 @@ menu li:hover {
 menu li:hover > .icon > svg {
 	fill: #111 !important;
 }
+
+summary > menu {
+	position: absolute;
+	top: 0;
+	right: 0;
+}
 .drop menu {
 	display: none;
 	position: absolute;
@@ -49,6 +55,7 @@ menu li:hover > .icon > svg {
 	display: flex;
 	flex-direction: column;
 }
+
 @media (prefers-color-scheme: dark) {
 	menu li:hover {
 		color: #e7e7e7;
