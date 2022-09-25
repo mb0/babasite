@@ -105,13 +105,14 @@ export class ImgView {
 	}
 	editPal() {
 		this.pal = this.wd.pal.get(this.img.pal)!
-		this.palv.update()
-		this.ed.repaint()
+		this.updatePal(this.pal)
 	}
 	updatePal(pal:Pal) {
 		if (this.pal.id != pal.id) return
-		this.palv.update()
-		this.ed.repaint()
+		const {ed, palv} = this
+		palv.update()
+		ed.c.stage.bg = ed.color(0)
+		ed.repaint()
 	}
 	updateClip(clip:Clip) {
 		const {clip:old, clipv, prev} = this

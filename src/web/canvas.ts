@@ -19,7 +19,7 @@ export class Canvas {
 	clear():void {
 		const {el, ctx, stage, bg} = this
 		ctx.resetTransform()
-		ctx.fillStyle = el.style.backgroundColor = bg || "gray"
+		ctx.fillStyle = bg||"gray"
 		ctx.fillRect(0, 0, el.width, el.height)
 		ctx.transform(stage.zoom, 0, 0, stage.zoom, stage.x, stage.y)
 	}

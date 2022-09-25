@@ -33,13 +33,14 @@ export class LvlView {
 	}
 	editTset() {
 		this.tset = this.wd.tset.get(this.lvl.tset)!
-		this.tsetv.update()
-		this.ed.repaint()
+		this.updateTset(this.tset)
 	}
 	updateTset(ts:Tset) {
 		if (this.tset.id != ts.id) return
-		this.tsetv.update()
-		this.ed.repaint()
+		const {ed, tsetv} = this
+		tsetv.update()
+		ed.c.stage.bg = ed.color(0)
+		ed.repaint()
 	}
 	close() {
 		this.ed.close()
