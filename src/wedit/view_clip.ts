@@ -95,9 +95,9 @@ export class ClipPreview extends BaseDock {
 		this.paint = (fn:number) => {
 			c.clear()
 			if (!ctx.clip) return
-			const ts = this.totals
 			const fr = ctx.clip.seq
-			if (!fr?.length || ts.length != fr.length) this.update()
+			if (!fr?.length || this.totals.length != fr.length) this.update()
+			const ts = this.totals
 			const at = fn%((ts[ts.length-1]||0)+1)
 			const idx = ts.findIndex(t => t >= at)
 			const pic = wd.pics.get(fr[idx].pic)

@@ -74,7 +74,6 @@ class TreeView implements Dock {
 			if (top == "world.sel") {
 				app.rr.go("/wedit")
 			} else if (top.indexOf('.') < 0) {
-				console.log("open "+ top, el)
 				if (top == 'clip') {
 					app.rr.go(`/wedit/${d.name}/img/${el.img}/${el.id}`)
 				} else {
