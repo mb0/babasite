@@ -1,15 +1,31 @@
 package ids
 
 import (
+	"fmt"
 	"regexp"
 	"sort"
+	"strconv"
+	"strings"
 )
 
 var NameCheck = regexp.MustCompile(`^[a-z0-9_]+$`)
 
-// Asset is a text that identifies an asset and optionally a sequence.
-// For example: "items/keycard" or "player_martin".
+// Asset is a text that identifies a topic entry mostly used for pic, clip an img.
+// For example: "pic:123", "clip:42", "img:5" or "obj:1337".
 type Asset string
+
+func (a Asset) Topic() Topic {
+	top, sid, ok := strings.Cut(string(a), ":")
+	if !ok {
+		return Topic{}
+	}
+	id, err := strconv.ParseUint(sid, 10, 32)
+	if err != nil {
+		return Topic{Top: top}
+	}
+	return Topic{Top: top, ID: uint32(id)}
+
+}
 
 type ID interface {
 	~uint32
@@ -54,6 +70,9 @@ type Topic struct {
 	Top string `json:"top"`
 	ID  uint32 `json:"id"`
 }
+
+func (t Topic) String() string { return fmt.Sprintf("%s:%d", t.Top, t.ID) }
+func (t Topic) Asset() Asset   { return Asset(t.String()) }
 
 type List[I ID] []I
 
