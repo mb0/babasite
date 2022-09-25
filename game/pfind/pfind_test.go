@@ -46,12 +46,12 @@ func TestDStar(t *testing.T) {
 	}
 }
 
-func pathStr(p *Path) string {
+func pathStr(p []Node) string {
 	if p == nil {
 		return ""
 	}
 	var b strings.Builder
-	for _, n := range p.Nodes {
+	for _, n := range p {
 		fmt.Fprintf(&b, "%d,%d ", n.X, n.Y)
 	}
 	res := b.String()

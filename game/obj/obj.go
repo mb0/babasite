@@ -17,8 +17,6 @@ type Obj struct {
 	// specific components:
 	// info for obj that can be inspected
 	Info *Info `json:"info,omitempty"`
-	// path of moving object like the player
-	Path *pfind.Path `json:"path,omitempty"`
 	// loot inventory id of lootable items
 	Loot ids.Inv `json:"loot,omitempty"`
 	// dialog id for items with a dialog

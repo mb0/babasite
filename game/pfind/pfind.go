@@ -3,15 +3,9 @@ package pfind
 import (
 	"container/heap"
 	"fmt"
-	"time"
 
 	"github.com/mb0/babasite/game/geo"
 )
-
-type Path struct {
-	Start time.Time
-	Nodes []Node
-}
 
 type Graph interface {
 	Near(p geo.Pos) []Node
@@ -39,7 +33,7 @@ type DStar struct {
 
 // Find path should use a focused D* search algorithm for tilemaps
 // see https://en.wikipedia.org/wiki/D*
-func (ds *DStar) FindPath(start, goal geo.Pos) (*Path, error) {
+func (ds *DStar) FindPath(start, goal geo.Pos) ([]Node, error) {
 	open := &Heap{[]Node{{start, 0}}}
 	cost := map[geo.Pos]Hist{start: {}}
 	// inspect map
@@ -72,7 +66,7 @@ func (ds *DStar) FindPath(start, goal geo.Pos) (*Path, error) {
 	}
 	res = append(res, Node{Pos: start, Cost: 0})
 	reverse(res)
-	return &Path{Nodes: res}, nil
+	return res, nil
 }
 
 var NeighborsDiag = []geo.Pos{
