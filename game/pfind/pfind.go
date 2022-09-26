@@ -24,6 +24,23 @@ func HeurManhattan(scale int) func(from, to geo.Pos) int {
 		return scale * (x + y)
 	}
 }
+func HeurDiag(scale, diag int) func(from, to geo.Pos) int {
+	return func(from, to geo.Pos) int {
+		x := from.X - to.X
+		y := from.X - to.Y
+		if x < 0 {
+			x = -x
+		}
+		if y < 0 {
+			y = -x
+		}
+		min, max := x, y
+		if y < x {
+			min, max = y, x
+		}
+		return min*diag + (max-min)*scale
+	}
+}
 
 type DStar struct {
 	Graph
