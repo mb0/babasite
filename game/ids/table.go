@@ -47,6 +47,8 @@ func (lt *ListTable[I, T, D]) From(top Topic) (id I) {
 	return id
 }
 
+func (lt *ListTable[I, T, D]) Mark(SyncFlag) { lt.Mods++ }
+
 func (lt *ListTable[I, T, D]) New() (D, error) {
 	lt.List = append(lt.List, Slot[T, D]{
 		Sync: SyncAdd,
@@ -99,6 +101,16 @@ func (lt *ListTable[I, T, D]) Set(id I, d D) error {
 	return nil
 }
 
+func (lt *ListTable[I, T, D]) Each(f func(uint32, *Slot[T, D]) error) error {
+	for idx := range lt.List {
+		err := f(uint32(idx)+1, &lt.List[idx])
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func (lt *ListTable[I, T, D]) All(c Cond[T, D]) []D {
 	res := make([]D, 0, len(lt.List))
 	for idx := range lt.List {
@@ -118,14 +130,16 @@ func (lt *ListTable[I, T, D]) Find(c Cond[T, D]) D {
 	return nil
 }
 
+type Marker interface{ Mark(SyncFlag) }
+
 type ModSlot[I ID, T any, D Dec[T]] struct {
-	*ListTable[I, T, D]
+	Table Marker
 	*Slot[T, D]
 }
 
 func (ts ModSlot[I, T, D]) Mark(sync SyncFlag) {
 	ts.Sync = sync
-	ts.Mods++
+	ts.Table.Mark(sync)
 }
 func (ts ModSlot[I, T, D]) MarkAdd() { ts.Mark(SyncAdd) }
 func (ts ModSlot[I, T, D]) MarkMod() { ts.Mark(SyncMod) }
