@@ -8,8 +8,11 @@ import (
 )
 
 type Graph interface {
+	Heur() Heur
 	Near(p geo.Pos) []Node
 }
+
+type Heur func(from, to geo.Pos) int
 
 func HeurManhattan(scale int) func(from, to geo.Pos) int {
 	return func(from, to geo.Pos) int {
@@ -42,17 +45,12 @@ func HeurDiag(scale, diag int) func(from, to geo.Pos) int {
 	}
 }
 
-type DStar struct {
-	Graph
-	Heur func(from, to geo.Pos) int
-	// TODO maybe add a pool for heaps
-}
-
-// Find path should use a focused D* search algorithm for tilemaps
+// FindPath uses a focused D* search algorithm for a generic graph
 // see https://en.wikipedia.org/wiki/D*
-func (ds *DStar) FindPath(start, goal geo.Pos) ([]Node, error) {
+func FindPath(g Graph, start, goal geo.Pos) ([]Node, error) {
 	open := &Heap{[]Node{{start, 0}}}
 	cost := map[geo.Pos]Hist{start: {}}
+	heur := g.Heur()
 	// inspect map
 	for len(open.Data) > 0 {
 		c := heap.Pop(open).(Node)
@@ -60,12 +58,12 @@ func (ds *DStar) FindPath(start, goal geo.Pos) ([]Node, error) {
 			break
 		}
 		old := cost[c.Pos]
-		for _, n := range ds.Near(c.Pos) {
+		for _, n := range g.Near(c.Pos) {
 			score := old.Score + n.Cost
 			prev, ok := cost[n.Pos]
 			if !ok || score < prev.Score {
 				cost[n.Pos] = Hist{Score: score, From: &c.Pos}
-				est := score + ds.Heur(n.Pos, goal)
+				est := score + heur(n.Pos, goal)
 				open.Upsert(n.Pos, est)
 			}
 		}

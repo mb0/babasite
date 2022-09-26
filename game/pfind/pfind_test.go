@@ -38,8 +38,7 @@ func TestDStar(t *testing.T) {
 	}
 	for i, test := range tests {
 		graph := strGraph(test.graph)
-		ds := &DStar{Graph: graph, Heur: HeurManhattan(10)}
-		p, _ := ds.FindPath(test.start, test.goal)
+		p, _ := FindPath(graph, test.start, test.goal)
 		if got := pathStr(p); test.want != got {
 			t.Errorf("test %d want path %s\n got %s", i, test.want, got)
 		}
@@ -72,6 +71,8 @@ func strGraph(s string) *StrGraph {
 type StrGraph struct {
 	Rows []string
 }
+
+func (g *StrGraph) Heur() Heur { return HeurManhattan(10) }
 
 func (g *StrGraph) Near(p geo.Pos) (res []Node) {
 	// get all neighbours
