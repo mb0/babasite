@@ -2,56 +2,11 @@ package bolt
 
 import "github.com/mb0/babasite/game/pix"
 
-type PixSync pix.Sys
-
-func (s *PixSync) Load(tx Src) (err error) {
-	if err = LoadTable(tx, &s.Pal); err != nil {
-		return err
+func PixSync(s *pix.Sys) Sync {
+	return Syncs{
+		NewListSync(&s.Pal),
+		NewListSync(&s.Img),
+		NewListSync(&s.Clip),
+		NewListSync(&s.Pic),
 	}
-	if err = LoadTable(tx, &s.Img); err != nil {
-		return err
-	}
-	if err = LoadTable(tx, &s.Clip); err != nil {
-		return err
-	}
-	if err = LoadTable(tx, &s.Pic); err != nil {
-		return err
-	}
-	return nil
-}
-
-func (s *PixSync) Dirty() bool {
-	return s.Pal.Mods+s.Img.Mods+s.Clip.Mods+s.Pic.Mods > 0
-}
-
-func (s *PixSync) Sync(tx Src) (err error) {
-	if err = SyncTable(tx, &s.Pal); err != nil {
-		return err
-	}
-	if err = SyncTable(tx, &s.Img); err != nil {
-		return err
-	}
-	if err = SyncTable(tx, &s.Clip); err != nil {
-		return err
-	}
-	if err = SyncTable(tx, &s.Pic); err != nil {
-		return err
-	}
-	return nil
-}
-
-func (s *PixSync) Save(tx Src) (err error) {
-	if err = SaveTable(tx, &s.Pal); err != nil {
-		return err
-	}
-	if err = SaveTable(tx, &s.Img); err != nil {
-		return err
-	}
-	if err = SaveTable(tx, &s.Clip); err != nil {
-		return err
-	}
-	if err = SaveTable(tx, &s.Pic); err != nil {
-		return err
-	}
-	return nil
 }

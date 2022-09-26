@@ -25,11 +25,11 @@ type WorldSync struct {
 
 func MakeWorldSync(w *game.World) WorldSync {
 	return WorldSync{World: w, Syncs: Syncs{
-		(*ObjSync)(&w.Obj),
-		(*InvSync)(&w.Inv),
-		(*DiaSync)(&w.Dia),
-		(*PixSync)(&w.Pix),
-		(*LvlSync)(&w.Lvl),
+		ObjSync(&w.Obj),
+		InvSync(&w.Inv),
+		DiaSync(&w.Dia),
+		PixSync(&w.Pix),
+		LvlSync(&w.Lvl),
 	}}
 }
 
