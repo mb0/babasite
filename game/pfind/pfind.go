@@ -9,7 +9,7 @@ import (
 
 type Graph interface {
 	Heur() Heur
-	Near(p geo.Pos) []Node
+	Near(geo.Pos, func(geo.Pos, int))
 }
 
 type Heur func(from, to geo.Pos) int
@@ -58,15 +58,15 @@ func FindPath(g Graph, start, goal geo.Pos) ([]Node, error) {
 			break
 		}
 		old := cost[c.Pos]
-		for _, n := range g.Near(c.Pos) {
-			score := old.Score + n.Cost
-			prev, ok := cost[n.Pos]
+		g.Near(c.Pos, func(n geo.Pos, nc int) {
+			score := old.Score + nc
+			prev, ok := cost[n]
 			if !ok || score < prev.Score {
-				cost[n.Pos] = Hist{Score: score, From: &c.Pos}
-				est := score + heur(n.Pos, goal)
-				open.Upsert(n.Pos, est)
+				cost[n] = Hist{Score: score, From: &c.Pos}
+				est := score + heur(n, goal)
+				open.Upsert(n, est)
 			}
-		}
+		})
 	}
 	fin, ok := cost[goal]
 	if !ok {

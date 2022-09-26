@@ -74,7 +74,7 @@ type StrGraph struct {
 
 func (g *StrGraph) Heur() Heur { return HeurManhattan(10) }
 
-func (g *StrGraph) Near(p geo.Pos) (res []Node) {
+func (g *StrGraph) Near(p geo.Pos, f func(geo.Pos, int)) {
 	// get all neighbours
 	for _, d := range NeighborsDiag {
 		y := p.Y + d.Y
@@ -90,13 +90,10 @@ func (g *StrGraph) Near(p geo.Pos) (res []Node) {
 		if t == '1' {
 			continue
 		}
-
-		n := geo.Pos{X: x, Y: y}
 		c := 14
 		if d.X == 0 || d.Y == 0 {
 			c = 10
 		}
-		res = append(res, Node{Pos: n, Cost: c})
+		f(geo.Pos{X: x, Y: y}, c)
 	}
-	return res
 }
