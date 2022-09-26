@@ -20,11 +20,11 @@ func LoadWorldInfos(tx *bbolt.Tx) (res []string) {
 
 type WorldSync struct {
 	*game.World
-	Syncs []Sync
+	Syncs
 }
 
 func MakeWorldSync(w *game.World) WorldSync {
-	return WorldSync{World: w, Syncs: []Sync{
+	return WorldSync{World: w, Syncs: Syncs{
 		(*ObjSync)(&w.Obj),
 		(*InvSync)(&w.Inv),
 		(*DiaSync)(&w.Dia),
@@ -39,21 +39,7 @@ func (s *WorldSync) Load(tx Src) error {
 	if b == nil {
 		return fmt.Errorf("world %q not found", s.Name)
 	}
-	for _, s := range s.Syncs {
-		if err := s.Load(b); err != nil {
-			return fmt.Errorf("sync %T: %v", s, err)
-		}
-	}
-	return nil
-}
-
-func (s *WorldSync) Dirty() bool {
-	for _, s := range s.Syncs {
-		if s.Dirty() {
-			return true
-		}
-	}
-	return false
+	return s.Syncs.Load(b)
 }
 
 func (s *WorldSync) Sync(tx Src) error {
@@ -62,14 +48,7 @@ func (s *WorldSync) Sync(tx Src) error {
 	if err != nil {
 		return err
 	}
-	for _, sub := range s.Syncs {
-		if sub.Dirty() {
-			if err := sub.Sync(b); err != nil {
-				return err
-			}
-		}
-	}
-	return nil
+	return s.Syncs.Sync(b)
 }
 
 func (s *WorldSync) Save(tx Src) error {
@@ -78,12 +57,7 @@ func (s *WorldSync) Save(tx Src) error {
 	if err != nil {
 		return err
 	}
-	for _, s := range s.Syncs {
-		if err := s.Save(b); err != nil {
-			return err
-		}
-	}
-	return nil
+	return s.Syncs.Save(b)
 }
 
 func writeWorldKey(name string) []byte {

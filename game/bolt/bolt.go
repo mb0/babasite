@@ -44,3 +44,43 @@ type Sync interface {
 	Sync(Src) error
 	Save(Src) error
 }
+
+type Syncs []Sync
+
+func (ss Syncs) Load(tx Src) error {
+	for _, s := range ss {
+		if err := s.Load(tx); err != nil {
+			return fmt.Errorf("sync %T: %v", s, err)
+		}
+	}
+	return nil
+}
+
+func (ss Syncs) Dirty() bool {
+	for _, s := range ss {
+		if s.Dirty() {
+			return true
+		}
+	}
+	return false
+}
+
+func (ss Syncs) Sync(tx Src) error {
+	for _, sub := range ss {
+		if sub.Dirty() {
+			if err := sub.Sync(tx); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+func (ss Syncs) Save(tx Src) error {
+	for _, s := range ss {
+		if err := s.Save(tx); err != nil {
+			return err
+		}
+	}
+	return nil
+}
