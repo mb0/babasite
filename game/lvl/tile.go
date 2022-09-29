@@ -18,7 +18,7 @@ type TileInfo struct {
 	Color uint32    `json:"color"`
 	Block bool      `json:"block,omitempty"`
 	Group string    `json:"group,omitempty"`
-	Asset ids.Asset `json:"asset,omitempty"`
+	Asset ids.Topic `json:"asset,omitempty"`
 }
 
 func (*Tset) Make(id uint32) Tset                 { return Tset{ID: ids.Tset(id)} }

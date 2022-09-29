@@ -43,7 +43,13 @@ func Import(dir string) (res []*game.World, err error) {
 		nts, _ := tstab.New()
 		nts.Name = ts.Name
 		for _, old := range ts.Infos {
-			nts.Infos = append(nts.Infos, lvl.TileInfo(old))
+			nts.Infos = append(nts.Infos, lvl.TileInfo{
+				Tile:  old.Tile,
+				Name:  old.Name,
+				Color: old.Color,
+				Block: old.Block,
+				Group: old.Group,
+			})
 		}
 		tsmap[ts.Name] = nts.ID
 	}

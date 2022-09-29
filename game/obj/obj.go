@@ -6,14 +6,13 @@ import (
 
 	"github.com/mb0/babasite/game/geo"
 	"github.com/mb0/babasite/game/ids"
-	"github.com/mb0/babasite/game/pfind"
 )
 
 type Obj struct {
 	ID  ids.Obj `json:"id"`
 	Lvl ids.Lvl `json:"lvl,omitempty"`
 	geo.Box
-	Asset ids.Asset `json:"asset,omitempty"`
+	Asset ids.Topic `json:"asset,omitempty"`
 	// specific components:
 	// info for obj that can be inspected
 	Info *Info `json:"info,omitempty"`

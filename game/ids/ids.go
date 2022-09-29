@@ -10,21 +10,27 @@ import (
 
 var NameCheck = regexp.MustCompile(`^[a-z0-9_]+$`)
 
-// Asset is a text that identifies a topic entry mostly used for pic, clip an img.
-// For example: "pic:123", "clip:42", "img:5" or "obj:1337".
-type Asset string
+// Topic is a compound id that identifies a specific game resource mostly used for pic, clip an img.
+// It uses a text encoding, for example: "pic:123", "clip:42", "img:5" or "obj:1337".
+type Topic struct {
+	Top string `json:"top"`
+	ID  uint32 `json:"id"`
+}
 
-func (a Asset) Topic() Topic {
-	top, sid, ok := strings.Cut(string(a), ":")
+func (t Topic) String() string               { return fmt.Sprintf("%s:%d", t.Top, t.ID) }
+func (t Topic) MarshalText() ([]byte, error) { return []byte(t.String()), nil }
+func (t *Topic) UnmarshalText(raw []byte) error {
+	top, sid, ok := strings.Cut(string(raw), ":")
+	t.Top = top
 	if !ok {
-		return Topic{}
+		return nil
 	}
 	id, err := strconv.ParseUint(sid, 10, 32)
 	if err != nil {
-		return Topic{Top: top}
+		return err
 	}
-	return Topic{Top: top, ID: uint32(id)}
-
+	t.ID = uint32(id)
+	return nil
 }
 
 type ID interface {
@@ -66,13 +72,6 @@ func (Prod) Top() string { return "prod" }
 func (Item) Top() string { return "item" }
 func (Inv) Top() string  { return "inv" }
 
-type Topic struct {
-	Top string `json:"top"`
-	ID  uint32 `json:"id"`
-}
-
-func (t Topic) String() string { return fmt.Sprintf("%s:%d", t.Top, t.ID) }
-func (t Topic) Asset() Asset   { return Asset(t.String()) }
 
 type List[I ID] []I
 

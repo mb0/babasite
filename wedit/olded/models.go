@@ -18,12 +18,12 @@ type Tset struct {
 }
 
 type TileInfo struct {
-	Tile  lvl.Tile  `json:"tile"`
-	Name  string    `json:"name"`
-	Color uint32    `json:"color"`
-	Block bool      `json:"block,omitempty"`
-	Group string    `json:"group,omitempty"`
-	Asset ids.Asset `json:"asset,omitempty"`
+	Tile  lvl.Tile `json:"tile"`
+	Name  string   `json:"name"`
+	Color uint32   `json:"color"`
+	Block bool     `json:"block,omitempty"`
+	Group string   `json:"group,omitempty"`
+	Asset string   `json:"asset,omitempty"`
 }
 
 type WorldInfo struct {

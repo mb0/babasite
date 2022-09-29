@@ -13,7 +13,7 @@ type Prod struct {
 	ID   ids.Prod `json:"id"`
 	Name string   `json:"name"`
 	geo.Dim
-	Asset ids.Asset `json:"asset,omitempty"`
+	Asset ids.Topic `json:"asset,omitempty"`
 	Text  string    `json:"text,omitempty"`
 }
 
