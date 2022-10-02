@@ -61,6 +61,11 @@ func (s *Sys) NewLvl(req Lvl) (*Lvl, error) {
 	}
 	return lvl, nil
 }
+func (s *Sys) DelLvl(id ids.Lvl) error {
+	// lvl can be referenced in objs for now
+	// TODO check for dangling refs
+	return s.Lvl.Set(id, nil)
+}
 
 func (s *Sys) defTset(id ids.Tset) ids.Tset {
 	p, _ := s.Tset.Get(id)

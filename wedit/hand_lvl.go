@@ -126,9 +126,7 @@ func lvlNew(ed *ConnSubs, m *hub.Msg) error {
 }
 func lvlDel(ed *ConnSubs, m *hub.Msg) error {
 	req := ParseID[ids.Lvl](m)
-	// TODO think about cleaning up reference or aborting the deletion
-	// lvl can be referenced in objs for now
-	err := ed.Lvl.Lvl.Set(req.ID, nil)
+	err := ed.Lvl.DelLvl(req.ID)
 	if err != nil {
 		return err
 	}

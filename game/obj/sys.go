@@ -14,5 +14,6 @@ func (s *Sys) NewObj() (*Obj, error) {
 }
 
 func (s *Sys) DelObj(id ids.Obj) {
+	// TODO check for dangling refs
 	s.Obj.Set(id, nil)
 }

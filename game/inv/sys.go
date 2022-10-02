@@ -48,10 +48,10 @@ func (s *Sys) NewInv(dim geo.Dim) (*Inv, error) {
 	return inv, nil
 }
 
-func (s *Sys) DelProd(id ids.Prod) {
+func (s *Sys) DelProd(id ids.Prod) error {
 	p, _ := s.Prod.Get(id)
 	if p == nil {
-		return
+		return nil
 	}
 	for idx := range s.Item.List {
 		if sl := &s.Item.List[idx]; sl.Data.Prod == id {
@@ -61,27 +61,31 @@ func (s *Sys) DelProd(id ids.Prod) {
 			s.delItem(&sl.Data)
 		}
 	}
-	s.Prod.Set(id, nil)
+	return s.Prod.Set(id, nil)
 }
 
-func (s *Sys) DelItem(id ids.Item) {
+func (s *Sys) DelItem(id ids.Item) error {
+	// TODO check if item can be deleted and for dangling refs
 	it, _ := s.Item.Get(id)
-	if it != nil {
-		if inv, _ := s.Inv.Get(it.Inv); inv != nil {
-			s.delItemFromInv(it, inv)
-		}
+	if it == nil {
+		return nil
+	}
+	if inv, _ := s.Inv.Get(it.Inv); inv != nil {
+		s.delItemFromInv(it, inv)
+	}
+	return s.delItem(it)
+}
+
+func (s *Sys) DelInv(id ids.Inv) error {
+	// TODO check for dangling refs
+	inv, _ := s.Inv.Get(id)
+	if inv == nil {
+		return nil
+	}
+	for _, it := range inv.Items {
 		s.delItem(it)
 	}
-}
-
-func (s *Sys) DelInv(id ids.Inv) {
-	inv, _ := s.Inv.Get(id)
-	if inv != nil {
-		for _, it := range inv.Items {
-			s.delItem(it)
-		}
-		s.Inv.Set(id, nil)
-	}
+	return s.Inv.Set(id, nil)
 }
 
 func (s *Sys) Move(id ids.Item, to ids.Inv, pos *geo.Pos) error {
@@ -127,11 +131,14 @@ func (s *Sys) Move(id ids.Item, to ids.Inv, pos *geo.Pos) error {
 	return nil
 }
 
-func (s *Sys) delItem(it *Item) {
+func (s *Sys) delItem(it *Item) error {
 	if it.Sub != 0 {
-		s.DelInv(it.Sub)
+		err := s.DelInv(it.Sub)
+		if err != nil {
+			return err
+		}
 	}
-	s.Item.Set(it.ID, nil)
+	return s.Item.Set(it.ID, nil)
 }
 func (s *Sys) delItemFromInv(it *Item, inv *Inv) {
 	for idx, ot := range inv.Items {

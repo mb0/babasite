@@ -23,8 +23,7 @@ func palNew(ed *ConnSubs, m *hub.Msg) error {
 }
 func palDel(ed *ConnSubs, m *hub.Msg) error {
 	req := ParseID[ids.Pal](m)
-	// TODO check for references and decide what to do
-	err := ed.Pix.Pal.Set(req.ID, nil)
+	err := ed.Pix.DelPal(req.ID)
 	if err != nil {
 		return err
 	}
@@ -117,8 +116,7 @@ func imgNew(ed *ConnSubs, m *hub.Msg) error {
 }
 func imgDel(ed *ConnSubs, m *hub.Msg) error {
 	req := ParseID[ids.Img](m)
-	// TODO check for references and decide what to do
-	err := ed.Pix.Img.Set(req.ID, nil)
+	err := ed.Pix.DelImg(req.ID)
 	if err != nil {
 		return err
 	}
@@ -218,8 +216,7 @@ func clipNew(ed *ConnSubs, m *hub.Msg) error {
 }
 func clipDel(ed *ConnSubs, m *hub.Msg) error {
 	req := ParseID[ids.Clip](m)
-	// TODO check for references and decide what to do
-	err := ed.Pix.Clip.Set(req.ID, nil)
+	err := ed.Pix.DelClip(req.ID)
 	if err != nil {
 		return err
 	}

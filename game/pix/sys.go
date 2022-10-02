@@ -45,6 +45,14 @@ func (s *Sys) NewPal(name string) (*Pal, error) {
 	return pal, nil
 }
 
+func (s *Sys) DelPal(id ids.Pal) error {
+	// abort if pal still in use
+	if s.Img.Find(func(i *Img) bool { return i.Pal == id }) != nil {
+		return fmt.Errorf("cannot delete %s %d used", id.Top(), id)
+	}
+	return s.Pal.Set(id, nil)
+}
+
 func (s *Sys) NewImg(a Img) (*Img, error) {
 	// TODO check a kind
 	err := ids.NamedUnique(&s.Img, a.Name)
@@ -60,6 +68,10 @@ func (s *Sys) NewImg(a Img) (*Img, error) {
 	img.Dim = s.defDim(a.Kind, a.Dim)
 	img.Pal = s.defPal(a.Pal)
 	return img, nil
+}
+func (s *Sys) DelImg(id ids.Img) error {
+	// TODO check for dangling refs
+	return s.Img.Set(id, nil)
 }
 
 func (s *Sys) GetClip(img ids.Img, name string) *Clip {
@@ -93,6 +105,10 @@ func (s *Sys) NewClip(req Clip) (*Clip, error) {
 		clip.Seq = []Frame{{Pic: p.ID}}
 	}
 	return clip, nil
+}
+func (s *Sys) DelClip(id ids.Clip) error {
+	// TODO check for dangling refs
+	return s.Clip.Set(id, nil)
 }
 
 func ClipNamedUnique(lt *ids.ListTable[ids.Clip, Clip, *Clip], img ids.Img, name string) error {
