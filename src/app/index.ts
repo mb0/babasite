@@ -4,8 +4,11 @@ import {Hub, Subs} from 'app/hub'
 import {Router, Routes} from 'app/router'
 import {selMenu} from 'app/menu'
 import lobby from 'app/lobby'
+import snack from 'web/snack'
 export {chat} from 'app/chat'
 export {menu} from 'app/menu'
+
+const debug = false
 
 export interface View {
 	name:string
@@ -15,6 +18,7 @@ export interface View {
 	start():HTMLElement
 	stop():void
 }
+
 export class App extends Hub {
 	cont:HTMLElement=document.querySelector("#app")!
 	rr:Router
@@ -56,28 +60,29 @@ export class App extends Hub {
 			switch (subj) {
 			case '_open':
 				lobby.retry = 0
-				console.log("websocket connected to "+ data)
+				if (debug) console.log("websocket connected", data)
 				this.rr.start(true)
 				break
 			case '_error':
-				console.log("websocket error", data)
+				if (debug) console.log("websocket error", data)
 				break
 			case '_close':
-				console.log("websocket connection closed")
+				if (debug) console.log("websocket closed")
 				break
 			case '_msg':
 				break
 			default:
-				// console.log("got message "+subj, data)
+				if (debug) console.log("got message: "+subj, data)
 			}
 			this.trigger(subj, data)
 		})
 	}
 	send(subj:string, data?:any):void {
 		if (this.conn?.ws.readyState != WebSocket.OPEN) {
-			console.log("not connected. trying to send:", subj, data)
+			if (debug) console.error("not connected. trying to send: "+subj, data)
+			snack.act("Nicht verbunden", 5000, "Erneut verbinden", ()=> location.reload())
 		} else {
-			// console.log("send message "+subj, data)
+			if (debug) console.log("send message "+subj, data)
 			this.conn.send(subj, data)
 		}
 	}
