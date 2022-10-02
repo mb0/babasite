@@ -197,6 +197,7 @@ const editorSubs = (v:WeditView):Subs => {
 		// update tree view
 		w.treev.update()
 		// we only allow deletion of unused pals
+		checkTopv(w, "pal", res.id)
 	}),
 	"pal.edit": checkW((w, res) => {
 		// lookup pal
@@ -237,6 +238,7 @@ const editorSubs = (v:WeditView):Subs => {
 		// delete img from world store
 		w.d.img.set(res.id, null)
 		w.treev.update()
+		checkTopv(w, "img", res.id)
 	}),
 	"img.open": checkW((w, res:PicData) => {
 		// open clip editor
@@ -321,6 +323,8 @@ const editorSubs = (v:WeditView):Subs => {
 		// delete tset from world store
 		w.d.tset.set(res.id, null)
 		w.treev.update()
+		// we can only delete unused tsets but we can have a topic view open
+		checkTopv(w, "tset", res.id)
 	}),
 	"tset.edit": checkW((w, res) => {
 		// lookup tset and edit
@@ -352,6 +356,7 @@ const editorSubs = (v:WeditView):Subs => {
 		w.d.tset.set(res.id, null)
 		w.treev.update()
 		// TODO switch lvl if lvl is active in editor
+		checkTopv(w, "lvl", res.id)
 	}),
 	"lvl.open": checkW((w, res) => {
 		w.lvlOpen(gridTiles<number>(res, res.raw) as Grid)
@@ -394,6 +399,7 @@ const editorSubs = (v:WeditView):Subs => {
 		if (w.lvlv?.lvl?.id == lvl.id) w.lvlv.ed.repaint()
 	}),
 }}
+
 interface SliceReq {
 	idx?:number
 	del?:number
@@ -410,4 +416,11 @@ function growLevel(p:Grid, o:Box) {
 	const tmp = gridTiles<number>(b)
 	gridEach(p, (p, t) => tmp.set(p, t))
 	Object.assign(p, tmp)
+}
+
+function checkTopv(w:WorldView, top:string, id:number) {
+	const v = w.topv
+	if (v && v.top == top && v.id == id) {
+		app.rr.go("/wedit/"+ w.d.name +"/"+ top)
+	}
 }
