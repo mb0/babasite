@@ -66,16 +66,17 @@ export class Slots<T extends Top> extends Array<T|null> {
 		if (id > 0) this[id-1] = t
 	}
 	one(f:(t:T)=>boolean):T|null {
-		return (this as T[]).find(f)||null
+		return (this as T[]).find(t=>t&&f(t))||null
 	}
-	// we use a quirk that array filter and forEach skip empty items
 	all(f?:(t:T)=>boolean):T[] {
-		return (this as T[]).filter(f || (()=>true))
+		return (this as T[]).filter(t=>t&&(!f||f(t)))
 	}
 	fmap<R>(f:(t:T)=>R|null):R[] {
 		return this.reduce((r, t) => {
-			const v = f(t!)
-			if (v) r.push(v)
+			if (t) {
+				const v = f(t!)
+				if (v) r.push(v)
+			}
 			return r
 		}, [] as R[])
 	}
