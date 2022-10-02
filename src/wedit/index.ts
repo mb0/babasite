@@ -1,4 +1,5 @@
 import h from 'web/html'
+import snack from 'web/snack'
 import {newLayout} from 'game/dock'
 import {Box, boxGrow, boxIn} from 'game/geo'
 import {gridEach, gridSel, gridTiles} from 'game/grid'
@@ -102,6 +103,9 @@ export class WeditView implements View {
 					h.repl(dock.main, loading)
 					app.send('lvl.open', {id})
 					return
+				} else {
+					snack.show("Level nicht gefunden")
+					return
 				}
 			}
 		} else if (a.top == 'img') {
@@ -112,11 +116,17 @@ export class WeditView implements View {
 					h.repl(dock.main, loading)
 					app.send('img.open', {id})
 					return
+				} else {
+					snack.show("Asset nicht gefunden")
+					return
 				}
 			}
 			if (iv && a.sub) {
 				const clip = w?.d.clip.get(parseInt(a.sub))
-				if (!clip) return // TODO inform clip not found
+				if (!clip) {
+					snack.show("Clip nicht gefunden")
+					return
+				}
 				let pic
 				if (a.xtra) pic = w?.d.pics.get(parseInt(a.xtra))
 				iv.show(clip, pic)
@@ -134,6 +144,7 @@ app.addView(new WeditView())
 const editorSubs = (v:WeditView):Subs => {
 	type handler = (res:any,subj?:string)=>void
 	const logErr:handler = (res, subj) => {
+		snack.show("Fehler "+ subj +": "+ res.err)
 		console.error("message error: "+ subj, res.err)
 	}
 	const checkErr = (h:handler):handler => (res, subj) => (res?.err ? logErr : h)(res, subj)
