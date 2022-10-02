@@ -11,7 +11,6 @@ import {Slots, WorldData} from './world'
 import {WorldView, worldSel, worldIndex} from './view_world'
 import {PicData} from './view_img'
 import './wedit.css'
-import {TopicView} from './view_top'
 
 export interface WeditArgs {
 	w?:string
@@ -89,8 +88,8 @@ export class WeditView implements View {
 		// check active topic
 		if (!a.id) {
 			// show topic overview
-			const topv = new TopicView(w.d, a.top)
-			h.repl(dock.main, topv.el)
+			w.topOpen(a.top)
+			h.repl(dock.main, w.topv!.el)
 			return
 		}
 		// check active game object
@@ -117,7 +116,7 @@ export class WeditView implements View {
 			}
 			if (iv && a.sub) {
 				const clip = w?.d.clip.get(parseInt(a.sub))
-				if (!clip) return // TODO inform error
+				if (!clip) return // TODO inform clip not found
 				let pic
 				if (a.xtra) pic = w?.d.pics.get(parseInt(a.xtra))
 				iv.show(clip, pic)
@@ -125,8 +124,8 @@ export class WeditView implements View {
 			}
 		} else  {
 			w?.clean()
-			const topv = new TopicView(w.d, a.top, id)
-			h.repl(dock.main, topv.el)
+			w.topOpen(a.top, id)
+			h.repl(dock.main, w.topv!.el)
 		}
 	}
 }

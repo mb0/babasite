@@ -11,6 +11,7 @@ import {mount, unmount} from 'web/modal'
 import {tsetForm} from './view_tset'
 import {palForm} from './view_pal'
 import {clipForm} from './view_clip'
+import {TopicView} from './view_top'
 
 export function worldSel(worlds:string[]):HTMLElement {
 	return h('', "Welt auswählen", h('ul', worlds.map(w =>
@@ -22,9 +23,14 @@ export class WorldView {
 	treev:TreeView
 	lvlv?:LvlView
 	imgv?:ImgView
+	topv?:TopicView
 	constructor(readonly d:WorldData, readonly dock:Layout) {
 		dock.add(this.treev = new TreeView(d), 0)
 		h.repl(dock.main, "")
+	}
+	topOpen(top:string, id?:number):void {
+		this.clean()
+		this.topv = new TopicView(this.d, top, id)
 	}
 	lvlOpen(g:Grid):void {
 		const {d, dock} = this
@@ -44,6 +50,7 @@ export class WorldView {
 	}
 	clean() {
 		this.dock.filter(({group}) => !group || (group == "wedit"))
+		this.topv = undefined
 		if (this.lvlv) {
 			this.lvlv.close()
 			this.lvlv = undefined
@@ -108,13 +115,17 @@ class TreeView implements Dock {
 		h.repl(this.el, namedTables.map(({top, label}) => {
 			if (top == "clip") return null
 			const sub = top == "img" ? imgTree(d, this.act) :
-				tableTree((d as any)[top], top, this.act)
+				tableTree((d as any)[top].all(), top, this.act)
 			const open = top == "lvl" || top == "img"
 			const ic = h('a', {title:label+' hinzufügen', onclick: (e:Event) => {
 				e.preventDefault()
 				this.act(top+'.new')
 			}}, hIcon('plus', {}))
-			return h('li.sum', h('details', {open}, h('summary', label, ic), sub))
+			const link = h('span', {title:label+' Übersicht', onclick: (e:Event) => {
+				e.preventDefault()
+				app.rr.go("/wedit/"+this.d.name+"/"+top)
+			}}, label)
+			return h('li.sum', h('details', {open}, h('summary', link, ic), sub))
 		}))
 	}
 }
@@ -136,8 +147,13 @@ function imgTree(d:WorldData, act:TopAct):HTMLElement {
 			e.preventDefault()
 			act('clip.new', img)
 		}}, hIcon('plus', {}))
+		const name = img.name || '(Ohne Namen)'
+		const link = h('span', {title:name+' Übersicht', onclick: (e:Event) => {
+			e.preventDefault()
+			app.rr.go("/wedit/"+d.name+"/img/"+img.id)
+		}}, name)
 		return h('li.sum', h('details',
-			h('summary', {oncontextmenu: onctx}, img.name || '(Ohne Namen)', ic),
+			h('summary', {oncontextmenu: onctx}, link, ic),
 			tableTree(clips, "clip", act)
 		))
 	}))
