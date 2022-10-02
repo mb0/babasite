@@ -79,8 +79,9 @@ export class ImgView {
 		}), 1)
 		dock.add(this.prev = new ClipPreview(this as ClipCtx), 2)
 		ed.updateTool = () => this.palv.toolv.updateTool()
-		if (!this.clip && this.clips?.length) this.clip = this.clips[0]
-		this.show(this.clip)
+		let clip = this.clip
+		if (!clip && this.clips?.length) clip = this.clips[0]
+		this.show(clip)
 	}
 	show(clip?:Clip, pic?:Pic) {
 		const {ed, wd, img, clipv, prev} = this
