@@ -97,10 +97,6 @@ export interface Edit<T> extends GridData {
 	fill?:T
 }
 
-export function gridEditor<T extends number>(d:Dim, color:(t:T)=>string, onedit:(e:Edit<T>)=>void):GridEditor<T> {
-	return new GridEditor<T>(d, color, onedit)
-}
-
 const cbEvents = ["copy", "cut", "paste"]
 export function handleClipboard<T extends number>(ed:GridEditor<T>, e:ClipboardEvent) {
 	const t = e.target as HTMLElement

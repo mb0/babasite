@@ -1,6 +1,6 @@
 import h from 'web/html'
 import {Layout} from 'game/dock'
-import {GridEditor, gridEditor} from 'game/editor'
+import {GridEditor} from 'game/editor'
 import {Pal, Img, Clip, Pic, palColor} from 'game/pix'
 import app from 'app'
 import {WorldData} from './world'
@@ -30,8 +30,8 @@ export class ImgView {
 		this.img = wd.img.get(id)!
 		this.pal = wd.pal.get(this.img.pal)!
 		this.clips = wd.clip.all(c => c.img == id)
-		let d = {w:this.img.w, h:this.img.h}
-		const ed = this.ed = gridEditor(d, t => palColor(this.pal, t), edit => {
+		let dim = {w:this.img.w, h:this.img.h}
+		const ed = this.ed = new GridEditor(dim, t => palColor(this.pal, t), edit => {
 			app.send("pic.edit", {
 				...edit,
 				img:this.img.id,
