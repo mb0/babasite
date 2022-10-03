@@ -188,16 +188,14 @@ const editorSubs = (v:WeditView):Subs => {
 		// add pal to world store
 		w.d.pal.set(res.id, res)
 		// and update tree view
-		w.treev.update()
+		checkTopv(w, "pal", res.id, false)
 		// TODO think about how to update the pal view and pal select modal
 	}),
 	"pal.del": checkW((w, res) => {
 		// delete pal from world store
 		w.d.pal.set(res.id, null)
-		// update tree view
-		w.treev.update()
 		// we only allow deletion of unused pals
-		checkTopv(w, "pal", res.id)
+		checkTopv(w, "pal", res.id, true)
 	}),
 	"pal.edit": checkW((w, res) => {
 		// lookup pal
@@ -206,7 +204,7 @@ const editorSubs = (v:WeditView):Subs => {
 		// update feature
 		if (res.name && res.name != p.name) {
 			p.name = res.name
-			w.treev.update()
+			checkTopv(w, "pal", res.id, false)
 		}
 		if (res.kind) p.kind = res.kind
 		const fmod = res.del || res.feats?.length
@@ -231,14 +229,12 @@ const editorSubs = (v:WeditView):Subs => {
 	"img.new": checkW((w, res:Img) => {
 		// add img to world store
 		w.d.img.set(res.id, res)
-		// update tree view
-		w.treev.update()
+		checkTopv(w, "img", res.id, false)
 	}),
 	"img.del": checkW((w, res) => {
 		// delete img from world store
 		w.d.img.set(res.id, null)
-		w.treev.update()
-		checkTopv(w, "img", res.id)
+		checkTopv(w, "img", res.id, true)
 	}),
 	"img.open": checkW((w, res:PicData) => {
 		// open clip editor
@@ -250,10 +246,9 @@ const editorSubs = (v:WeditView):Subs => {
 		// lookup img and edit
 		const img = w.d.img.get(res.id)
 		if (!img) return
-		const modn = img.name != res.name
 		const modp = img.pal != res.pal
 		Object.assign(img, res)
-		if (modn) w.treev.update()
+		checkTopv(w, "img", res.id, false)
 		if (modp && w.imgv?.img.id == res.id) {
 			w.imgv?.editPal()
 		}
@@ -317,23 +312,21 @@ const editorSubs = (v:WeditView):Subs => {
 	}),
 	"tset.new": checkW((w, res:Tset) => {
 		w.d.tset.set(res.id, res)
-		w.treev.update()
+		checkTopv(w, "tset", res.id, false)
 	}),
 	"tset.del": checkW((w, res) => {
 		// delete tset from world store
 		w.d.tset.set(res.id, null)
-		w.treev.update()
 		// we can only delete unused tsets but we can have a topic view open
-		checkTopv(w, "tset", res.id)
+		checkTopv(w, "tset", res.id, true)
 	}),
 	"tset.edit": checkW((w, res) => {
 		// lookup tset and edit
 		const ts = w.d.tset.get(res.id)
 		if (!ts) return
-		const modn = ts.name != res.name
 		Object.assign(ts, res)
 		ts.cache = undefined
-		if (modn) w.treev.update()
+		checkTopv(w, "tset", res.id, false)
 		w.lvlv?.updateTset(ts)
 	}),
 	"tset.tile": checkW((w, res) => {
@@ -349,14 +342,13 @@ const editorSubs = (v:WeditView):Subs => {
 	}),
 	"lvl.new": checkW((w, res:Lvl) => {
 		w.d.lvl.set(res.id, res)
-		w.treev.update()
+		checkTopv(w, "lvl", res.id, false)
 	}),
 	"lvl.del": checkW((w, res) => {
 		// delete lvl from world store
 		w.d.tset.set(res.id, null)
-		w.treev.update()
 		// TODO switch lvl if lvl is active in editor
-		checkTopv(w, "lvl", res.id)
+		checkTopv(w, "lvl", res.id, true)
 	}),
 	"lvl.open": checkW((w, res) => {
 		w.lvlOpen(gridTiles<number>(res, res.raw) as Grid)
@@ -365,10 +357,9 @@ const editorSubs = (v:WeditView):Subs => {
 		// lookup lvl and edit
 		const lv = w.d.lvl.get(res.id)
 		if (!lv) return
-		const modn = lv.name != res.name
 		const modts = lv.tset != res.tset
 		Object.assign(lv, res)
-		if (modn) w.treev.update()
+		checkTopv(w, "lvl", res.id, false)
 		if (modts && w.lvlv?.lvl.id == lv.id) {
 			w.lvlv.editTset()
 		}
@@ -418,9 +409,12 @@ function growLevel(p:Grid, o:Box) {
 	Object.assign(p, tmp)
 }
 
-function checkTopv(w:WorldView, top:string, id:number) {
+function checkTopv(w:WorldView, top:string, id:number, del:boolean) {
+	// update tree view
+	w.treev.update()
 	const v = w.topv
-	if (v && v.top == top && v.id == id) {
-		app.rr.go("/wedit/"+ w.d.name +"/"+ top)
+	if (v && v.top == top) {
+		if (del && v.id == id) app.rr.go("/wedit/"+ w.d.name +"/"+ top)
+		else if (!v.id || v.id == id) v.update()
 	}
 }
