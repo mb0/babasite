@@ -90,7 +90,7 @@ export class ImgView {
 			clipv.update()
 			prev.update()
 		}
-		if (clip && !pic) {
+		if (clip?.seq && !pic) {
 			const fr = clip.seq[0]
 			if (fr) pic = wd.pics.get(fr.pic)
 		}

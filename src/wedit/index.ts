@@ -282,6 +282,7 @@ const editorSubs = (v:WeditView):Subs => {
 		if (res.pics) res.pics.forEach((p:Pic) => {
 			w.d.pics.set(p.id, gridTiles<number>(p, p.raw) as Pic)
 		})
+		if (!cl.seq) cl.seq = []
 		applySlice(res, cl.seq, res.seq)
 		if (w.imgv?.clip?.id == cl.id) {
 			w.imgv.clipv?.update()

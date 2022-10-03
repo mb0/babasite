@@ -46,7 +46,7 @@ export class ClipView {
 					h('a', {onclick: e => {
 						e.preventDefault()
 						const {id, seq} = clip
-						app.send('clip.edit', {id, idx:seq.length, seq:[{}]})
+						app.send('clip.edit', {id, idx:seq?.length||0, seq:[{}]})
 					}}, hIcon('plus')),
 				),
 			),
@@ -61,7 +61,7 @@ export function renderFrames(wd:WorldData, pal:Pal, clip:Clip):HTMLElement {
 		app.rr.go(`/wedit/${wd.name}/img/${clip.img}/${clip.id}/${p.id}`)
 	}
 	const bg = palColor(pal, 0)
-	return h('.row', clip.seq.map((fr, idx) => {
+	return h('.row', clip.seq?.map((fr, idx) => {
 		const id = 'frame_'+ clip.name +'_' + idx
 		const c = new Canvas(id, clip.w, clip.h, bg)
 		c.clear()
@@ -113,7 +113,7 @@ export class ClipPreview extends BaseDock {
 		c.setStage({zoom})
 		this.paint = (fn:number) => {
 			c.clear()
-			if (!ctx.clip) return
+			if (!ctx.clip?.seq?.length) return
 			const fr = ctx.clip.seq
 			if (!fr?.length || this.totals.length != fr.length) this.update()
 			const ts = this.totals
@@ -130,7 +130,7 @@ export class ClipPreview extends BaseDock {
 		const {ctx:{clip, pal}, c} = this
 		if (clip) {
 			c.setStage({w:clip.w*c.stage.zoom, h:clip.h*c.stage.zoom, bg:palColor(pal, 0)})
-			this.totals = clip.seq.reduce((a, fr)=> {
+			this.totals = (clip.seq||[]).reduce((a, fr)=> {
 				a.push((a.length?a[a.length-1]:0)+1+(fr.dur||0))
 				return a
 			}, [] as number[])
