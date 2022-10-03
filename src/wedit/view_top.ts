@@ -39,7 +39,15 @@ function index(v:TopView, top:string):(d:WorldData)=>HData {
 	return v.index || ((d) => {
 		const list = topSlots(d, top).all()
 		return h('',
-			h('h1', v.name + ' Übersicht'),
+			h('.row', h('b', {style:'width:140px'}, v.name),
+				!v.form?null:h('a', {title: v.name +" hinzufügen", onclick: (e:Event)=> {
+					e.preventDefault()
+					mount(v.form!(d, {}, (res:any) => {
+						app.send(top+".new", res)
+						unmount()
+					}))
+				}}, hIcon('plus', {})),
+			),
 			list.map(t => indexEntry(v, d, top, t)),
 		)
 	})
@@ -47,8 +55,8 @@ function index(v:TopView, top:string):(d:WorldData)=>HData {
 
 function indexEntry(v:TopView, d:WorldData, top:string, t:any):HData {
 	const name = t.name || '(Ohne Namen)'
-	return h('', {style: 'display:flex'},
-		h('span', {style: 'min-width: 140px', onclick: (_) => {
+	return h('.row',
+		h('span', {style:'min-width:140px', onclick: (_) => {
 			app.rr.go(app.rr.cur+'/'+t.id)
 		}}, name),
 		!v.form?null:h('a', {title: v.name +" "+ name +" ändern", onclick: (e:Event)=> {
@@ -69,7 +77,7 @@ function detail(v:TopView, top:string):(d:WorldData, id:number)=>HData {
 	return v.detail || ((d, id) => {
 		const o = topSlots(d, top).get(id)
 		return h('',
-			h('h1', v.name + ': '+ id),
+			h('h4', v.name + ': '+ id),
 			h('', (!o ? "nicht" : o.name || id) +" gefunden"),
 		)
 	})
