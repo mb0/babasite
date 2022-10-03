@@ -347,7 +347,7 @@ const editorSubs = (v:WeditView):Subs => {
 	}),
 	"lvl.del": checkW((w, res) => {
 		// delete lvl from world store
-		w.d.tset.set(res.id, null)
+		w.d.lvl.set(res.id, null)
 		// TODO switch lvl if lvl is active in editor
 		checkTopv(w, "lvl", res.id, true)
 	}),
