@@ -42,6 +42,32 @@
 	flex: 1 1 0;
 	max-width: 100%;
 }
+#clip-view  {
+	display: flex;
+}
+#clip-view .detail {
+	display: none;
+	flex: 0 0 auto;
+}
+#clip-view.show-detail {
+	flex-direction: column;
+}
+#clip-view.show-detail .detail {
+	display: inline-flex;
+}
+#clip-view.show-detail .frame {
+	display: flex;
+}
+#clip-view.show-detail .row {
+	flex-direction: column;
+}
+#clip-view .frame {
+	display: block;
+	flex: 0 0 auto;
+}
+#clip-view .frame canvas {
+	display: inline-block;
+}
 div.color {
 	display: flex;
 	align-content: center;
