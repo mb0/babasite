@@ -30,7 +30,7 @@ export class ClipView {
 			h('.row',
 				h('a', {onclick: _ => {
 					this.el.className = this.el.className ? "" : "show-detail"
-				}}, clip.name || "(Ohne Namen)"),
+				}}, "Clip: "+ (clip.name || "(Ohne Namen)")),
 				h('.detail', clip.w +'x'+clip.h,
 					h('a', {onclick: e => {
 						e.preventDefault()
@@ -129,7 +129,8 @@ export class ClipPreview extends BaseDock {
 	update() {
 		const {ctx:{clip, pal}, c} = this
 		if (clip) {
-			c.setStage({w:clip.w*c.stage.zoom, h:clip.h*c.stage.zoom, bg:palColor(pal, 0)})
+			c.bg = palColor(pal, 0)
+			c.setStage({w:clip.w*c.stage.zoom, h:clip.h*c.stage.zoom})
 			this.totals = (clip.seq||[]).reduce((a, fr)=> {
 				a.push((a.length?a[a.length-1]:0)+1+(fr.dur||0))
 				return a
