@@ -11,10 +11,13 @@ export interface Route {
 export class Router {
 	cur:string
 	def?:(p:string)=>void
+	title:string
 	private onpop:(e:Event)=>void
 	readonly onclick:(e:MouseEvent)=>void
 	constructor(public base:string, public routes:Route[]=[]) {
+		this.title = document.title
 		this.cur = this.rel()
+		document.title = this.title + " "+ this.cur
 		this.onpop = e => {
 			const p = this.rel()
 			if (!p) return
@@ -57,10 +60,11 @@ export class Router {
 	}
 	show(p:string, repl?:boolean):void {
 		this.cur = p
+		document.title = this.title + " "+ p
 		history[repl?'replaceState':'pushState'](null, '', this.base + p.replace(/^[/]/, ''))
 	}
 	ensure(p:string):void {
-		if (this.cur != p) this.show(p)
+		if (this.cur != p) this.show(p, true)
 	}
 	reroute(q:Params, exec=true, repl?:boolean):void {
 		this[exec?'go':'show'](pure(this.rel()) +"?"+ paramStr(q), repl)
