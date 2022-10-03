@@ -75,8 +75,11 @@ class TreeView implements Dock {
 	cont?:HTMLElement
 	menu:Menu
 	act:TopAct
+	open:{[key:string]:boolean}
 	constructor(public d:WorldData) {
 		this.label = "World "+ d.name
+		// TODO maybe save tree toggle state in local storage
+		this.open = {lvl:true, img:true}
 		this.act = (top:string, el?:any) => {
 			if (top == "world.sel") {
 				app.rr.go("/wedit")
@@ -111,12 +114,11 @@ class TreeView implements Dock {
 		this.update()
 	}
 	update():void {
-		const {d} = this
+		const {d, open} = this
 		h.repl(this.el, namedTables.map(({top, label}) => {
 			if (top == "clip") return null
 			const sub = top == "img" ? imgTree(d, this.act) :
 				tableTree((d as any)[top].all(), top, this.act)
-			const open = top == "lvl" || top == "img"
 			const ic = h('a', {title:label+' hinzufügen', onclick: (e:Event) => {
 				e.preventDefault()
 				this.act(top+'.new')
@@ -125,7 +127,9 @@ class TreeView implements Dock {
 				e.preventDefault()
 				app.rr.go("/wedit/"+this.d.name+"/"+top)
 			}}, label)
-			return h('li.sum', h('details', {open}, h('summary', link, ic), sub))
+			return h('li.sum', h('details', {open:open[top], ontoggle: (e:any) =>{
+				open[top] = e.target.open
+			}}, h('summary', link, ic), sub))
 		}))
 	}
 }
