@@ -75,7 +75,7 @@ function tsetSelect(tsets:Tset[], submit:(ts:Tset)=>void) {
 		h('ul',
 			tsets.map(ts => h('li', {onclick:()=> submit(ts)}, ts.name)),
 			h('li', {onclick: () => {
-				mount(tsetForm({}, res => {
+				mount(tsetForm(null, {}, res => {
 					app.send("tset.new", res)
 					unmount()
 				}))
@@ -89,7 +89,7 @@ function tsetSelect(tsets:Tset[], submit:(ts:Tset)=>void) {
 	return el
 }
 
-export function tsetForm(s:Partial<Tset>, submit:(res:Partial<Tset>)=>void) {
+export function tsetForm(_:WorldData|null, s:Partial<Tset>, submit:(res:Partial<Tset>)=>void) {
 	return simpleForm<TileInfo>('Tileset', s, !s.id, submit, [
 		nameInput(s.name),
 	])

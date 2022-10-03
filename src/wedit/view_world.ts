@@ -99,11 +99,11 @@ class TreeView implements Dock {
 					send(res)
 				}
 				let f:any = null
-				if (top == "tset.new") f = tsetForm({}, send)
+				if (top == "tset.new") f = tsetForm(d, {}, send)
 				else if (top == "lvl.new") f = lvlForm(d, {}, open)
-				else if (top == "pal.new") f = palForm({}, send)
+				else if (top == "pal.new") f = palForm(d, {}, send)
 				else if (top == "img.new") f = imgForm(d, {}, open)
-				else if (top == "clip.new") f = clipForm({img:el.id, w:el.w, h:el.h}, send)
+				else if (top == "clip.new") f = clipForm(d, {img:el.id, w:el.w, h:el.h}, send)
 				if (f) mount(f)
 				else console.log(`action ${top} not implemented`)
 			}

@@ -28,7 +28,7 @@ export class ClipView {
 		if (clip) h.repl(this.el, h('.row',
 			h('', {onclick: e => {
 				e.preventDefault()
-				mount(clipForm(clip, res => {
+				mount(clipForm(wd, clip, res => {
 					const {id, name, w, h, loop} = res
 					app.send('clip.edit', {id, name, w, h, loop})
 					unmount()
@@ -126,7 +126,7 @@ function paintPic(c:Canvas, clip:Clip, pal:Pal, pic:Pic) {
 	}, dimBox(clip), 0)
 }
 
-export function clipForm(s:Partial<Clip>, submit:(res:Partial<Clip>)=>void) {
+export function clipForm(_:WorldData|null, s:Partial<Clip>, submit:(res:Partial<Clip>)=>void) {
 	return simpleForm<Clip>('Clip', s, !s.id, submit, [
 		strInput('name', 'Name', s.name),
 		dimInput(s),

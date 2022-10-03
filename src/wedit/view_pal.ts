@@ -88,7 +88,7 @@ function palSelect(pals:Pal[], submit:(p:Pal)=>void) {
 	return h('section.form',
 		h('header', 'Palette auswählen'),
 		h('span', {onclick() {
-			mount(palForm({}, res => {
+			mount(palForm(null, {}, res => {
 				app.send("pal.new", res)
 				unmount()
 			}))
@@ -97,7 +97,7 @@ function palSelect(pals:Pal[], submit:(p:Pal)=>void) {
 	)
 }
 
-export function palForm(s:Partial<Pal>, submit:(res:Partial<Pal>)=>void) {
+export function palForm(_:WorldData|null, s:Partial<Pal>, submit:(res:Partial<Pal>)=>void) {
 	return simpleForm<Pal>('Palette', s, !s.id, submit, [
 		strInput('name', 'Name', s.name),
 	])
