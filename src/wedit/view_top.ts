@@ -43,6 +43,7 @@ function index(v:TopView, top:string):(d:WorldData)=>HData {
 				!v.form?null:h('a', {title: v.name +" hinzufügen", onclick: (e:Event)=> {
 					e.preventDefault()
 					mount(v.form!(d, {}, (res:any) => {
+						if (top == "lvl" || top == "img") res.open = true
 						app.send(top+".new", res)
 						unmount()
 					}))
@@ -83,7 +84,7 @@ function detail(v:TopView, top:string):(d:WorldData, id:number)=>HData {
 	})
 }
 
-function delForm(title:string, top:string, id:number):HTMLElement {
+export function delForm(title:string, top:string, id:number):HTMLElement {
 	let onsubmit = (e:Event) => {
 		e.preventDefault()
 		app.send(top+".del", {id})

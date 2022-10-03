@@ -57,7 +57,7 @@ export class ImgView {
 				copy:true,
 			})
 		}
-		ed.c.setStage({x:8, y:8, w:this.img.w, h:this.img.h, zoom:12, bg:ed.color(0)})
+		ed.c.setStage({x:8, y:8, w:dim.w, h:dim.h, zoom:12, bg:ed.color(0)})
 		this.clipv = new ClipView(this as ClipCtx)
 		h.repl(dock.main, h('#img-view', this.clipv.el, ed.c.el))
 		dock.add(this.palv = new PalView(this, idx => {
@@ -79,9 +79,6 @@ export class ImgView {
 		}), 1)
 		dock.add(this.prev = new ClipPreview(this as ClipCtx), 2)
 		ed.updateTool = () => this.palv.toolv.updateTool()
-		let clip = this.clip
-		if (!clip && this.clips?.length) clip = this.clips[0]
-		this.show(clip)
 	}
 	show(clip?:Clip, pic?:Pic) {
 		const {ed, wd, img, clipv, prev} = this
@@ -101,6 +98,8 @@ export class ImgView {
 				path += '/'+ pic.id
 				ed.update(pic)
 			} else ed.c.clear()
+		} else {
+			ed.c.clear()
 		}
 		app.rr.ensure(path)
 	}
@@ -115,9 +114,9 @@ export class ImgView {
 		ed.c.stage.bg = ed.color(0)
 		ed.repaint()
 	}
-	updateClip(clip:Clip) {
+	updateClip(clip?:Clip) {
 		const {clip:old, clipv, prev} = this
-		if (old?.id == clip.id) {
+		if (!clip || !old || old?.id == clip.id) {
 			clipv.update()
 			prev.update()
 		}

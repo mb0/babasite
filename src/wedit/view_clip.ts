@@ -9,11 +9,14 @@ import {Canvas} from 'web/canvas'
 import app from 'app'
 import {Animator} from 'web/animate'
 import {BaseDock} from 'game/dock'
+import {imgForm} from './view_img'
+import {delForm} from './view_top'
 
 export interface ClipCtx {
 	wd:WorldData
 	pal:Pal
 	img:Img
+	clips:Clip[]
 	clip?:Clip
 	ator:Animator
 }
@@ -25,9 +28,9 @@ export class ClipView {
 		this.update()
 	}
 	update():void {
-		const {wd, clip, pal} = this.ctx
-		if (clip) h.repl(this.el,
-			h('.row',
+		const {wd, img, clip, clips, pal} = this.ctx
+		if (clip) {
+			h.repl(this.el, h('.row',
 				h('a', {onclick: _ => {
 					this.el.className = this.el.className ? "" : "show-detail"
 				}}, "Clip: "+ (clip.name || "(Ohne Namen)")),
@@ -49,9 +52,54 @@ export class ClipView {
 						app.send('clip.edit', {id, idx:seq?.length||0, seq:[{}]})
 					}}, hIcon('plus')),
 				),
-			),
-			renderFrames(wd, pal, clip),
-		)
+			), renderFrames(wd, pal, clip))
+		} else {
+			this.el.className = "show-detail"
+			h.repl(this.el, h('.row',
+				h('a', {onclick: _ => {
+					this.el.className = this.el.className ? "" : "show-detail"
+				}}, "Asset: "+ (img.name || "(Ohne Namen)")),
+				h('.detail', img.w +'x'+img.h,
+					h('a', {onclick: e => {
+						e.preventDefault()
+						mount(imgForm(wd, img, res => {
+							app.send('img.edit', res)
+							unmount()
+						}))
+
+					}}, hIcon('gear')),
+				),
+				h('.detail', 'Clips',
+					h('a', {onclick: e => {
+						e.preventDefault()
+						mount(clipForm(wd, {img:img.id, w:img.w, h:img.h}, res => {
+							app.send("clip.new", res)
+							unmount()
+						}))
+					}}, hIcon('plus')),
+				),
+				!clips?null:h('.row.detail', clips.map(c => {
+					const name = c.name || '(Ohne Namen)'
+					return h('', {style:"display:flex"},
+						h('a', {style:'min-width:140px', onclick: e => {
+							e.preventDefault()
+							app.rr.go(`/wedit/${wd.name}/img/${img.id}/${c.id}`)
+						}}, name),
+						h('a', {title: "Clip "+ name +" ändern", onclick: (e:Event)=> {
+							e.preventDefault()
+							mount(clipForm(wd, c, (res:any) => {
+								app.send("clip.edit", res)
+								unmount()
+							}))
+						}}, hIcon('gear', {})),
+						h('a', {title: "Clip "+ name +" löschen", onclick: (e:Event)=> {
+							e.preventDefault()
+							mount(delForm("Clip "+ name, "clip", c.id))
+						}}, hIcon('close', {})),
+					)
+				})),
+			))
+		}
 	}
 }
 

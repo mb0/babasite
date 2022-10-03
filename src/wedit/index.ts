@@ -102,11 +102,10 @@ export class WeditView implements View {
 				if (lvl) {
 					h.repl(dock.main, loading)
 					app.send('lvl.open', {id})
-					return
 				} else {
 					snack.show("Level nicht gefunden")
-					return
 				}
+				return
 			}
 		} else if (a.top == 'img') {
 			const iv = w?.imgv
@@ -115,22 +114,22 @@ export class WeditView implements View {
 				if (img) {
 					h.repl(dock.main, loading)
 					app.send('img.open', {id})
-					return
 				} else {
 					snack.show("Asset nicht gefunden")
-					return
 				}
-			}
-			if (iv && a.sub) {
-				const clip = w?.d.clip.get(parseInt(a.sub))
-				if (!clip) {
-					snack.show("Clip nicht gefunden")
-					return
-				}
-				let pic
-				if (a.xtra) pic = w?.d.pics.get(parseInt(a.xtra))
-				iv.show(clip, pic)
 				return
+			}
+			if (a.sub) {
+				const clip = w?.d.clip.get(parseInt(a.sub))
+				if (clip) {
+					let pic
+					if (a.xtra) pic = w?.d.pics.get(parseInt(a.xtra))
+					iv.show(clip, pic)
+				} else {
+					snack.show("Clip nicht gefunden")
+				}
+			} else {
+				iv.show()
 			}
 		} else  {
 			w?.clean()
@@ -255,12 +254,14 @@ const editorSubs = (v:WeditView):Subs => {
 	}),
 	"clip.new": checkW((w, res:Clip) => {
 		w.d.clip.set(res.id, res)
-		w.treev.update()
+		if (w.imgv?.img.id == res.img) w.imgv?.updateClip(res)
 	}),
 	"clip.del": checkW((w, res) => {
 		// delete clip from world store
+		const old = w.d.clip.get(res.id)
+		if (!old) return
 		w.d.clip.set(res.id, null)
-		w.treev.update()
+		if (w.imgv?.img.id == old.img) w.imgv?.updateClip()
 	}),
 	"clip.edit": checkW((w, res) => {
 		// lookup clip and edit

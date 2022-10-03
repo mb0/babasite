@@ -2,15 +2,10 @@ import h, {hIcon} from 'web/html'
 import {Menu} from 'web/menu'
 import {Dock, Layout} from 'game/dock'
 import app from 'app'
-import {Img} from 'game/pix'
 import {Grid} from 'game/lvl'
 import {WorldData, namedTables} from './world'
-import {lvlForm, LvlView} from './view_lvl'
-import {imgForm, ImgView, PicData} from './view_img'
-import {mount, unmount} from 'web/modal'
-import {tsetForm} from './view_tset'
-import {palForm} from './view_pal'
-import {clipForm} from './view_clip'
+import {LvlView} from './view_lvl'
+import {ImgView, PicData} from './view_img'
 import {TopicView} from './view_top'
 
 export function worldSel(worlds:string[]):HTMLElement {
@@ -84,28 +79,9 @@ class TreeView implements Dock {
 			if (top == "world.sel") {
 				app.rr.go("/wedit")
 			} else if (top.indexOf('.') < 0) {
-				if (top == 'clip') {
-					app.rr.go(`/wedit/${d.name}/img/${el.img}/${el.id}`)
-				} else {
-					app.rr.go(`/wedit/${d.name}/${top}/${el.id}`)
-				}
+				app.rr.go(`/wedit/${d.name}/${top}/${el.id}`)
 			} else {
-				const send = (res:any) => {
-					app.send(top, res)
-					unmount()
-				}
-				const open = (res:any) => {
-					res.open = true
-					send(res)
-				}
-				let f:any = null
-				if (top == "tset.new") f = tsetForm(d, {}, send)
-				else if (top == "lvl.new") f = lvlForm(d, {}, open)
-				else if (top == "pal.new") f = palForm(d, {}, send)
-				else if (top == "img.new") f = imgForm(d, {}, open)
-				else if (top == "clip.new") f = clipForm(d, {img:el.id, w:el.w, h:el.h}, send)
-				if (f) mount(f)
-				else console.log(`action ${top} not implemented`)
+				console.log(`action ${top} not implemented`)
 			}
 		}
 		this.menu = {act:this.act, list:[
@@ -114,52 +90,30 @@ class TreeView implements Dock {
 		this.update()
 	}
 	update():void {
-		const {d, open} = this
+		const {open} = this
 		h.repl(this.el, namedTables.map(({top, label}) => {
 			if (top == "clip") return null
-			const sub = top == "img" ? imgTree(d, this.act) :
-				tableTree((d as any)[top].all(), top, this.act)
-			const ic = h('a', {title:label+' hinzufügen', onclick: (e:Event) => {
-				e.preventDefault()
-				this.act(top+'.new')
-			}}, hIcon('plus', {}))
-			const link = h('span', {title:label+' Übersicht', onclick: (e:Event) => {
+			const sub = this.topicSub(top)
+			const link = h('a', {title:label+' Übersicht', onclick: (e:Event) => {
 				e.preventDefault()
 				app.rr.go("/wedit/"+this.d.name+"/"+top)
 			}}, label)
+			if (!sub) return h('li', link)
 			return h('li.sum', h('details', {open:open[top], ontoggle: (e:any) =>{
 				open[top] = e.target.open
-			}}, h('summary', link, ic), sub))
+			}}, h('summary', link), sub))
 		}))
 	}
+	topicSub(top:string):HTMLElement|null {
+		if (top == "tset" || top == "pal") return null
+		const {d, act} = this
+		return tableTree((d as any)[top].all(), top, act)
+	}
 }
+
 
 function tableTree(list:any[], top:string, act:TopAct):HTMLElement {
 	return h('ul', list.map((el:any) => {
 		return h('li', {onclick: () => act(top, el)}, el.name || '(Ohne Namen)')
 	}))
 }
-
-function imgTree(d:WorldData, act:TopAct):HTMLElement {
-	return h('ul', d.img.fmap((img:Img) => {
-		const clips = d.clip.all(c => c.img == img.id)
-		const onctx = (e:any) => {
-			e.preventDefault()
-			act("img", img)
-		}
-		const ic = h('a', {title:'Clip hinzufügen', onclick: (e:Event) => {
-			e.preventDefault()
-			act('clip.new', img)
-		}}, hIcon('plus', {}))
-		const name = img.name || '(Ohne Namen)'
-		const link = h('span', {title:name+' Übersicht', onclick: (e:Event) => {
-			e.preventDefault()
-			app.rr.go("/wedit/"+d.name+"/img/"+img.id)
-		}}, name)
-		return h('li.sum', h('details',
-			h('summary', {oncontextmenu: onctx}, link, ic),
-			tableTree(clips, "clip", act)
-		))
-	}))
-}
-
