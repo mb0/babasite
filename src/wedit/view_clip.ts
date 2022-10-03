@@ -30,7 +30,7 @@ export class ClipView {
 			h('.row',
 				h('a', {onclick: _ => {
 					this.el.className = this.el.className ? "" : "show-detail"
-				}}, clip.name),
+				}}, clip.name || "(Ohne Namen)"),
 				h('.detail', clip.w +'x'+clip.h,
 					h('a', {onclick: e => {
 						e.preventDefault()
