@@ -36,8 +36,8 @@ export interface Table {
 
 export const namedTables:Table[] = [
 	{top:"tset", label:"Tileset"},
-	{top:"lvl", label:"Level"},
 	{top:"pal", label:"Palette"},
+	{top:"lvl", label:"Level"},
 	{top:"img",label: "Asset"},
 	{top:"clip", label:"Clip"},
 ]

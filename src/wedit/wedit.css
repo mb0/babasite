@@ -20,36 +20,32 @@
 .wtree li.sum {
 	list-style: none;
 }
-#img-view {
+#img-view, #lvl-view {
 	flex: 1 1 0;
 	display: flex;
 	flex-direction: column;
 	align-items: stretch;
 }
-#img-view #clip-view {
+#clip-view, #head-view {
+	display: flex;
+	flex-direction: column;
 	flex: 0 1 auto;
 }
-#img-view #editor-canvas {
+#editor-canvas {
 	flex: 1 1 0;
 	max-width: 100%;
 }
-#clip-view  {
-	display: flex;
-}
-#clip-view .detail {
+.detail {
 	display: none;
 	flex: 0 0 auto;
 }
-#clip-view.show-detail {
-	flex-direction: column;
-}
-#clip-view.show-detail .detail {
+details[open] .detail {
 	display: inline-flex;
 }
-#clip-view.show-detail .frame {
+.drow {
 	display: flex;
 }
-#clip-view.show-detail .row {
+details[open] .drow {
 	flex-direction: column;
 }
 #clip-view .frame {
@@ -57,7 +53,7 @@
 	flex: 0 0 auto;
 }
 #clip-view .frame canvas {
-	display: inline-block;
+	display: block;
 }
 div.color {
 	display: flex;

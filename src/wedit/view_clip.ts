@@ -22,44 +22,52 @@ export interface ClipCtx {
 }
 
 export class ClipView {
-	el:HTMLElement
+	cont = h('details')
+	el = h('#clip-view', this.cont)
+	last?:Clip
 	constructor(public ctx:ClipCtx) {
-		this.el = h('#clip-view')
 		this.update()
 	}
 	update():void {
 		const {wd, img, clip, clips, pal} = this.ctx
 		if (clip) {
-			h.repl(this.el, h('.row',
-				h('a', {onclick: _ => {
-					this.el.className = this.el.className ? "" : "show-detail"
-				}}, "Clip: "+ (clip.name || "(Ohne Namen)")),
-				h('.detail', clip.w +'x'+clip.h,
-					h('a', {onclick: e => {
-						e.preventDefault()
-						mount(clipForm(wd, clip, res => {
-							const {id, name, w, h, loop} = res
-							app.send('clip.edit', {id, name, w, h, loop})
-							unmount()
-						}))
+			if (!this.last) (this.cont as HTMLDetailsElement).open = false
+			h.repl(this.cont,
+				h('summary.drow',
+					h('',
+						h('', "Clip: "+ (clip.name || "(Ohne Namen)")),
+						h('a', {onclick: e => {
+							e.preventDefault()
+							history.back()
+						}}, "Zurück"),
+						h('.row', "Dim: "+ clip.w +'x'+clip.h,
+							h('a', {onclick: e => {
+								e.preventDefault()
+								mount(clipForm(wd, clip, res => {
+									const {id, name, w, h, loop} = res
+									app.send('clip.edit', {id, name, w, h, loop})
+									unmount()
+								}))
 
-					}}, hIcon('gear')),
+							}}, hIcon('gear')),
+						),
+					),
+					h('.detail', 'Frames:',
+						h('a', {onclick: e => {
+							e.preventDefault()
+							const {id, seq} = clip
+							app.send('clip.edit', {id, idx:seq?.length||0, seq:[{}]})
+						}}, hIcon('plus')),
+					),
+					renderFrames(wd, pal, clip),
 				),
-				h('.detail', 'Frames:',
-					h('a', {onclick: e => {
-						e.preventDefault()
-						const {id, seq} = clip
-						app.send('clip.edit', {id, idx:seq?.length||0, seq:[{}]})
-					}}, hIcon('plus')),
-				),
-			), renderFrames(wd, pal, clip))
+			)
+			h.repl(this.el, this.cont)
 		} else {
-			this.el.className = "show-detail"
-			h.repl(this.el, h('.row',
-				h('a', {onclick: _ => {
-					this.el.className = this.el.className ? "" : "show-detail"
-				}}, "Asset: "+ (img.name || "(Ohne Namen)")),
-				h('.detail', img.w +'x'+img.h,
+			h.repl(this.el,
+				h('.row',
+					"Asset: "+ (img.name || "(Ohne Namen)")+
+					" Dim: "+ img.w +'x'+img.h,
 					h('a', {onclick: e => {
 						e.preventDefault()
 						mount(imgForm(wd, img, res => {
@@ -69,7 +77,7 @@ export class ClipView {
 
 					}}, hIcon('gear')),
 				),
-				h('.detail', 'Clips',
+				h('.row', 'Clips',
 					h('a', {onclick: e => {
 						e.preventDefault()
 						mount(clipForm(wd, {img:img.id, w:img.w, h:img.h}, res => {
@@ -78,7 +86,7 @@ export class ClipView {
 						}))
 					}}, hIcon('plus')),
 				),
-				!clips?null:h('.row.detail', clips.map(c => {
+				!clips?null:h('', clips.map(c => {
 					const name = c.name || '(Ohne Namen)'
 					return h('', {style:"display:flex"},
 						h('a', {style:'min-width:140px', onclick: e => {
@@ -98,8 +106,9 @@ export class ClipView {
 						}}, hIcon('close', {})),
 					)
 				})),
-			))
+			)
 		}
+		this.last = clip
 	}
 }
 
@@ -120,28 +129,25 @@ export function renderFrames(wd:WorldData, pal:Pal, clip:Clip):HTMLElement {
 			dt.setData("application/x-wedit-pic", wd.name+":"+fr.pic)
 		}
 		const pic = wd.pics.get(fr.pic)
+		const edit = (e:Event) => {
+			e.preventDefault()
+			if (!pic) return
+			sel(e, pic)
+			mount(frameForm(fr, (res, del) => {
+				const req:any = {id:clip.id, idx, del:1}
+				if (!del) req.seq = [res]
+				app.send('clip.edit', req)
+				unmount()
+			}))
+		}
 		if (pic) {
 			paintPic(c, clip, pal, pic)
 			c.el.onclick = e => sel(e, pic)
-			c.el.oncontextmenu = e => {
-				sel(e, pic)
-				mount(frameForm(fr, (res, del) => {
-					const req:any = {id:clip.id, idx, del:1}
-					if (!del) req.seq = [res]
-					app.send('clip.edit', req)
-					unmount()
-				}))
-			}
+			c.el.oncontextmenu = edit
 		}
 		return h('.frame', c.el, h('.detail',
 			""+((fr.dur||0)+1),
-			h('a', {title:"Bild ändern", onclick: (e:Event)=> {
-				e.preventDefault()
-			}}, hIcon('gear', {})),
-			h('a', {title:"Bild löschen", onclick: (e:Event)=> {
-				e.preventDefault()
-				app.send('clip.edit', {id:clip.id, idx, del:1})
-			}}, hIcon('close', {})),
+			!pic?null:h('a', {title:"Bild ändern", onclick: edit}, hIcon('gear', {})),
 		))
 	}))
 }
