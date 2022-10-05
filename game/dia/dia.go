@@ -7,7 +7,7 @@ import (
 	"github.com/mb0/babasite/game/ids"
 )
 
-type Dialog struct {
+type Dia struct {
 	ID     ids.Dia  `json:"id"`
 	Title  string   `json:"title"`
 	Text   string   `json:"text"`
@@ -19,7 +19,7 @@ type Choice struct {
 	Next ids.Dia `json:"next,omitempty"`
 }
 
-func (*Dialog) Make(id uint32) Dialog              { return Dialog{ID: ids.Dia(id)} }
-func (d *Dialog) UID() uint32                      { return uint32(d.ID) }
-func (d *Dialog) UnmarshalBinary(raw []byte) error { return json.Unmarshal(raw, d) }
-func (d *Dialog) MarshalBinary() ([]byte, error)   { return json.Marshal(d) }
+func (*Dia) Make(id uint32) Dia                 { return Dia{ID: ids.Dia(id)} }
+func (d *Dia) UID() uint32                      { return uint32(d.ID) }
+func (d *Dia) UnmarshalBinary(raw []byte) error { return json.Unmarshal(raw, d) }
+func (d *Dia) MarshalBinary() ([]byte, error)   { return json.Marshal(d) }

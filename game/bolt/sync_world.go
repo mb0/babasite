@@ -25,11 +25,23 @@ type WorldSync struct {
 
 func MakeWorldSync(w *game.World) WorldSync {
 	return WorldSync{World: w, Syncs: Syncs{
-		ObjSync(&w.Obj),
-		InvSync(&w.Inv),
-		DiaSync(&w.Dia),
-		PixSync(&w.Pix),
-		LvlSync(&w.Lvl),
+		NewListSync(&w.Lvl.Tset),
+		NewListSync(&w.Lvl.Lvl),
+		NewListSync(&w.Lvl.Grid),
+
+		NewListSync(&w.Pix.Pal),
+		NewListSync(&w.Pix.Img),
+		NewListSync(&w.Pix.Clip),
+		NewListSync(&w.Pix.Pic),
+
+		NewListSync(&w.Obj.Info),
+		NewListSync(&w.Obj.Obj),
+
+		NewListSync(&w.Inv.Prod),
+		NewListSync(&w.Inv.Item),
+		NewListSync(&w.Inv.Inv),
+
+		NewListSync(&w.Dia.Dia),
 	}}
 }
 
