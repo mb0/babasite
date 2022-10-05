@@ -8,24 +8,36 @@ import (
 	"github.com/mb0/babasite/game/ids"
 )
 
-type Obj struct {
-	ID  ids.Obj `json:"id"`
-	Lvl ids.Lvl `json:"lvl,omitempty"`
-	geo.Box
+type Info struct {
+	ID ids.Info `json:"id"`
+	// internal name for development
+	Name string `json:"name"`
+	// img or clip to render, objects can be invisible e.g. areas to trigger an action
 	Asset ids.Topic `json:"asset,omitempty"`
-	// specific components:
-	// info for obj that can be inspected
-	Info *Info `json:"info,omitempty"`
-	// loot inventory id of lootable items
-	Loot ids.Inv `json:"loot,omitempty"`
-	// dialog id for items with a dialog
+	// text info for obj that can be inspected
+	Descr string `json:"descr,omitempty"`
+	// dialog id for items with a dialog e.g. terminals or keypads
 	Dia ids.Dia `json:"dia,omitempty"`
 }
 
-type Info struct {
-	Name string `json:"name"`
-	Text string `json:"text,omitempty"`
+// Obj represents all things that can be positioned in levels.
+type Obj struct {
+	ID ids.Obj `json:"id"`
+	// generic info
+	Info ids.Info `json:"info"`
+	// level position and dimension
+	Lvl ids.Lvl `json:"lvl"`
+	geo.Box
+	// specific components:
+	// loot inventory id of lootable items
+	Loot ids.Inv `json:"loot,omitempty"`
 }
+
+func (*Info) Make(id uint32) Info                { return Info{ID: ids.Info(id)} }
+func (o *Info) UID() uint32                      { return uint32(o.ID) }
+func (o *Info) Named() string                    { return o.Name }
+func (o *Info) UnmarshalBinary(raw []byte) error { return json.Unmarshal(raw, o) }
+func (o *Info) MarshalBinary() ([]byte, error)   { return json.Marshal(o) }
 
 func (*Obj) Make(id uint32) Obj                 { return Obj{ID: ids.Obj(id)} }
 func (o *Obj) UID() uint32                      { return uint32(o.ID) }

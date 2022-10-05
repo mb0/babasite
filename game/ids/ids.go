@@ -50,7 +50,8 @@ type (
 	Lvl  uint32
 	Grid uint32
 
-	Obj uint32
+	Obj  uint32
+	Info uint32
 
 	Dia uint32
 
@@ -67,11 +68,11 @@ func (Tset) Top() string { return "tset" }
 func (Lvl) Top() string  { return "lvl" }
 func (Grid) Top() string { return "map" }
 func (Obj) Top() string  { return "obj" }
+func (Info) Top() string { return "info" }
 func (Dia) Top() string  { return "dia" }
 func (Prod) Top() string { return "prod" }
 func (Item) Top() string { return "item" }
 func (Inv) Top() string  { return "inv" }
-
 
 type List[I ID] []I
 

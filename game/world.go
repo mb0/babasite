@@ -30,6 +30,8 @@ func (w *World) Info() WorldData {
 		Clip: w.Pix.Clip.All(nil),
 		Tset: w.Lvl.Tset.All(nil),
 		Lvl:  w.Lvl.Lvl.All(nil),
+		Info: w.Obj.Info.All(nil),
+		Obj:  w.Obj.Obj.All(nil),
 	}
 }
 
@@ -40,4 +42,6 @@ type WorldData struct {
 	Clip []*pix.Clip `json:"clip"`
 	Tset []*lvl.Tset `json:"tset"`
 	Lvl  []*lvl.Lvl  `json:"lvl"`
+	Info []*obj.Info `json:"info"`
+	Obj  []*obj.Obj  `json:"obj"`
 }
