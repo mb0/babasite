@@ -15,6 +15,32 @@ type Sys struct {
 	Tset TsetTable
 	Lvl  LvlTable
 	Grid GridTable
+
+	graphs map[ids.Lvl]*Graph
+}
+
+func (s *Sys) Graph(lvl ids.Lvl) (*Graph, error) {
+	g, ok := s.graphs[lvl]
+	if !ok {
+		if s.graphs == nil {
+			s.graphs = make(map[ids.Lvl]*Graph)
+		}
+		l, err := s.Lvl.Get(lvl)
+		if err != nil {
+			return nil, err
+		}
+		tset, err := s.Tset.Get(l.Tset)
+		if err != nil {
+			return nil, err
+		}
+		grid, err := s.Grid.Get(l.Grid)
+		if err != nil {
+			return nil, err
+		}
+		g = &Graph{Tset: tset, Grid: grid}
+		s.graphs[lvl] = g
+	}
+	return g, nil
 }
 
 func (s *Sys) NewTset(name string) (*Tset, error) {
