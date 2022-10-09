@@ -84,6 +84,9 @@ export class ImgView {
 		const {ed, wd, img, clipv, prev} = this
 		if (clip != this.clip) {
 			this.clip = clip
+			if (clip) {
+				ed.c.setStage({w:clip.w, h:clip.h})
+			}
 			clipv.update()
 			prev.update()
 		}

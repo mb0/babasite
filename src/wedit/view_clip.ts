@@ -184,7 +184,10 @@ export class ClipPreview extends BaseDock {
 		const {ctx:{clip, pal}, c} = this
 		if (clip) {
 			c.bg = palColor(pal, 0)
-			c.setStage({w:clip.w*c.stage.zoom, h:clip.h*c.stage.zoom})
+			const dim = {w:clip.w*c.stage.zoom, h:clip.h*c.stage.zoom}
+			c.el.width = dim.w
+			c.el.height = dim.h
+			c.setStage(dim)
 			this.totals = (clip.seq||[]).reduce((a, fr)=> {
 				a.push((a.length?a[a.length-1]:0)+1+(fr.dur||0))
 				return a
