@@ -49,6 +49,7 @@ type (
 	Tset uint32
 	Lvl  uint32
 	Grid uint32
+	Act  uint32
 
 	Obj  uint32
 	Info uint32
@@ -67,6 +68,7 @@ func (Pic) Top() string  { return "pic" }
 func (Tset) Top() string { return "tset" }
 func (Lvl) Top() string  { return "lvl" }
 func (Grid) Top() string { return "map" }
+func (Act) Top() string  { return "act" }
 func (Obj) Top() string  { return "obj" }
 func (Info) Top() string { return "info" }
 func (Dia) Top() string  { return "dia" }
