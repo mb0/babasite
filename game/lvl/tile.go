@@ -6,6 +6,11 @@ import (
 	"github.com/mb0/babasite/game/ids"
 )
 
+// Ability is a bitmask with 16 movement kinds. We use it to decide whether a tile can be traversed.
+
+// It should deprecate the block field.
+type Ability uint16
+
 type Tset struct {
 	ID    ids.Tset   `json:"id"`
 	Name  string     `json:"name"`
@@ -13,9 +18,12 @@ type Tset struct {
 }
 
 type TileInfo struct {
-	Tile  Tile      `json:"tile"`
-	Name  string    `json:"name"`
+	Tile Tile `json:"tile"`
+	// Allow is a bitmask that indicates what ability is required to traverse to or over this
+	// tile. It should deprecate the block field.
+	Allow Ability   `json:"allow,omitempty"`
 	Color uint32    `json:"color"`
+	Name  string    `json:"name"`
 	Block bool      `json:"block,omitempty"`
 	Group string    `json:"group,omitempty"`
 	Asset ids.Topic `json:"asset,omitempty"`
