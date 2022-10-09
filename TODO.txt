@@ -1,14 +1,24 @@
 Aufgaben
 ========
 
-Simon:
-    * Studiert und beschreibt ein Rätsel vom ersten Akt
-
-Jakob:
-    * Arbeitet an einem Grafik Konzept
+Simon und Jakob:
+    * Arbeitet weiter am Spiel Konzept
+    * Übertagen von Bildern in den Editor
 
 Martin programmiert:
+    * Allgemeine Editor Unterstützung für positionierte Markierungen für:
+      * Objekte im Level Editor positionieren
+      * Anker im Asset Editor positionieren
+    * World preview aus dem editor starten. Dafür brauchen wir:
+      * Startpunkt auf einer begehbaren Position im Level. Wir können sowas als Obj vewalten.
+      * Default admin player - erstmal reicht ein Punkt.
+      * Test Seite unter /wedit/world/test/lvlid oder so
+      * Es wird automatisch eine Test Instanz für ein Level erzeugt wenn noch keine besteht
+      * Die Test Instanz wird nach einiger Zeit ohne Spieler geschlossen.
+      * Wir verwenden für den test view den wedit room, so dass wir live Objekte aktualisieren
+        können. Wir wollen aber Kontrolle über Updates haben und müssen dafür die Daten isolieren.
+	Dafür wäre die angedachten geschachtelte Spielstände sinnvoll.
+
+Martin macht irgendwann vielleicht:
     * Editor: Binäre nachrichten versenden, History, Save
-    * Bessere Datenbank benutzen
-    * World editor aus map editor and char editor zusammenlegen
-    * World preview aus dem editor starten
+    * Bessere Datenbank auch für Benutzerkonten benutzen
