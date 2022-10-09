@@ -298,12 +298,16 @@ func clipEdit(ed *ConnSubs, m *hub.Msg) (err error) {
 }
 func picEdit(ed *ConnSubs, m *hub.Msg) error {
 	var req struct {
-		Img ids.Img `json:"img"`
-		Pic ids.Pic `json:"pic"`
+		Clip ids.Clip `json:"clip"`
+		Pic  ids.Pic  `json:"pic"`
 		grid.Edit[pix.Pixel]
 	}
 	m.Unmarshal(&req)
-	img, err := ed.Pix.Img.Get(req.Img)
+	cl, err := ed.Pix.Clip.Get(req.Clip)
+	if err != nil {
+		return err
+	}
+	img, err := ed.Pix.Img.Get(cl.Img)
 	if err != nil {
 		return err
 	}
@@ -312,7 +316,7 @@ func picEdit(ed *ConnSubs, m *hub.Msg) error {
 	if sl.Empty() {
 		return ids.ErrNotFound
 	}
-	err = req.Apply(geo.Box{Dim: img.Dim}, &sl.Data.Pix)
+	err = req.Apply(geo.Box{Dim: cl.Dim}, &sl.Data.Pix)
 	if err != nil {
 		return err
 	}

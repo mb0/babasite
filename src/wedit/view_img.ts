@@ -34,7 +34,7 @@ export class ImgView {
 		const ed = this.ed = new GridEditor(dim, t => palColor(this.pal, t), edit => {
 			app.send("pic.edit", {
 				...edit,
-				img:this.img.id,
+				clip:this.clip?.id,
 				pic:ed.img!.id,
 			})
 			ed.tmp.reset()
@@ -84,9 +84,7 @@ export class ImgView {
 		const {ed, wd, img, clipv, prev} = this
 		if (clip != this.clip) {
 			this.clip = clip
-			if (clip) {
-				ed.c.setStage({w:clip.w, h:clip.h})
-			}
+			if (clip) ed.resize({w:clip.w, h:clip.h})
 			clipv.update()
 			prev.update()
 		}

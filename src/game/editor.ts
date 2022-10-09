@@ -37,6 +37,13 @@ export class GridEditor<T extends number> {
 		c.init(()=>this.repaint())
 		cbEvents.forEach(typ => addEventListener(typ, this.handleCb))
 	}
+	resize(d:Dim):void {
+		const o = this.dim
+		if (o.w == d.w && o.h == d.h) return
+		this.dim = d
+		this.tmp = tmpGrid<T>(d.w, d.h)
+		this.c.setStage(d)
+	}
 	repaint():void {
 		const {c, dim, tool, tmp, sel, img, float, color} = this
 		c.clear()
