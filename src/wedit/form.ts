@@ -28,7 +28,7 @@ export function strInput(key:string, label:string, val?:string, opts?:any, help?
 export function numInput(key:string, label:string, val?:number, opts?:any, help?:string):Input {
 	let el = uintInput(val, opts)
 	const wrap = labelWrap(label, el, help)
-	return {el, wrap, write: to => to[key] = el.value}
+	return {el, wrap, write: to => to[key] = parseInt(el.value, 10)}
 }
 export function colorInput(val?:number, opts?:any, help?:string):Input {
 	opts = opts||{}
