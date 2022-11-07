@@ -3,7 +3,7 @@ import snack from 'web/snack'
 import {newLayout} from 'game/dock'
 import {Box, boxGrow, boxIn} from 'game/geo'
 import {gridEach, gridSel, gridTiles} from 'game/grid'
-import {Clip, Img, Pal, Pic, growPic} from 'game/pix'
+import {Clip, Img, Pal, Pic, growPic, Spot} from 'game/pix'
 import {Grid, Lvl, TileInfo, Tset} from 'game/lvl'
 import {View, app, chat, menu} from 'app'
 import {Handler, Routes} from 'app/router'
@@ -175,6 +175,7 @@ const editorSubs = (v:WeditView):Subs => {
 		const wd = res as WorldData
 		wd.pics = new Map()
 		wd.pal = new Slots(res.pal)
+		wd.spot = new Slots(res.spot)
 		wd.img = new Slots(res.img)
 		wd.clip = new Slots(res.clip)
 		wd.tset = new Slots(res.tset)
@@ -224,6 +225,20 @@ const editorSubs = (v:WeditView):Subs => {
 		applySlice(res, f.colors, res.ins)
 		p.cache = undefined
 		w.imgv?.updatePal(p)
+	}),
+	"spot.new": checkW((w, res:Spot) => {
+		w.d.spot.set(res.id, res)
+		checkTopv(w, "spot", res.id, false)
+	}),
+	"spot.del": checkW((w, res) => {
+		w.d.spot.set(res.id, null)
+		checkTopv(w, "spot", res.id, true)
+	}),
+	"spot.edit": checkW((w, res:Spot) => {
+		const sp = w.d.spot.get(res.id)
+		if (!sp) return
+		Object.assign(sp, res)
+		checkTopv(w, "spot", res.id, false)
 	}),
 	"img.new": checkW((w, res:Img) => {
 		// add img to world store

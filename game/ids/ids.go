@@ -45,6 +45,7 @@ type (
 	Img  uint32
 	Clip uint32
 	Pic  uint32
+	Spot uint32
 
 	Tset uint32
 	Lvl  uint32
@@ -65,6 +66,7 @@ func (Pal) Top() string  { return "pal" }
 func (Img) Top() string  { return "img" }
 func (Clip) Top() string { return "clip" }
 func (Pic) Top() string  { return "pic" }
+func (Spot) Top() string { return "spot" }
 func (Tset) Top() string { return "tset" }
 func (Lvl) Top() string  { return "lvl" }
 func (Grid) Top() string { return "map" }

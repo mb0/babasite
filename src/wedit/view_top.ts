@@ -3,7 +3,7 @@ import {h, HData, hIcon} from "web/html"
 import {topSlots, WorldData} from "./world"
 import {mount, unmount} from 'web/modal'
 import {lvlForm} from "./view_lvl"
-import {imgForm} from "./view_img"
+import {imgForm,spotForm} from "./view_img"
 import {palForm} from "./view_pal"
 import {tsetForm} from "./view_tset"
 
@@ -17,6 +17,7 @@ interface TopView {
 export const topViews:{[key:string]:TopView} = {
 	img:  {name:'Asset', form: imgForm},
 	pal:  {name:'Palette', form: palForm},
+	spot: {name:'Spot', form: spotForm},
 	tset: {name:'Tileset', form: tsetForm},
 	lvl:  {name:'Level', form: lvlForm},
 	clip: {name:'Clip'},

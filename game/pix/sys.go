@@ -11,12 +11,14 @@ type PalTable = ids.ListTable[ids.Pal, Pal, *Pal]
 type ImgTable = ids.ListTable[ids.Img, Img, *Img]
 type ClipTable = ids.ListTable[ids.Clip, Clip, *Clip]
 type PicTable = ids.ListTable[ids.Pic, Pic, *Pic]
+type SpotTable = ids.ListTable[ids.Spot, Spot, *Spot]
 
 type Sys struct {
 	Pal  PalTable
 	Img  ImgTable
 	Clip ClipTable
 	Pic  PicTable
+	Spot SpotTable
 }
 
 func (s *Sys) NewPal(name string) (*Pal, error) {
@@ -51,6 +53,26 @@ func (s *Sys) DelPal(id ids.Pal) error {
 		return fmt.Errorf("cannot delete %s %d used", id.Top(), id)
 	}
 	return s.Pal.Set(id, nil)
+}
+
+func (s *Sys) NewSpot(a Spot) (*Spot, error) {
+	err := ids.NamedUnique(&s.Spot, a.Name)
+	if err != nil {
+		return nil, err
+	}
+	sp, err := s.Spot.New()
+	if err != nil {
+		return nil, err
+	}
+	sp.Name = a.Name
+	sp.Dim = a.Dim
+	sp.Color = a.Color
+	return sp, nil
+}
+
+func (s *Sys) DelSpot(id ids.Spot) error {
+	// TODO check for dangling refs
+	return s.Spot.Set(id, nil)
 }
 
 func (s *Sys) NewImg(a Img) (*Img, error) {

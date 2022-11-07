@@ -1,4 +1,4 @@
-import {Box, boxGrow, boxIn, Dim} from 'game/geo'
+import {Box, boxGrow, boxIn, Dim, Pos} from 'game/geo'
 import {Grid, gridEach, gridTiles} from 'game/grid'
 import {cssColor} from 'game/color'
 
@@ -23,6 +23,12 @@ export interface Feat {
 	colors:string[]
 }
 
+export interface Spot extends Dim {
+	id:number
+	name:string
+	color:number
+}
+
 export interface Img extends Dim {
 	id:number
 	name:string
@@ -41,6 +47,11 @@ export interface Clip extends Dim {
 export interface Frame {
 	pic:number
 	dur:number
+	marks:Mark[]
+}
+
+export interface Mark extends Pos {
+	id:number
 }
 
 export interface Pic extends Grid<number> {

@@ -8,7 +8,7 @@ import snack from 'web/snack'
 export {chat} from 'app/chat'
 export {menu} from 'app/menu'
 
-const debug = false
+const debug = true
 
 export interface View {
 	name:string

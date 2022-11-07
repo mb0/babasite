@@ -1,4 +1,4 @@
-import {Pal, Img, Clip, Pic} from 'game/pix'
+import {Pal, Img, Clip, Pic, Spot} from 'game/pix'
 import {Tset, Lvl, Grid} from 'game/lvl'
 
 
@@ -12,6 +12,7 @@ export interface WorldData {
 	name:string
 	vers:Vers
 	pal:Slots<Pal>
+	spot:Slots<Spot>
 	img:Slots<Img>
 	clip:Slots<Clip>
 	tset:Slots<Tset>
@@ -37,6 +38,7 @@ export interface Table {
 export const namedTables:Table[] = [
 	{top:"tset", label:"Tileset"},
 	{top:"pal", label:"Palette"},
+	{top:"spot", label:"Spot"},
 	{top:"lvl", label:"Level"},
 	{top:"img",label: "Asset"},
 	{top:"clip", label:"Clip"},

@@ -86,6 +86,46 @@ func palFeat(ed *ConnSubs, m *hub.Msg) (err error) {
 	ed.Bcast(site.RawMsg(m.Subj, req), 0)
 	return nil
 }
+
+func spotNew(ed *ConnSubs, m *hub.Msg) error {
+	var req pix.Spot
+	m.Unmarshal(&req)
+	sp, err := ed.Pix.NewSpot(req)
+	if err != nil {
+		return err
+	}
+	ed.Bcast(site.RawMsg(m.Subj, sp), 0)
+	return nil
+}
+func spotDel(ed *ConnSubs, m *hub.Msg) error {
+	req := ParseID[ids.Spot](m)
+	err := ed.Pix.DelSpot(req.ID)
+	if err != nil {
+		return err
+	}
+	ed.Bcast(site.RawMsg(m.Subj, req), 0)
+	return nil
+}
+func spotEdit(ed *ConnSubs, m *hub.Msg) error {
+	var req pix.Spot
+	m.Unmarshal(&req)
+	sl := ed.Pix.Spot.Slot(req.ID)
+	if sl.Empty() {
+		return ids.ErrNotFound
+	}
+	res := &sl.Data
+	if n := req.Name; n != "" && n != res.Name {
+		// check uniqueness
+		if old := ids.NamedFind(&ed.Pix.Spot, n); old != nil {
+			return fmt.Errorf("spot %s already exists", n)
+		}
+		res.Name = n
+	}
+	sl.MarkMod()
+	ed.Bcast(site.RawMsg(m.Subj, res), 0)
+	return nil
+}
+
 func imgNew(ed *ConnSubs, m *hub.Msg) error {
 	var req struct {
 		pix.Img

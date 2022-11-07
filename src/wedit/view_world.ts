@@ -1,4 +1,4 @@
-import h, {hIcon} from 'web/html'
+import h from 'web/html'
 import {Menu} from 'web/menu'
 import {Dock, Layout} from 'game/dock'
 import app from 'app'
@@ -105,7 +105,7 @@ class TreeView implements Dock {
 		}))
 	}
 	topicSub(top:string):HTMLElement|null {
-		if (top == "tset" || top == "pal") return null
+		if (top != "lvl" && top != "img") return null
 		const {d, act} = this
 		return tableTree((d as any)[top].all(), top, act)
 	}

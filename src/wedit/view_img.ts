@@ -1,10 +1,10 @@
 import h from 'web/html'
 import {Layout} from 'game/dock'
 import {GridEditor} from 'game/editor'
-import {Pal, Img, Clip, Pic, palColor} from 'game/pix'
+import {Pal, Img, Clip, Pic, palColor, Spot} from 'game/pix'
 import app from 'app'
 import {WorldData} from './world'
-import {kindSelect, nameInput, dimInput, namedListSelect, simpleForm} from './form'
+import {kindSelect, nameInput, dimInput, namedListSelect, simpleForm, colorInput} from './form'
 import {PalView} from './view_pal'
 import {ClipCtx, ClipPreview, ClipView} from './view_clip'
 import {gridEach, gridSel} from 'game/grid'
@@ -137,6 +137,13 @@ export class ImgView {
 	}
 }
 
+export function spotForm(_:WorldData, s:Partial<Spot>, submit:(res:Partial<Spot>)=>void) {
+	return simpleForm<Spot>('Spot', s, !s.id, submit, [
+		nameInput(s.name),
+		dimInput(s),
+		colorInput(s.color),
+	])
+}
 export function imgForm(wd:WorldData, s:Partial<Img>, submit:(res:Partial<Img>)=>void) {
 	return simpleForm<Img>('Asset', s, !s.id, submit, [
 		nameInput(s.name),

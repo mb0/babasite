@@ -26,6 +26,7 @@ type Game struct {
 func (w *World) Info() WorldData {
 	return WorldData{WorldMeta: w.WorldMeta,
 		Pal:  w.Pix.Pal.All(nil),
+		Spot: w.Pix.Spot.All(nil),
 		Img:  w.Pix.Img.All(nil),
 		Clip: w.Pix.Clip.All(nil),
 		Tset: w.Lvl.Tset.All(nil),
@@ -42,6 +43,7 @@ func (w *World) Info() WorldData {
 type WorldData struct {
 	WorldMeta
 	Pal  []*pix.Pal  `json:"pal"`
+	Spot []*pix.Spot `json:"spot"`
 	Img  []*pix.Img  `json:"img"`
 	Clip []*pix.Clip `json:"clip"`
 	Tset []*lvl.Tset `json:"tset"`

@@ -30,6 +30,7 @@ func MakeWorldSync(w *game.World) WorldSync {
 		NewListSync(&w.Lvl.Grid),
 
 		NewListSync(&w.Pix.Pal),
+		NewListSync(&w.Pix.Spot),
 		NewListSync(&w.Pix.Img),
 		NewListSync(&w.Pix.Clip),
 		NewListSync(&w.Pix.Pic),
